@@ -48,6 +48,7 @@ python3 -m http.server   # or any static server; open http://localhost:8000
 | `HIDDEN_PAYMENT_METHODS` | Payment methods that don't count by default, comma separated (default `Pruebas,Otros`) |
 | `COMMUNITY`, `COMMUNITY_URL` | Community running the node (optional) |
 | `SOCIAL_LINKS` | Links to its social media, comma separated (optional; Telegram, X, YouTube, GitHub and Nostr are recognised automatically) |
+| `ARCHIVE_DIR` | Folder for the archiver's data (optional; default `indexer/data/`, see [Archiver](#archiver)) |
 
 Each currency's payment methods come from the Mostro app's list; anything not on it is grouped as
 «Otros» (other). In `HIDDEN_PAYMENT_METHODS` add the ones that trade at a different rate in your market
@@ -101,6 +102,30 @@ External services it uses and what happens if they are blocked:
 | Yadio | current BTC/USD, the currency's USD reference, market-price order book | currency/USD can't be calculated; currency/BTC and currency/sat keep working |
 | Coinbase | hourly historical BTC/USD, for currency/USD | it's calculated with Yadio's current BTC/USD and marked as approximate |
 
+## Archiver
+
+Relays keep orders for about 15 days and only their latest version: once an order is completed, the
+`pending` version (market or fixed price) and the `in-progress` one (when it was taken) are gone. The
+node's `mostro-rates` (BTC price in every currency, from Yadio) expire after 10 minutes. To keep a full
+history, `indexer/archivador.mjs` subscribes to the `.env` relays and stores everything the node
+publishes, verified (signature and author), in daily files:
+
+- `indexer/data/eventos/YYYY-MM-DD.jsonl`: orders of every currency (one line per relay that had it, to
+  check which relay had what), each `mostro-rates` once, and the node's metadata when it changes.
+- `indexer/data/yadio/YYYY-MM-DD.jsonl`: Yadio's BTC/USD every 5 minutes for the last 24 h, to fill the
+  gaps when the archiver was off.
+
+It needs Node.js ≥ 22 (native WebSocket), no dependencies, and must run all the time: whatever happens
+while it is off is lost, except the latest version of each order. Around 1 MB per day.
+
+```sh
+node indexer/archivador.mjs
+```
+
+To run it as a service that starts by itself, see `indexer/tasak-archivador.service`. Two archivers on
+different machines can be merged later (events are deduplicated by id). These files will feed the
+future indexer.
+
 ## Files
 
 | File | What it is |
@@ -110,6 +135,7 @@ External services it uses and what happens if they are blocked:
 | `i18n.js` | language (Spanish / English): dictionary and text translation |
 | `comun.js`, `comun.css` | configuration, formatting, colours and node card, shared by both pages |
 | `build.mjs` | reads `.env` and generates `config.js` |
+| `indexer/` | the event archiver and its systemd service |
 | `vendor/` | copied libraries (no CDN) and the Mostro app's payment methods per currency (`mostro-payment-methods.js`) |
 
 ## Languages

@@ -1,0 +1,24 @@
+# systemd user service for the tasaK event archiver.
+#
+# Install (adjust the two paths below first):
+#   cp indexer/tasak-archivador.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now tasak-archivador
+#   loginctl enable-linger "$USER"     # start at boot, without logging in
+# Logs: journalctl --user -u tasak-archivador -f
+
+[Unit]
+Description=tasaK event archiver (Mostro orders and mostro-rates to daily .jsonl files)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+# Node >= 22 (native WebSocket). With nvm, use the absolute path: systemd does not load nvm
+ExecStart=/usr/bin/node indexer/archivador.mjs
+# The repository folder: the archiver reads its .env and vendor/ from here
+WorkingDirectory=%h/tasak
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

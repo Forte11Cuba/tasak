@@ -48,6 +48,7 @@ Variables de `.env` (en inglés, para que sirvan a cualquier operador de nodo):
 | `HIDDEN_PAYMENT_METHODS` | Métodos de pago que no cuentan por defecto, separados por coma (por defecto `Pruebas,Otros`) |
 | `COMMUNITY`, `COMMUNITY_URL` | Comunidad que opera el nodo (opcional) |
 | `SOCIAL_LINKS` | Enlaces a sus redes, separados por coma (opcional; Telegram, X, YouTube, GitHub y Nostr se reconocen solos) |
+| `ARCHIVE_DIR` | Carpeta de los datos del archivador (opcional; por defecto `indexer/data/`, ver [Archivador](#archivador)) |
 
 Los métodos de pago de cada moneda salen de la lista de la app de Mostro; lo que no está en ella se
 agrupa como «Otros». En `HIDDEN_PAYMENT_METHODS` conviene añadir los que en tu mercado se negocian a
@@ -95,6 +96,31 @@ Servicios externos que usa y qué pasa si están bloqueados:
 | Yadio | BTC/USD actual, referencia de la moneda frente al USD, order book a precio de mercado | la moneda/USD no se puede calcular; moneda/BTC y moneda/sat siguen funcionando |
 | Coinbase | BTC/USD histórico por hora, para la moneda/USD | se calcula con el BTC/USD actual de Yadio y se avisa de que es aproximado |
 
+## Archivador
+
+Los relays guardan las órdenes unos 15 días y solo su última versión: cuando una orden se completa,
+desaparecen la versión `pending` (precio de mercado o fijo) y la `in-progress` (cuándo se tomó). Los
+`mostro-rates` del nodo (precio de BTC en cada moneda, de Yadio) caducan a los 10 minutos. Para tener el
+historial completo, `indexer/archivador.mjs` se suscribe a los relays del `.env` y guarda todo lo que
+publica el nodo, verificado (firma y autor), en archivos diarios:
+
+- `indexer/data/eventos/AAAA-MM-DD.jsonl`: órdenes de todas las monedas (una línea por cada relay que la
+  tenía, para comprobar qué relay tenía qué), cada `mostro-rates` una vez y los metadatos del nodo
+  cuando cambian.
+- `indexer/data/yadio/AAAA-MM-DD.jsonl`: el BTC/USD de Yadio cada 5 minutos de las últimas 24 h, para
+  rellenar los huecos cuando el archivador estuvo apagado.
+
+Necesita Node.js ≥ 22 (WebSocket nativo), sin dependencias, y debe estar siempre encendido: lo que pase
+mientras está apagado se pierde, salvo la última versión de cada orden. Ocupa alrededor de 1 MB al día.
+
+```sh
+node indexer/archivador.mjs
+```
+
+Para que arranque solo como servicio, ver `indexer/tasak-archivador.service`. Dos archivadores en
+máquinas distintas se pueden unir después (los eventos se deduplican por id). Estos archivos
+alimentarán el futuro indexador.
+
 ## Archivos
 
 | Archivo | Qué es |
@@ -104,6 +130,7 @@ Servicios externos que usa y qué pasa si están bloqueados:
 | `i18n.js` | idioma (español / inglés): diccionario y traducción de textos |
 | `comun.js`, `comun.css` | configuración, formato, colores y tarjeta del nodo, compartidos por las dos páginas |
 | `build.mjs` | lee `.env` y genera `config.js` |
+| `indexer/` | el archivador de eventos y su servicio de systemd |
 | `vendor/` | librerías copiadas (sin depender de CDN) y la lista de métodos de pago por moneda de la app de Mostro (`mostro-payment-methods.js`) |
 
 ## Idiomas
