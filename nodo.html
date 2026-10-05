@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Nodo Mostro · tasaK</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%230b0e11%22/><text x=%2216%22 y=%2224%22 font-size=%2222%22 font-weight=%22800%22 text-anchor=%22middle%22 fill=%22%23f0b90b%22 font-family=%22sans-serif%22>K</text></svg>">
+<meta name="description" content="Información del nodo Mostro: comisión, condiciones, comunidad y redes, leída de sus eventos Nostr.">
+<script src="vendor/nostr-tools-2.25.2.bundle.min.js"></script>
+<!-- Generado por build.mjs a partir de .env -->
+<script src="config.js"></script>
+<link rel="stylesheet" href="comun.css">
+<script src="i18n.js"></script>
+<script src="comun.js"></script>
+<style>
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 14px/1.5 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  header {
+    display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    padding: 12px 16px; border-bottom: 1px solid var(--line); background: var(--panel);
+  }
+  header a.back { color: var(--muted); text-decoration: none; font-size: 13px; }
+  header a.back:hover { color: var(--text); }
+  .lang-switch { margin-left: 4px; }
+  .status { margin-left: auto; font-size: 12px; color: var(--muted); display: flex; align-items: center; gap: 6px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); }
+  .dot.live { background: var(--up); box-shadow: 0 0 6px var(--up); }
+  main { max-width: 760px; margin: 0 auto; padding: 8px 16px 40px; }
+  h1 { font-size: 22px; margin: 18px 0 2px; }
+  .intro { color: var(--muted); margin: 0 0 8px; }
+  .node-card { background: var(--panel); border: 1px solid var(--line); border-radius: 8px; padding: 18px; margin-top: 16px; }
+  .node-card + .node-card { border-top: 1px solid var(--line); }
+  .source { color: var(--muted); font-size: 12px; margin-top: 24px; }
+  .source code { color: var(--text); }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand" data-name="sitio">tasa<span>K</span></div>
+  <a class="back" id="back" href="index.html" data-i18n>← Volver a la tasa</a>
+  <div class="status"><span class="dot" id="dot"></span><span id="status" data-i18n>Conectando…</span></div>
+  <button class="theme-btn" type="button"></button>
+  <span class="lang-switch" aria-label="Idioma"></span>
+</header>
+
+<main>
+  <h1 data-i18n>Nodo Mostro</h1>
+  <p class="intro" data-lang="es">Quién opera el nodo del que salen las órdenes, sus condiciones y cómo contactar con su comunidad.</p>
+  <p class="intro" data-lang="en">Who runs the node the orders come from, its terms and how to reach its community.</p>
+  <div id="nodes"><p class="muted" data-i18n>Cargando la información del nodo desde los relays…</p></div>
+  <p class="source" data-lang="en">
+    Source: the node's own signed Nostr events (profile <code>kind 0</code>, information <code>kind 38385</code>,
+    relays <code>kind 10002</code> and orders <code>kind 38383</code>). The community and its social links come from
+    this site's configuration (<code>.env</code>), because the node doesn't publish them.
+  </p>
+  <p class="source" data-lang="es">
+    Fuente: los eventos firmados del propio nodo en Nostr (perfil <code>kind 0</code>, información <code>kind 38385</code>,
+    relays <code>kind 10002</code> y órdenes <code>kind 38383</code>). La comunidad y sus redes vienen de la configuración
+    de este sitio (<code>.env</code>), porque el nodo no las publica.
+  </p>
+</main>
+
+<script>
+const MOSTROS = new Set(CONFIG.mostros);
+const verifyEvent = window.NostrTools?.verifyEvent ?? null;
+const meta = new Map();     // pubkey -> { profile, info, relays }
+const orders = new Map();   // pubkey:d -> versión más reciente de la orden
+let live = 0;
+
+document.getElementById('back').href = 'index.html' + location.search;
+
+// Resumen de las órdenes de un nodo para la sección «Actividad»
+function activity(pk) {
+  const now = Date.now() / 1000;
+  const mine = [...orders.values()].filter(o => o.pk === pk);
+  const done = mine.filter(o => o.s === 'success' && o.fa > 0);
+  const open = mine.filter(o => o.s === 'pending' && !(o.exp && o.exp < now));
+  const byFiat = new Map();
+  for (const o of done) {
+    const v = byFiat.get(o.f) || { n: 0, vol: 0 };
+    v.n++; v.vol += o.fa;
+    byFiat.set(o.f, v);
+  }
+  const first = Math.min(...done.map(o => o.ts));
+  return [
+    [t('Órdenes completadas'), `${done.length}${done.length ? ` · ${t('desde {d}', { d: esc(fmtTime(first).split(',')[0]) })}` : ''} <span class="muted">${t('(lo que guardan los relays, ~15 días)')}</span>`],
+    ...[...byFiat].sort((a, b) => b[1].n - a[1].n)
+      .map(([f, v]) => [t('Volumen en {f}', { f: esc(f) }), `${fmtInt(v.vol)} ${esc(f)} · ${nOrders(v.n)}`]),
+    [t('Órdenes abiertas ahora'), String(open.length)],
+  ];
+}
+
+let queued = false;
+function render() {
+  if (queued) return;
+  queued = true;
+  requestAnimationFrame(() => {
+    queued = false;
+    document.getElementById('nodes').innerHTML = CONFIG.mostros.length
+      ? CONFIG.mostros.map(pk => nodeCardHtml(pk, meta.get(pk), activity(pk))).join('')
+      : `<p class="muted">${t('No hay nodos configurados: ejecuta «node build.mjs» o pasa ?mostro=… en la URL.')}</p>`;
+    const name = meta.get(CONFIG.mostros[0])?.profile?.name;
+    if (name) document.title = `${name} · ${t('Nodo Mostro')} · ${CONFIG.nombreSitio}`;
+    document.getElementById('dot').classList.toggle('live', live > 0);
+    document.getElementById('status').textContent = live
+      ? `${live}/${CONFIG.relays.length} relays${verifyEvent ? ' · ' + t('✓ firmas') : ''}` : t('Conectando…');
+  });
+}
+
+function onEvent(ev) {
+  if (!ev || !MOSTROS.has(ev.pubkey)) return;
+  if (verifyEvent && !verifyEvent(ev)) return;
+  if (ev.kind === 38383) {
+    const t = {};
+    for (const [k, ...v] of ev.tags) if (!(k in t)) t[k] = v;
+    if (!t.d || !t.s) return;
+    const key = ev.pubkey + ':' + t.d[0];
+    const prev = orders.get(key);
+    if (prev && prev.ts >= ev.created_at) return;
+    orders.set(key, {
+      pk: ev.pubkey, ts: ev.created_at, s: t.s[0], f: (t.f?.[0] || '').toUpperCase(),
+      fa: (t.fa || []).length === 1 ? Number(t.fa[0]) : 0, exp: Number(t.expires_at?.[0] || 0),
+    });
+  } else if (!applyMeta(meta, ev)) return;
+  render();
+}
+
+// Una consulta por relay: información del nodo y sus órdenes (sin paginar: son pocas)
+function connect(url) {
+  let ws;
+  try { ws = new WebSocket(url); } catch { return; }
+  let counted = false;
+  ws.onopen = () => {
+    ws.send(JSON.stringify(['REQ', 'n', { kinds: META_KINDS, authors: CONFIG.mostros },
+      { kinds: [38383], authors: CONFIG.mostros, limit: 500 }]));
+  };
+  ws.onmessage = msg => {
+    let d;
+    try { d = JSON.parse(msg.data); } catch { return; }
+    if (d[0] === 'EVENT') onEvent(d[2]);
+    else if (d[0] === 'EOSE' && !counted) { counted = true; live++; render(); }
+  };
+  ws.onclose = () => { if (counted) { live--; render(); } };
+  ws.onerror = () => ws.close();
+}
+
+render();
+CONFIG.relays.forEach(connect);
+</script>
+</body>
+</html>

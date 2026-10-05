@@ -1,0 +1,97 @@
+/* Estilos compartidos por index.html y nodo.html */
+:root {
+  --bg: #0b0e11;
+  --panel: #14171c;
+  --line: #23272f;
+  --row: #181b20;
+  --text: #e6e8ea;
+  --muted: #8a919c;
+  --up: #16c784;
+  --down: #ea3943;
+  --up-bg: rgba(22, 199, 132, .12);
+  --down-bg: rgba(234, 57, 67, .12);
+  --accent: #f0b90b;
+  --avg: #5b8def;
+  /* Derivados, para no escribir colores a mano en las páginas */
+  --accent-bg: rgba(240, 185, 11, .1);
+  --accent-line: rgba(240, 185, 11, .45);
+  --accent-flash: rgba(240, 185, 11, .25);
+  --avg-soft: rgba(91, 141, 239, .35);
+  --grid: #15181d;
+  --up-vol: rgba(22, 199, 132, .4);
+  --down-vol: rgba(234, 57, 67, .4);
+  --shadow: rgba(0, 0, 0, .5);
+  --backdrop: rgba(0, 0, 0, .6);
+  color-scheme: dark;
+}
+
+/* Tema claro: colores más oscuros para que acento, subidas y bajadas se lean sobre blanco */
+:root[data-theme="light"] {
+  --bg: #ffffff;
+  --panel: #f5f6f8;
+  --line: #e1e4e9;
+  --row: #f0f2f5;
+  --text: #15181d;
+  --muted: #5d6572;
+  --up: #0a8f5f;
+  --down: #d1323b;
+  --up-bg: rgba(10, 143, 95, .1);
+  --down-bg: rgba(209, 50, 59, .09);
+  --accent: #b07d00;
+  --avg: #2b63d9;
+  --accent-bg: rgba(176, 125, 0, .1);
+  --accent-line: rgba(176, 125, 0, .45);
+  --accent-flash: rgba(240, 185, 11, .3);
+  --avg-soft: rgba(43, 99, 217, .3);
+  --grid: #eef0f3;
+  --up-vol: rgba(10, 143, 95, .35);
+  --down-vol: rgba(209, 50, 59, .35);
+  --shadow: rgba(20, 24, 32, .18);
+  --backdrop: rgba(20, 24, 32, .35);
+  color-scheme: light;
+}
+* { box-sizing: border-box; }
+.num { font-variant-numeric: tabular-nums; font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace; }
+.up { color: var(--up); }
+.down { color: var(--down); }
+.muted { color: var(--muted); }
+.brand { font-weight: 800; font-size: 20px; letter-spacing: -0.5px; line-height: 1.2; }
+.brand span { color: var(--accent); }
+.brand-logo { display: block; height: 34px; width: auto; margin: -2px 0; }
+
+/* Tarjeta con la información de un nodo Mostro */
+.node-card { padding: 12px 0 4px; }
+.node-card + .node-card { border-top: 1px solid var(--line); }
+.node-top { display: flex; gap: 12px; align-items: center; }
+.node-top img { width: 52px; height: 52px; border-radius: 50%; background: var(--bg); flex: none; }
+.node-top h3 { margin: 0; font-size: 17px; }
+.node-top p { margin: 2px 0 0; color: var(--muted); }
+.node-links { display: flex; flex-wrap: wrap; gap: 6px; margin: 12px 0 0; }
+.node-links a {
+  color: var(--text); text-decoration: none; font-size: 12px;
+  border: 1px solid var(--line); border-radius: 999px; padding: 3px 10px;
+}
+.node-links a:hover { border-color: var(--avg); }
+.node-sec { margin: 14px 0 0; color: var(--muted); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+.node-kv { display: grid; grid-template-columns: max-content 1fr; gap: 5px 14px; margin: 6px 0 0; font-size: 13px; }
+.node-kv dt { color: var(--muted); }
+.node-kv dd { margin: 0; word-break: break-all; }
+
+/* Textos largos escritos en los dos idiomas: solo se ve el elegido (lang en <html>) */
+html:not([lang="es"]) [data-lang="es"], html:not([lang="en"]) [data-lang="en"] { display: none !important; }
+
+/* Selector de idioma ES | EN */
+.lang-switch { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
+.lang-switch button {
+  background: none; border: 0; color: var(--muted); font: inherit; font-size: 11px; font-weight: 600;
+  padding: 4px 8px; cursor: pointer;
+}
+.lang-switch button:hover { color: var(--text); }
+.lang-switch button.on { background: var(--line); color: var(--text); }
+
+/* Botón de tema ☀ / ☾ */
+.theme-btn {
+  background: none; border: 1px solid var(--line); border-radius: 4px; color: var(--muted);
+  font: inherit; font-size: 13px; line-height: 1; padding: 4px 8px; cursor: pointer;
+}
+.theme-btn:hover { color: var(--text); }

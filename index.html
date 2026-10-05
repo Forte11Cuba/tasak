@@ -1,0 +1,1570 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>tasaK</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 32 32%22><rect width=%2232%22 height=%2232%22 rx=%226%22 fill=%22%230b0e11%22/><text x=%2216%22 y=%2224%22 font-size=%2222%22 font-weight=%22800%22 text-anchor=%22middle%22 fill=%22%23f0b90b%22 font-family=%22sans-serif%22>K</text></svg>">
+<meta name="description" content="Tasa de cambio a partir de órdenes completadas en nodos Mostro (P2P sobre Nostr).">
+<!-- Librerías copiadas en vendor/: la página no depende de ningún CDN (pueden estar bloqueados en algunos países) -->
+<script src="vendor/lightweight-charts-5.2.1.standalone.production.js"></script>
+<script src="vendor/nostr-tools-2.25.2.bundle.min.js"></script>
+<script src="vendor/mostro-payment-methods.js"></script>
+<!-- Generado por build.mjs a partir de .env -->
+<script src="config.js"></script>
+<link rel="stylesheet" href="comun.css">
+<script src="i18n.js"></script>
+<script src="comun.js"></script>
+<style>
+  html, body { height: 100%; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font: 14px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    display: flex; flex-direction: column;
+  }
+
+  /* Cabecera: bloques con la misma estructura (etiqueta / valor / detalle), alineados y separados */
+  header {
+    display: flex; align-items: stretch; flex-wrap: wrap; row-gap: 10px;
+    padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--panel);
+  }
+  .brand-box { display: flex; flex-direction: column; justify-content: center; padding-right: 14px; }
+  .pair { color: var(--muted); font-size: 12px; }
+  .node-btn {
+    display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 0;
+    color: var(--text); font: inherit; font-size: 13px; cursor: pointer;
+  }
+  .node-btn:hover { color: var(--text); }
+  .node-btn img { width: 16px; height: 16px; border-radius: 50%; }
+  .node-btn .i {
+    border: 1px solid currentColor; border-radius: 50%; width: 13px; height: 13px; font-size: 9px;
+    display: inline-flex; align-items: center; justify-content: center; font-weight: 700;
+  }
+  .stat {
+    display: flex; flex-direction: column; justify-content: center; gap: 2px;
+    padding: 0 11px; border-left: 1px solid var(--line); min-width: 0;
+  }
+  .stat .label { color: var(--muted); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
+  .stat .value { font-size: 16px; font-weight: 600; white-space: nowrap; }
+  .stat .sub { color: var(--muted); font-size: 11px; white-space: nowrap; }
+  .stat .unit { color: var(--muted); font-size: 11px; font-weight: 400; margin-left: 4px; }
+  .stat.big .value { font-size: 24px; font-weight: 700; color: var(--avg); line-height: 1.15; }
+  /* Parpadeo cuando la Tasa K cambia: un instante en verde o rojo y vuelve al azul */
+  .stat.big .value.tick-up { animation: tick-up 1.6s ease-out; }
+  .stat.big .value.tick-down { animation: tick-down 1.6s ease-out; }
+  @keyframes tick-up { 0%, 35% { color: var(--up); background: var(--up-bg); } 100% { color: var(--avg); background: transparent; } }
+  @keyframes tick-down { 0%, 35% { color: var(--down); background: var(--down-bg); } 100% { color: var(--avg); background: transparent; } }
+  .stat.big .value { border-radius: 4px; margin: 0 -4px; padding: 0 4px; }
+  @media (prefers-reduced-motion: reduce) { .stat.big .value.tick-up, .stat.big .value.tick-down { animation: none; } }
+  .value-row { display: flex; align-items: baseline; gap: 10px; }
+  .chg {
+    font-size: 12px; font-weight: 600; padding: 1px 6px; border-radius: 4px; white-space: nowrap;
+  }
+  .chg.up { background: var(--up-bg); }
+  .chg.down { background: var(--down-bg); }
+  .head-end { margin-left: auto; align-self: center; display: flex; align-items: center; padding-left: 10px; }
+  .status {
+    align-self: center; font-size: 12px; color: var(--muted);
+    display: flex; align-items: center; gap: 6px; white-space: nowrap; cursor: default;
+  }
+  .status .ok { color: var(--up); }
+  .status .warn { color: var(--accent); }
+  .status.error { color: var(--down); white-space: normal; max-width: 320px; }
+  .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
+  .dot.live { background: var(--up); box-shadow: 0 0 6px var(--up); }
+
+  .filters {
+    display: flex; gap: 6px; align-items: center; flex-wrap: wrap;
+    padding: 8px 16px; border-bottom: 1px solid var(--line);
+  }
+  .filters .label { color: var(--muted); font-size: 12px; margin-right: 4px; }
+  select {
+    background: var(--panel); color: var(--text); border: 1px solid var(--line);
+    border-radius: 4px; padding: 3px 6px; font: inherit; font-size: 13px;
+  }
+  .chip {
+    background: none; border: 1px solid var(--line); color: var(--muted);
+    border-radius: 999px; padding: 3px 10px; font: inherit; font-size: 12px; cursor: pointer;
+  }
+  .chip.on { border-color: var(--accent); color: var(--text); background: var(--accent-bg); }
+  .chip .c { opacity: .6; margin-left: 4px; }
+  .sep { width: 1px; height: 18px; background: var(--line); margin: 0 8px; }
+  [hidden] { display: none !important; }
+
+  main {
+    flex: 1; min-height: 0;
+    display: grid; grid-template-columns: 1fr 440px; gap: 1px; background: var(--line);
+  }
+  .col { display: grid; gap: 1px; min-height: 0; min-width: 0; }
+  .col.left { grid-template-rows: 1fr; }
+  .col.right { grid-template-rows: var(--book, 1fr) 5px var(--trades, 1fr); gap: 0; }
+  /* Separador arrastrable entre order book y órdenes ejecutadas, como el del volumen */
+  .splitter { background: var(--line); cursor: row-resize; touch-action: none; }
+  .splitter:hover, .splitter.drag, .splitter:focus-visible { background: var(--avg-soft); outline: none; }
+  .panel { background: var(--bg); display: flex; flex-direction: column; min-height: 0; min-width: 0; }
+  .panel-head {
+    display: flex; align-items: center; gap: 4px; flex-wrap: wrap;
+    padding: 6px 12px; border-bottom: 1px solid var(--line); min-height: 37px;
+  }
+  .panel-head h2 { font-size: 13px; font-weight: 600; margin: 0 auto 0 0; }
+  .panel-head .hint { color: var(--muted); font-size: 11px; }
+  .tabs button {
+    background: none; border: 0; color: var(--muted); padding: 3px 9px; border-radius: 4px;
+    font: inherit; font-size: 12px; cursor: pointer;
+  }
+  .tabs button:hover { color: var(--text); }
+  .tabs button.on { color: var(--text); background: var(--line); }
+  .chart { flex: 1; min-height: 240px; position: relative; }
+  .icon-btn {
+    background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 4px;
+    font: inherit; font-size: 14px; line-height: 1; padding: 4px 7px; cursor: pointer; margin-left: 4px;
+  }
+  .icon-btn:hover { color: var(--text); }
+
+  /* Menú desplegable del filtro de métodos de pago */
+  .menu { position: relative; margin-left: auto; }
+  .menu > summary {
+    list-style: none; cursor: pointer; color: var(--muted); font-size: 12px;
+    border: 1px solid var(--line); border-radius: 4px; padding: 3px 9px;
+  }
+  .menu > summary::-webkit-details-marker { display: none; }
+  .menu > summary:hover, .menu[open] > summary { color: var(--text); }
+  .menu > summary.filtered { border-color: var(--accent); color: var(--text); }
+  .menu .pop {
+    position: absolute; right: 0; top: calc(100% + 4px); z-index: 10; width: 280px;
+    background: var(--panel); border: 1px solid var(--line); border-radius: 6px; padding: 10px;
+    box-shadow: 0 8px 24px var(--shadow);
+  }
+  .menu .pop p { margin: 0 0 8px; color: var(--muted); font-size: 11px; }
+  .menu .pop .chips { display: flex; flex-wrap: wrap; gap: 6px; }
+  /* Desplegable de temporalidad, como el de TradingView */
+  .menu.tf { margin-left: 0; }
+  .menu.tf > summary { color: var(--text); min-width: 52px; text-align: center; }
+  .menu.tf .pop { left: 0; right: auto; width: 190px; padding: 6px 0; max-height: 60vh; overflow-y: auto; }
+  .tf-group {
+    color: var(--muted); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; padding: 8px 14px 4px;
+  }
+  .tf-group:not(:first-child) { border-top: 1px solid var(--line); margin-top: 4px; }
+  .tf-pop button {
+    display: block; width: 100%; text-align: left; background: none; border: 0; color: var(--text);
+    font: inherit; font-size: 13px; padding: 6px 14px; cursor: pointer;
+  }
+  .tf-pop button:hover { background: var(--row); }
+  .tf-pop button.on { background: var(--line); }
+
+  /* Pantalla completa: API nativa o, si no existe (iPhone), panel fijo */
+  .panel:fullscreen { width: 100vw; height: 100vh; }
+  .panel.max { position: fixed; inset: 0; z-index: 50; }
+  .panel.max .chart, .panel:fullscreen .chart { min-height: 0; }
+  /* Leyenda sobre la gráfica (estilo TradingView): valores bajo el cursor o del último punto */
+  /* Etiqueta del panel de volumen, con el ojo para mostrarlo u ocultarlo */
+  .vol-tag {
+    position: absolute; left: 10px; z-index: 5; display: flex; align-items: center; gap: 4px;
+    background: var(--bg); border: 1px solid var(--line); border-radius: 4px; padding: 1px 4px 1px 7px;
+    font-size: 11px; color: var(--muted);
+  }
+  .vol-tag button {
+    background: none; border: 0; color: var(--muted); cursor: pointer; padding: 2px; display: flex;
+  }
+  .vol-tag button:hover { color: var(--text); }
+  .legend {
+    position: absolute; top: 6px; left: 10px; z-index: 4; pointer-events: none;
+    font-size: 12px; line-height: 1.5; text-shadow: 0 0 4px var(--bg), 0 0 4px var(--bg);
+  }
+  .legend .row { display: flex; gap: 10px; flex-wrap: wrap; }
+  .legend .k { color: var(--muted); margin-right: 3px; }
+  .legend .when { color: var(--muted); }
+  .empty {
+    position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
+    color: var(--muted); pointer-events: none; z-index: 3; text-align: center; padding: 16px;
+  }
+
+  .scroll { overflow: auto; flex: 1; min-height: 0; }
+  table { width: 100%; border-collapse: collapse; font-size: 12px; }
+  th {
+    color: var(--muted); font-weight: 400; text-align: right; padding: 5px 8px;
+    position: sticky; top: 0; background: var(--bg); z-index: 1;
+  }
+  td { text-align: right; padding: 3px 8px; white-space: nowrap; }
+  th:first-child, td:first-child { text-align: left; }
+  .trades td { border-bottom: 1px solid var(--row); }
+  .trades tr[data-key], .book tr[data-key] { cursor: pointer; }
+  .trades tr[data-key]:hover td, .book tr[data-key]:hover td { background: var(--row); }
+  .ev-meta { display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; margin: 8px 0 12px; font-size: 13px; }
+  .ev-meta dt { color: var(--muted); }
+  .ev-meta dd { margin: 0; overflow-wrap: anywhere; }
+  .ev-json {
+    background: var(--bg); border: 1px solid var(--line); border-radius: 6px; padding: 10px; margin: 0;
+    font-size: 11px; line-height: 1.45; max-height: 45vh; overflow: auto; white-space: pre-wrap; word-break: break-all;
+  }
+  .ev-actions { display: flex; gap: 8px; margin-top: 12px; align-items: center; flex-wrap: wrap; }
+  .ev-actions a { color: var(--avg); font-size: 13px; }
+  .trades tr.out td { opacity: .45; }
+  tr.new td { animation: flash 1.5s; }
+  @keyframes flash { from { background: var(--accent-flash); } to { background: transparent; } }
+  .pm { color: var(--muted); font-size: 11px; max-width: 96px; overflow: hidden; text-overflow: ellipsis; display: inline-block; vertical-align: bottom; }
+
+  /* Order book: barra de profundidad detrás de cada fila */
+  .book tr.ask, .book tr.bid { position: relative; }
+  .book tr.ask td:first-child { color: var(--down); }
+  .book tr.bid td:first-child { color: var(--up); }
+  .book tr.ask { background: linear-gradient(to left, var(--down-bg) var(--d), transparent var(--d)); }
+  .book tr.bid { background: linear-gradient(to left, var(--up-bg) var(--d), transparent var(--d)); }
+  .book tr.mid td {
+    padding: 8px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line);
+    font-size: 13px; text-align: left; white-space: normal;
+  }
+  .book tr.mid strong { font-size: 16px; }
+  .book .none td { color: var(--muted); text-align: center; padding: 10px; }
+
+  .head-btn { margin-left: 8px; font-size: 12px; padding: 5px 10px; }
+  .node-filter { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+  .info-nav { margin-left: 10px; display: flex; align-items: center; gap: 6px; }
+  .info-nav .head-btn { margin-left: 0; }
+  /* Accesos a la información del nodo y la FAQ, en el color de acento para que se vean */
+  .info-nav .head-btn { color: var(--accent); border-color: var(--accent-line); background: var(--accent-bg); }
+  .info-nav .head-btn:hover { color: var(--bg); background: var(--accent); border-color: var(--accent); }
+  a.head-btn, a.node-btn { text-decoration: none; }
+  dialog.faq {
+    background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 8px;
+    padding: 0; width: min(680px, calc(100vw - 32px)); max-height: calc(100vh - 48px);
+  }
+  dialog.faq::backdrop { background: var(--backdrop); }
+  .faq-head {
+    display: flex; align-items: center; justify-content: space-between;
+    padding: 12px 16px; border-bottom: 1px solid var(--line); position: sticky; top: 0; background: var(--panel);
+  }
+  .faq-head h2 { margin: 0; font-size: 16px; }
+  .faq-body { padding: 8px 16px 16px; }
+  .faq details { border-bottom: 1px solid var(--line); padding: 10px 0; }
+  .faq summary { cursor: pointer; font-weight: 600; }
+  .faq details p, .faq details ul { margin: 8px 0 0; color: var(--muted); line-height: 1.55; }
+  .faq details li { margin: 2px 0; }
+  .faq code { color: var(--text); background: var(--bg); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+  .faq strong { color: var(--text); }
+
+  @media (max-width: 900px) {
+    body { height: auto; }
+    main { grid-template-columns: 1fr; }
+    .col.left, .col.right { grid-template-rows: auto; }
+    .col.right { gap: 1px; }
+    .stat { border-left: 0; padding: 0 20px 0 0; }
+    .brand-box { width: 100%; }
+    .splitter { display: none; }
+    .chart { min-height: 340px; }
+    .scroll { max-height: 55vh; }
+    .status { margin-left: 0; }
+    header { gap: 14px; }
+    .hide-sm { display: none; }
+  }
+</style>
+</head>
+<body>
+<header>
+  <div class="brand-box">
+    <div class="brand" data-name="sitio">tasa<span>K</span></div>
+  </div>
+  <div class="stat big">
+    <span class="label"><span data-name="tasa">Tasa K</span> · <span data-i18n>últimas 24h</span></span>
+    <span class="value-row">
+      <span class="value num" id="sTasa">—</span>
+      <span class="chg num" id="sChg" title="Cambio respecto a las 24 horas anteriores" data-i18n-title></span>
+    </span>
+    <span class="sub num" id="sTasaSub">&nbsp;</span>
+  </div>
+  <div class="stat" title="Tasa de referencia de Yadio, la que usa Mostro para las órdenes a precio de mercado" data-i18n-title>
+    <span class="label" data-i18n>Referencia Yadio</span>
+    <span class="value num" id="sYadio">—</span>
+    <span class="sub num" id="sYadioSub">&nbsp;</span>
+  </div>
+  <div class="stat">
+    <span class="label" id="lblVol" data-i18n>Volumen total</span>
+    <span class="value num" id="sVol">—</span>
+    <span class="sub num" id="sVolSub">&nbsp;</span>
+  </div>
+  <div class="stat" title="Precio de la última orden completada" data-i18n-title>
+    <span class="label" data-i18n>Última orden</span>
+    <span class="value num" id="sLast">—</span>
+    <span class="sub num" id="sLastSub">&nbsp;</span>
+  </div>
+  <div class="head-end">
+    <div class="status" id="statusBox"><span class="dot" id="dot"></span><span id="status" data-i18n>Conectando…</span></div>
+    <nav class="info-nav">
+      <button class="theme-btn" type="button"></button>
+      <span class="lang-switch" aria-label="Idioma"></span>
+      <a class="icon-btn head-btn" id="nodeBtn2" href="nodo.html" title="Información del nodo Mostro: comisión, condiciones, comunidad y redes" data-i18n-title data-i18n>ⓘ Nodo Mostro</a>
+      <button class="icon-btn head-btn" id="faqBtn" title="Preguntas frecuentes" data-i18n-title>? FAQ</button>
+    </nav>
+  </div>
+</header>
+
+<div class="filters">
+  <span class="label" data-i18n>Moneda</span>
+  <select id="fiat"></select>
+  <span class="tabs" id="units">
+    <button data-unit="usd" class="on">/USD</button>
+    <button data-unit="btc">/BTC</button>
+    <button data-unit="sat">/sat</button>
+  </span>
+  <span class="node-filter">
+    <span class="sep"></span>
+    <span class="label" data-i18n>Nodo</span>
+    <span id="nodesBox" hidden><span id="nodes"></span></span>
+    <a class="node-btn" id="nodeBtn" href="nodo.html" title="Información del nodo Mostro" data-i18n-title><span id="pair">—</span><span class="i">i</span></a>
+  </span>
+</div>
+
+<main>
+  <div class="col left">
+    <section class="panel" id="chartPanel">
+      <div class="panel-head">
+        <span class="tabs" id="modes">
+          <button data-mode="line" data-i18n>Precio</button>
+          <button data-mode="candles" data-i18n>Velas</button>
+          <button data-mode="avg" title="Precio ponderado por volumen de las 24 horas anteriores a cada punto: Σ(precio × monto) ÷ Σ monto" data-i18n-title data-i18n>Ponderado</button>
+        </span>
+        <span class="sep"></span>
+        <details class="menu tf" id="tfMenu">
+          <summary id="tfSummary" title="Temporalidad" data-i18n-title>Orden ▾</summary>
+          <div class="pop tf-pop">
+            <div class="tf-group" id="tfOrders" data-i18n>Órdenes</div>
+            <button data-tf="0" title="Un punto por orden ejecutada" data-i18n-title data-i18n>Cada orden</button>
+            <div class="tf-group" data-i18n>Horas</div>
+            <button data-tf="3600" data-i18n>1 hora</button>
+            <button data-tf="14400" data-i18n>4 horas</button>
+            <div class="tf-group" data-i18n>Días</div>
+            <button data-tf="86400" data-i18n>1 día</button>
+            <div class="tf-group" data-i18n>Semanas</div>
+            <button data-tf="604800" data-i18n>1 semana</button>
+            <div class="tf-group" data-i18n>Meses</div>
+            <button data-tf="2592000" data-i18n>1 mes</button>
+            <div class="tf-group" data-i18n>Años</div>
+            <button data-tf="31536000" data-i18n>1 año</button>
+          </div>
+        </details>
+        <details class="menu" id="pmMenu">
+          <summary id="pmSummary">Método de pago ▾</summary>
+          <div class="pop">
+            <p data-lang="es">Órdenes que entran en la gráfica, la <span data-name="tasa">Tasa K</span> y las tablas. Números: <strong>completadas · abiertas</strong> (las abiertas están en el order book).</p>
+            <p data-lang="en">Orders included in the chart, the <span data-name="tasa">Tasa K</span> and the tables. Numbers: <strong>completed · open</strong> (open ones are in the order book).</p>
+            <div class="chips" id="pms"></div>
+          </div>
+        </details>
+        <button class="icon-btn" id="fsBtn" title="Pantalla completa" aria-label="Pantalla completa" data-i18n-title>⛶</button>
+      </div>
+      <div class="chart" id="chart"><div class="legend num" id="legend"></div><div class="vol-tag" id="volTag"><span>Vol.</span><button id="volEye" aria-label="Ocultar volumen" title="Ocultar volumen"></button></div><div class="empty" data-i18n>Cargando órdenes de los relays…</div></div>
+    </section>
+  </div>
+
+  <div class="col right">
+    <section class="panel">
+      <div class="panel-head">
+        <h2>Order book</h2>
+        <span class="hint" data-i18n>intenciones abiertas</span>
+      </div>
+      <div class="scroll">
+        <table class="book">
+          <thead><tr><th data-i18n>Precio</th><th data-i18n>Monto</th><th data-i18n>Prima</th><th data-i18n>Método</th></tr></thead>
+          <tbody id="book"></tbody>
+        </table>
+      </div>
+    </section>
+    <div class="splitter" id="rightSplit" role="separator" aria-orientation="horizontal" tabindex="0"
+         title="Arrastra para cambiar el tamaño del order book y las órdenes ejecutadas" data-i18n-title></div>
+    <section class="panel">
+      <div class="panel-head">
+        <h2 id="tradesTitle" data-i18n>Órdenes ejecutadas</h2>
+        <span class="hint" id="tradesHint"></span>
+      </div>
+      <div class="scroll">
+        <table class="trades">
+          <thead id="tradesHead"></thead>
+          <tbody id="trades"></tbody>
+        </table>
+      </div>
+    </section>
+  </div>
+</main>
+
+<dialog class="faq" id="evDlg">
+  <div class="faq-head">
+    <h2 data-i18n>Evento Nostr de la orden</h2>
+    <button class="icon-btn" id="evClose" aria-label="Cerrar" title="Cerrar" data-i18n-title>✕</button>
+  </div>
+  <div class="faq-body">
+    <p class="muted" style="margin: 8px 0 0" data-lang="es">Cada orden, abierta o completada, es un evento firmado por el nodo Mostro y publicado en los relays (NIP-69, kind 38383). Con él cualquiera puede comprobar la orden y recalcular la tasa.</p>
+    <p class="muted" style="margin: 8px 0 0" data-lang="en">Every order, open or completed, is an event signed by the Mostro node and published on relays (NIP-69, kind 38383). With it anyone can check the order and recompute the rate.</p>
+    <dl class="ev-meta" id="evMeta"></dl>
+    <pre class="ev-json num" id="evJson"></pre>
+    <div class="ev-actions">
+      <button class="icon-btn" id="evCopy" data-i18n>Copiar JSON</button>
+      <a id="evLink" target="_blank" rel="noopener" hidden data-i18n>Ver en njump.me ↗</a>
+    </div>
+  </div>
+</dialog>
+
+<dialog class="faq" id="faq">
+  <div class="faq-head">
+    <h2 data-i18n>Preguntas frecuentes</h2>
+    <button class="icon-btn" id="faqClose" aria-label="Cerrar" title="Cerrar" data-i18n-title>✕</button>
+  </div>
+  <div class="faq-body" data-lang="es">
+    <details open>
+      <summary>¿Qué es la <span data-name="tasa">Tasa K</span>?</summary>
+      <p>Es el precio ponderado por volumen de las órdenes <strong>completadas</strong> en las últimas 24 horas, no de anuncios publicados:</p>
+      <p><code><span data-name="tasa">Tasa K</span> = Σ(precio × monto) ÷ Σ monto</code></p>
+      <p>Cada orden pesa según la moneda que movió. Ejemplo: 3 órdenes a 785 <span class="fiat-name">CUP</span>/USD que suman 3000 <span class="fiat-name">CUP</span> y una a 750 de 5000 <span class="fiat-name">CUP</span> dan (785×3000 + 750×5000) ÷ 8000 = <strong>763,13</strong>.</p>
+    </details>
+    <details>
+      <summary>¿Cómo se calcula el precio de cada orden?</summary>
+      <p><code>precio = moneda pagada ÷ BTC recibidos ÷ BTC/USD</code>, con el BTC/USD de la hora en que se completó la orden (velas horarias de Coinbase; si no responde, el precio actual de Yadio y se avisa de que el USD es aproximado).</p>
+    </details>
+    <details>
+      <summary>¿Qué es <span class="fiat-name">CUP</span>/sat?</summary>
+      <p>Cuántos <span class="fiat-name">CUP</span> cuesta 1 sat: <code><span class="fiat-name">CUP</span> pagados ÷ sats</code> de cada orden. Sale directamente del evento de la orden, sin usar el precio de BTC/USD de Coinbase ni de Yadio, así que es la medida más directa y fácil de comprobar. <span class="fiat-name">CUP</span>/BTC es lo mismo multiplicado por 100 millones.</p>
+    </details>
+    <details>
+      <summary>¿Qué muestran Precio, Velas y Ponderado?</summary>
+      <ul>
+        <li><strong>Precio</strong>: un punto por orden ejecutada, o por periodo con el precio ponderado de ese periodo.</li>
+        <li><strong>Velas</strong>: apertura, máximo, mínimo y cierre de cada periodo.</li>
+        <li><strong>Ponderado</strong>: en cada punto, la <span data-name="tasa">Tasa K</span> de ese momento, es decir, el precio ponderado de las 24 horas anteriores.</li>
+      </ul>
+      <p>Los periodos van de 1 hora a 1 año (1h, 4h, 1D, 1W, 1M, 1Y). El volumen se ve en la parte baja de la gráfica y, al pasar el ratón, la leyenda muestra los valores de ese punto.</p>
+    </details>
+    <details>
+      <summary>¿De dónde salen los datos?</summary>
+      <p>De los nodos Mostro configurados en este sitio (<span class="node-names"></span>). Cada orden es un evento Nostr (NIP-69, kind 38383) que se lee directamente de los relays y se comprueba su firma, así que cualquiera puede recalcular la misma tasa.</p>
+    </details>
+    <details>
+      <summary>¿Cómo compruebo una orden?</summary>
+      <p>Haz clic en una orden de la tabla «Órdenes ejecutadas», o en su punto de la gráfica en modo <strong>Orden</strong>. Se abre su evento Nostr firmado: el JSON completo, su id y si la firma se verificó. Puedes copiarlo o abrirlo en njump.me.</p>
+    </details>
+    <details>
+      <summary>¿Por qué solo hay unos 15 días de historial?</summary>
+      <p>Los relays borran las órdenes a los 15 días (y algunos antes). Por eso los periodos mensual y anual todavía muestran solo lo que queda en los relays.</p>
+    </details>
+    <details>
+      <summary>¿Qué es el order book?</summary>
+      <p>Las órdenes abiertas que aún nadie ha tomado. Las de precio de mercado se calculan como <code>Yadio ÷ (1 − prima)</code>, que es como Mostro calcula los sats; las marcadas con 🔒 tienen precio fijo. Si alguien compra por encima de lo que otro vende, el libro aparece como «cruzado».</p>
+    </details>
+    <details>
+      <summary>¿Por qué algunos métodos de pago no cuentan por defecto?</summary>
+      <p>Los métodos de cada moneda son los de la app de Mostro; lo que alguien escribe a mano y no está en esa lista se agrupa como «Otros». Quien publica este sitio decide cuáles no cuentan por defecto; aquí: <strong class="hidden-pms"></strong>. Suelen ocultarse los que se negocian a otra tasa en ese mercado; Pruebas son órdenes de prueba. Se pueden activar desde el menú «Método de pago» de la gráfica.</p>
+    </details>
+    <details>
+      <summary>¿Qué es «Ref. Yadio»?</summary>
+      <p>La tasa de referencia de Yadio para la moneda, que es la que usa Mostro para las órdenes a precio de mercado. Sirve para comparar con la <span data-name="tasa">Tasa K</span>.</p>
+    </details>
+    <details>
+      <summary>¿Puedo ver mi propio nodo Mostro?</summary>
+      <p>Sí. Quien despliega el sitio lo configura en el archivo <code>.env</code>, y cualquier visitante puede cambiarlo en la URL:</p>
+      <p><code>?mostro=npub…,npub…&amp;relays=wss://…&amp;fiat=…&amp;lang=es</code></p>
+    </details>
+  </div>
+<div class="faq-body" data-lang="en">
+    <details open>
+      <summary>What is the <span data-name="tasa">Tasa K</span>?</summary>
+      <p>It is the volume-weighted price of orders <strong>completed</strong> in the last 24 hours, not of published ads:</p>
+      <p><code><span data-name="tasa">Tasa K</span> = Σ(price × amount) ÷ Σ amount</code></p>
+      <p>Each order weighs by the currency it moved. Example: 3 orders at 785 <span class="fiat-name">CUP</span>/USD totalling 3,000 <span class="fiat-name">CUP</span> and one at 750 for 5,000 <span class="fiat-name">CUP</span> give (785×3000 + 750×5000) ÷ 8000 = <strong>763.13</strong>.</p>
+    </details>
+    <details>
+      <summary>How is the price of each order calculated?</summary>
+      <p><code>price = currency paid ÷ BTC received ÷ BTC/USD</code>, using the BTC/USD of the hour the order was completed (Coinbase hourly candles; if they don't respond, the current Yadio price, and the page warns that USD is approximate).</p>
+    </details>
+    <details>
+      <summary>What is <span class="fiat-name">CUP</span>/sat?</summary>
+      <p>How many <span class="fiat-name">CUP</span> 1 sat costs: <code><span class="fiat-name">CUP</span> paid ÷ sats</code> of each order. It comes straight from the order event, without the BTC/USD price from Coinbase or Yadio, so it is the most direct measure and the easiest to check. <span class="fiat-name">CUP</span>/BTC is the same multiplied by 100 million.</p>
+    </details>
+    <details>
+      <summary>What do Price, Candles and Weighted show?</summary>
+      <ul>
+        <li><strong>Price</strong>: one point per executed order, or per period with the weighted price of that period.</li>
+        <li><strong>Candles</strong>: open, high, low and close of each period.</li>
+        <li><strong>Weighted</strong>: at each point, the <span data-name="tasa">Tasa K</span> at that moment, i.e. the weighted price of the previous 24 hours.</li>
+      </ul>
+      <p>Periods go from 1 hour to 1 year (1h, 4h, 1D, 1W, 1M, 1Y). Volume is shown at the bottom of the chart and, when hovering, the legend shows that point's values.</p>
+    </details>
+    <details>
+      <summary>Where does the data come from?</summary>
+      <p>From the Mostro nodes configured on this site (<span class="node-names"></span>). Each order is a Nostr event (NIP-69, kind 38383) read directly from relays with its signature checked, so anyone can recompute the same rate.</p>
+    </details>
+    <details>
+      <summary>How do I check an order?</summary>
+      <p>Click an order in the «Executed orders» table or the order book, or its point on the chart in <strong>Order</strong> mode. Its signed Nostr event opens: the full JSON, its id and whether the signature was verified. You can copy it or open it on njump.me.</p>
+    </details>
+    <details>
+      <summary>Why is there only about 15 days of history?</summary>
+      <p>Relays delete orders after 15 days (some sooner). That is why the monthly and yearly periods still only show what is left on the relays.</p>
+    </details>
+    <details>
+      <summary>What is the order book?</summary>
+      <p>Open orders nobody has taken yet. Market-price ones are calculated as <code>Yadio ÷ (1 − premium)</code>, which is how Mostro calculates the sats; those marked with 🔒 have a fixed price. If someone buys above what someone else sells, the book shows as «crossed».</p>
+    </details>
+    <details>
+      <summary>Why don't some payment methods count by default?</summary>
+      <p>Each currency's methods are the ones in the Mostro app; anything typed by hand that isn't on that list is grouped as «Other». Whoever publishes this site decides which ones don't count by default; here: <strong class="hidden-pms"></strong>. Usually hidden are the ones that trade at a different rate in that market; Tests are test orders. They can be enabled from the chart's «Payment method» menu.</p>
+    </details>
+    <details>
+      <summary>What is «Yadio reference»?</summary>
+      <p>Yadio's reference rate for the currency, which Mostro uses for market-price orders. It is there to compare with the <span data-name="tasa">Tasa K</span>.</p>
+    </details>
+    <details>
+      <summary>Can I see my own Mostro node?</summary>
+      <p>Yes. Whoever deploys the site configures it in the <code>.env</code> file, and any visitor can change it in the URL:</p>
+      <p><code>?mostro=npub…,npub…&amp;relays=wss://…&amp;fiat=…&amp;lang=en</code></p>
+    </details>
+  </div>
+</dialog>
+
+<script>
+// ---------- Configuración: .env (config.js) con la URL por encima ----------
+
+const MOSTROS = new Set(CONFIG.mostros);
+
+// Métodos que no cuentan por defecto (HIDDEN_PAYMENT_METHODS del .env), comparados sin acentos ni mayúsculas
+const normPm = s => s.normalize('NFD').replace(/[\u0300-\u036f]/g, '').replace(/\p{Extended_Pictographic}|\p{Regional_Indicator}/gu, '').toLowerCase().replace(/\s+/g, ' ').trim();
+const HIDDEN_PM = new Set(CONFIG.metodosOcultos.map(normPm));
+const hiddenByDefault = k => HIDDEN_PM.has(normPm(k));
+// La Tasa K es siempre el precio ponderado de las últimas 24 horas
+const WIN = 24 * 3600;
+
+const state = {
+  orders: new Map(),   // pubkey:d -> versión más reciente de la orden
+  seen: new Set(),     // ids de eventos ya procesados (llegan repetidos de varios relays)
+  nodeNames: new Map(),
+  nodeMeta: new Map(),   // pubkey -> { profile, info, relays } leídos de sus eventos Nostr
+  newest: 0,
+  rejected: 0,
+  btcusd: new Map(),   // hora unix -> BTC/USD
+  btcLoadedFrom: Infinity,
+  btcRetryAt: 0,       // tras un fallo de Coinbase, no reintentar antes de esta hora (ms)
+  btcApprox: false,
+  yadio: null,         // { BTC, USD: { CUP, ... } }
+  fiat: CONFIG.fiat,
+  fiatAuto: !CONFIG.fiat,   // sin FIAT en el .env ni en la URL: la moneda más usada en el nodo
+  unit: 'usd',
+  // 'line' = precio, 'candles' = velas, 'avg' = ponderado; por defecto precio de cada orden,
+  // o la última vista elegida en este navegador
+  mode: 'line',
+  tf: 0,               // periodo de la gráfica en segundos; 0 = un punto por orden
+  pmSel: null,         // Set de métodos activos; null = valores por defecto
+  nodeSel: new Set(CONFIG.mostros),
+  live: 0,
+  sigs: 'cargando',
+};
+
+// Última vista de la gráfica elegida (modo y temporalidad)
+try {
+  const v = JSON.parse(localStorage.getItem('tasak.view'));
+  if (['line', 'candles', 'avg'].includes(v?.mode)) state.mode = v.mode;
+  if ([0, 3600, 14400, 86400, 604800, 2592000, 31536000].includes(v?.tf)) state.tf = v.tf;
+} catch {}
+const saveView = () => { try { localStorage.setItem('tasak.view', JSON.stringify({ mode: state.mode, tf: state.tf })); } catch {} };
+
+const shortKey = k => k.slice(0, 8) + '…';
+const nodeName = k => state.nodeNames.get(k) || shortKey(k);
+
+// ---------- Verificación de firmas ----------
+// Sin verificar, un relay podría inyectar eventos falsos con la pubkey del nodo.
+// nostr-tools viene en vendor/; si aun así no cargara, seguimos sin verificar y lo indicamos.
+const verifyEvent = window.NostrTools?.verifyEvent ?? null;
+state.sigs = verifyEvent ? 'ok' : 'off';
+
+// ---------- Métodos de pago ----------
+// Los makers escriben el método a mano. Lo comparamos con la lista de métodos de esa moneda de la
+// app de Mostro (vendor/mostro-payment-methods.js); lo que no coincide (teléfonos, notas, bancos
+// raros…) va a «Otros» para no llenar el filtro de texto libre.
+const PM_LISTS = window.MOSTRO_PAYMENT_METHODS || {};
+const pmListFor = fiat => PM_LISTS[fiat] || PM_LISTS.default || ['Bank Transfer', 'Cash in person'];
+function pmKey(raw, fiat) {
+  const s = normPm(raw);
+  if (/prueba|\btest\b|no tomar/.test(s)) return 'Pruebas';
+  const list = pmListFor(fiat).map(m => ({ m, n: normPm(m) }));
+  // 1) igual («Cash» → Cash, no Cash App); 2) el texto contiene el método, el más largo
+  // («360 CUP de saldo móvil 📲» → Saldo móvil); 3) el texto es parte de un único método («Clásica»)
+  const exact = list.find(x => x.n === s);
+  if (exact) return exact.m;
+  const inside = list.filter(x => s.includes(x.n)).sort((a, b) => b.n.length - a.n.length)[0];
+  if (inside) return inside.m;
+  const partial = s.length >= 4 ? list.filter(x => x.n.includes(s)) : [];
+  return partial.length === 1 ? partial[0].m : 'Otros';
+}
+
+function orderMatchesPm(o) {
+  if (o.pmKeys.includes('Pruebas')) return state.pmSel.has('Pruebas');
+  return o.pmKeys.some(k => state.pmSel.has(k));
+}
+
+// ---------- Nostr ----------
+function parseOrder(ev) {
+  const t = Object.create(null);
+  for (const tag of ev.tags) if (!(tag[0] in t)) t[tag[0]] = tag.slice(1);
+  if (!t.d || !t.s || !t.f) return null;
+  const pm = (t.pm || []).filter(Boolean);
+  const pmKeys = [...new Set(pm.map(raw => pmKey(raw, t.f[0].toUpperCase())))];
+  if (t.y?.[1]) state.nodeNames.set(ev.pubkey, t.y[1]);
+  return {
+    key: ev.pubkey + ':' + t.d[0],
+    node: ev.pubkey,
+    ts: ev.created_at,
+    status: t.s[0].toLowerCase(),
+    side: (t.k?.[0] || '').toLowerCase(),
+    fiat: t.f[0].toUpperCase(),
+    fa: (t.fa || []).map(Number),
+    amt: Number(t.amt?.[0] || 0),
+    premium: Number(t.premium?.[0] || 0),
+    expiresAt: Number(t.expires_at?.[0] || 0),
+    pm,
+    pmKeys: pmKeys.length ? pmKeys : ['Sin método'],
+  };
+}
+
+// Orden de los estados para desempatar eventos con el mismo created_at
+const RANK = { pending: 0, success: 2, canceled: 2, expired: 2 };
+const rank = s => RANK[s] ?? 1;
+// true si la versión `a` de una orden sustituye a `b`: la más reciente; con el mismo created_at,
+// la de estado más avanzado y, si empatan, el id mayor (así todos los visitantes eligen la misma)
+const newerVersion = (a, b) => a.ts !== b.ts ? a.ts > b.ts
+  : rank(a.status) !== rank(b.status) ? rank(a.status) > rank(b.status) : a.ev.id > b.ev.id;
+
+// Devuelve true si el evento cambió el estado
+
+function handleEvent(ev) {
+  if (!ev || state.seen.has(ev.id)) return false;
+  if (!MOSTROS.has(ev.pubkey) || (ev.kind !== 38383 && !META_KINDS.includes(ev.kind))) return false;
+  if (verifyEvent && !verifyEvent(ev)) { state.rejected++; return false; }
+  state.seen.add(ev.id);
+  if (ev.kind !== 38383) {
+    if (!applyMeta(state.nodeMeta, ev)) return false;
+    const name = state.nodeMeta.get(ev.pubkey).profile?.name;
+    if (name) state.nodeNames.set(ev.pubkey, name);
+    return true;
+  }
+  state.newest = Math.max(state.newest, ev.created_at);
+
+  const o = parseOrder(ev);
+  if (!o) return false;
+  o.ev = ev;   // evento firmado original, para mostrarlo y poder verificarlo
+  const prev = state.orders.get(o.key);
+  if (prev && !newerVersion(o, prev)) return false;
+  // La versión pending es la única que dice si la orden era a precio de mercado o fijo;
+  // el relay la reemplaza, así que la conservamos si la llegamos a ver.
+  o.origin = prev?.status === 'pending' ? { fixed: prev.amt > 0, premium: prev.premium } : prev?.origin;
+  state.orders.set(o.key, o);
+  return true;
+}
+
+// Los relays limitan los eventos por consulta: paginamos hacia atrás con `until` hasta
+// que una página llega vacía y entonces abrimos la suscripción en vivo.
+const PAGE = 300;
+
+function connect(url, attempt = 0) {
+  let ws;
+  try { ws = new WebSocket(url); } catch { return; }
+  const base = { kinds: [38383], authors: CONFIG.mostros };
+  // Al reconectar solo pedimos lo nuevo
+  const since = state.newest ? { since: state.newest - 3600 } : {};
+  let page = 0, count = 0, oldest = Infinity, prevOldest = Infinity;
+  let isLive = false, opened = false, startedAt = 0, changed = false;
+  const req = (id, extra) => ws.send(JSON.stringify(['REQ', id, { ...base, ...since, ...extra }]));
+
+  ws.onopen = () => {
+    opened = true;
+    startedAt = Math.floor(Date.now() / 1000);
+    req('hist0', { limit: PAGE });
+    // Perfil, información y relays del nodo
+    ws.send(JSON.stringify(['REQ', 'meta', { kinds: META_KINDS, authors: CONFIG.mostros }]));
+  };
+  ws.onmessage = onMessage;
+
+  function onMessage(msg) {
+    let d;
+    try { d = JSON.parse(msg.data); } catch { return; }
+    if (d[0] === 'EVENT') {
+      if (d[1].startsWith('hist')) { count++; oldest = Math.min(oldest, d[2]?.created_at ?? Infinity); }
+      if (handleEvent(d[2])) {
+        if (isLive) { if (d[2].tags.some(t => t[0] === 's' && t[1] === 'success')) markFresh(d[2]); scheduleRender(); }
+        else changed = true;
+      }
+    } else if (d[0] === 'EOSE' && d[1] === 'meta') {
+      ws.send(JSON.stringify(['CLOSE', 'meta']));
+      if (isLive && changed) scheduleRender();
+    } else if (d[0] === 'EOSE' && d[1] === 'hist' + page) {
+      ws.send(JSON.stringify(['CLOSE', d[1]]));
+      if (count > 0 && oldest < prevOldest) {
+        prevOldest = oldest;
+        page++; count = 0;
+        req('hist' + page, { limit: PAGE, until: oldest - 1 });
+        return;
+      }
+      // Desde que empezamos a pedir historia, para no perder nada si la paginación fue lenta
+      ws.send(JSON.stringify(['REQ', 'live', { ...base, since: startedAt - 60 }, { kinds: META_KINDS, authors: CONFIG.mostros, since: startedAt }]));
+      isLive = true;
+      state.live++;
+      setStatus();
+      if (changed) scheduleRender();
+    }
+  }
+
+  ws.onclose = () => {
+    if (isLive) state.live--;
+    setStatus();
+    const next = opened ? 0 : attempt + 1;
+    setTimeout(() => connect(url, next), Math.min(60000, 5000 * 2 ** next));
+  };
+  ws.onerror = () => ws.close();
+}
+
+function markFresh(ev) {
+  const d = ev.tags.find(t => t[0] === 'd')?.[1];
+  const o = state.orders.get(ev.pubkey + ':' + d);
+  if (o) o.fresh = true;
+}
+
+function setStatus(error) {
+  const box = document.getElementById('statusBox');
+  box.classList.toggle('error', !!error);
+  document.getElementById('dot').classList.toggle('live', !error && state.live > 0);
+  if (error) { document.getElementById('status').textContent = error; return; }
+  // Visible: lo esencial; al pasar el ratón: el detalle completo
+  const live = state.live > 0;
+  const short = [live ? `${state.live}/${CONFIG.relays.length}` : t('Conectando…')];
+  const full = [live ? t('En vivo: {live} de {total} relays conectados', { live: state.live, total: CONFIG.relays.length }) : t('Conectando con los relays…')];
+  if (state.sigs === 'ok') { short.push('<span class="ok">✓</span>'); full.push(t('Firmas de los eventos verificadas en este navegador')); }
+  if (state.sigs === 'off') { short.push(`<span class="warn">${t('⚠ sin verificar')}</span>`); full.push(t('Firmas sin verificar: no cargó nostr-tools')); }
+  if (state.rejected) { short.push(`<span class="warn">${t('⚠ {n} rechazados', { n: state.rejected })}</span>`); full.push(t('{n} eventos rechazados por firma no válida', { n: state.rejected })); }
+  if (state.btcApprox && state.unit === 'usd') { short.push(`<span class="warn">${t('⚠ USD aprox.')}</span>`); full.push(t('USD aproximado: sin precio histórico de Coinbase, se usa el BTC/USD actual de Yadio')); }
+  document.getElementById('status').innerHTML = short.join(' ');
+  box.title = full.join('\n');
+}
+
+// ---------- Precios externos ----------
+async function loadYadio() {
+  try {
+    state.yadio = await (await fetch('https://api.yadio.io/exrates/USD')).json();
+  } catch (e) { console.warn('Yadio', e); }
+}
+
+// Velas horarias de Coinbase (máx 300 por petición) para pasar cada trade a USD.
+// Si una petición falla, ese tramo no se da por cargado: se reintenta en el siguiente render,
+// como mucho una vez por minuto para no insistir contra un servicio bloqueado
+async function loadBtcHistory(fromTs) {
+  if (fromTs >= state.btcLoadedFrom || Date.now() < state.btcRetryAt) return;
+  const until = Math.min(state.btcLoadedFrom, Math.floor(Date.now() / 1000));
+  const step = 300 * 3600;
+  // De lo más reciente hacia atrás: lo cargado queda siempre contiguo hasta `until`
+  for (let end = until; end > fromTs - 3600; end -= step) {
+    const start = Math.max(end - step, fromTs - 3600);
+    const url = 'https://api.exchange.coinbase.com/products/BTC-USD/candles?granularity=3600' +
+      `&start=${new Date(start * 1000).toISOString()}&end=${new Date(end * 1000).toISOString()}`;
+    try {
+      const res = await fetch(url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      for (const [time, , , , close] of await res.json()) state.btcusd.set(time, close);
+      state.btcLoadedFrom = Math.max(start + 3600, fromTs);
+    } catch (e) {
+      console.warn('Coinbase', e);
+      state.btcRetryAt = Date.now() + 60 * 1000;
+      return;
+    }
+  }
+  state.btcLoadedFrom = fromTs;
+}
+
+const btcSpot = () => state.yadio?.BTC ?? null;
+function btcAt(ts) {
+  const h = Math.floor(ts / 3600) * 3600;
+  const p = state.btcusd.get(h) ?? state.btcusd.get(h - 3600);
+  if (p != null) return p;
+  // Sin la vela histórica usamos el precio actual: el resultado es aproximado
+  if (ts < Date.now() / 1000 - 3 * 3600) state.btcApprox = true;
+  return btcSpot();
+}
+const yadioFiatPerUsd = () => state.yadio?.USD?.[state.fiat] ?? (state.fiat === 'USD' ? 1 : null);
+
+// Nombre de la unidad elegida: CUP/USD, CUP/BTC o CUP/sat
+const unitName = () => `${state.fiat}/${{ usd: 'USD', btc: 'BTC', sat: 'sat' }[state.unit]}`;
+
+// Convierte "moneda por BTC" a la unidad elegida
+function toUnit(fiatPerBtc, ts) {
+  if (state.unit === 'btc') return fiatPerBtc;
+  if (state.unit === 'sat') return fiatPerBtc / 1e8;   // directo del evento, sin precio de BTC
+  const btc = ts ? btcAt(ts) : btcSpot();
+  return btc ? fiatPerBtc / btc : null;
+}
+
+// ---------- Datos derivados ----------
+function filtered(status) {
+  return [...state.orders.values()].filter(o =>
+    o.status === status && o.fiat === state.fiat && state.nodeSel.has(o.node) && orderMatchesPm(o));
+}
+
+function getTrades() {
+  state.btcApprox = false;
+  return filtered('success')
+    .filter(o => o.fa.length === 1 && o.fa[0] > 0 && o.amt > 0)
+    .map(o => ({ ...o, size: o.fa[0], price: toUnit(o.fa[0] / (o.amt / 1e8), o.ts) }))
+    .filter(o => o.price != null)
+    .sort((a, b) => a.ts - b.ts);
+}
+
+function getBook() {
+  const now = Date.now() / 1000;
+  const ref = yadioFiatPerUsd();
+  const out = [];
+  for (const o of filtered('pending')) {
+    if (o.expiresAt && o.expiresAt < now) continue;
+    if (!o.fa.length || !(o.fa.at(-1) > 0)) continue;
+    let fiatPerBtc;
+    if (o.amt > 0) fiatPerBtc = o.fa[0] / (o.amt / 1e8);           // precio fijo
+    else if (ref && btcSpot()) fiatPerBtc = ref * btcSpot() / (1 - o.premium / 100);  // precio de mercado
+    else continue;
+    out.push({ ...o, fixed: o.amt > 0, price: toUnit(fiatPerBtc), size: o.fa.at(-1) });
+  }
+  return {
+    asks: out.filter(o => o.side === 'sell').sort((a, b) => a.price - b.price),
+    bids: out.filter(o => o.side === 'buy').sort((a, b) => b.price - a.price),
+  };
+}
+
+// Precio ponderado por volumen: cada orden pesa según el monto en moneda que movió
+function weightedPrice(trades) {
+  let vol = 0, pv = 0;
+  for (const t of trades) { vol += t.size; pv += t.price * t.size; }
+  return vol ? pv / vol : null;
+}
+
+// Los gráficos trabajan en UTC; desplazamos a la zona horaria configurada
+function tzOffset(ts) {
+  const d = new Date(ts * 1000);
+  const local = new Date(d.toLocaleString('en-US', { timeZone: CONFIG.tz }));
+  const utc = new Date(d.toLocaleString('en-US', { timeZone: 'UTC' }));
+  return (local - utc) / 1000;
+}
+const toChartTime = ts => ts + tzOffset(ts);
+
+const WEEK = 7 * 86400;
+const MONTH = 30 * 86400;    // identificadores: meses y años van por calendario, no por duración
+const YEAR = 365 * 86400;
+const MONDAY = 4 * 86400;   // el 1/1/1970 fue jueves: las semanas empiezan el lunes 5/1/1970
+
+// Inicio del periodo que contiene un tiempo del gráfico (ya en hora local)
+function periodStart(time, tf) {
+  if (tf === MONTH || tf === YEAR) {
+    const d = new Date(time * 1000);
+    return Date.UTC(d.getUTCFullYear(), tf === MONTH ? d.getUTCMonth() : 0, 1) / 1000;
+  }
+  if (tf === WEEK) return Math.floor((time - MONDAY) / WEEK) * WEEK + MONDAY;
+  return Math.floor(time / tf) * tf;
+}
+
+// Inicio del periodo siguiente
+function nextPeriod(start, tf) {
+  if (tf === MONTH || tf === YEAR) {
+    const d = new Date(start * 1000);
+    return Date.UTC(d.getUTCFullYear() + (tf === YEAR), d.getUTCMonth() + (tf === MONTH), 1) / 1000;
+  }
+  return start + tf;
+}
+
+// Agrupa las órdenes por periodo: vela OHLC, volumen y precio ponderado por volumen
+function buildCandles(trades, tf) {
+  const buckets = new Map();
+  for (const t of trades) {
+    const key = periodStart(toChartTime(t.ts), tf);
+    let c = buckets.get(key);
+    if (!c) buckets.set(key, c = { time: key, open: t.price, high: t.price, low: t.price, close: t.price, vol: 0, pv: 0 });
+    c.high = Math.max(c.high, t.price);
+    c.low = Math.min(c.low, t.price);
+    c.close = t.price;
+    c.vol += t.size;
+    c.pv += t.price * t.size;
+  }
+  return [...buckets.values()];
+}
+
+// Periodos sin órdenes entre el primero y el último
+function emptyPeriods(keys, tf) {
+  const out = [];
+  for (let i = 1; i < keys.length; i++) {
+    for (let t = nextPeriod(keys[i - 1], tf); t < keys[i]; t = nextPeriod(t, tf)) out.push(t);
+  }
+  return out;
+}
+
+// ---------- Formato ----------
+const fmtPrice = p => p == null ? '—' : p === 0 ? '0' : p >= 1e6 ? (p / 1e6).toFixed(2) + 'M'
+  : p >= 100 ? p.toLocaleString(LOCALE, { maximumFractionDigits: 2 })
+  : p.toLocaleString(LOCALE, { minimumFractionDigits: p >= 10 ? 2 : 4, maximumFractionDigits: p >= 10 ? 2 : 4 });
+
+// ---------- Gráficos ----------
+const css = getComputedStyle(document.documentElement);
+const C = n => css.getPropertyValue(n).trim();
+
+function makeChart(el) {
+  const chart = LightweightCharts.createChart(el, {
+    autoSize: true,
+    layout: {
+      background: { color: C('--bg') }, textColor: C('--muted'), fontSize: 11,
+      // Paneles redimensionables arrastrando el separador, como en TradingView
+      panes: { enableResize: true, separatorColor: C('--line'), separatorHoverColor: C('--avg-soft') },
+    },
+    grid: { vertLines: { color: C('--grid') }, horzLines: { color: C('--grid') } },
+    rightPriceScale: { borderColor: C('--line'), minimumWidth: 80 },
+    timeScale: { borderColor: C('--line'), timeVisible: true, secondsVisible: false },
+    crosshair: { mode: LightweightCharts.CrosshairMode.Normal },
+    localization: { locale: LOCALE, priceFormatter: fmtPrice },
+  });
+  return { chart, el };
+}
+
+const { LineSeries, CandlestickSeries, HistogramSeries } = LightweightCharts;
+
+const chartC = makeChart(document.getElementById('chart'));
+chartC.line = chartC.chart.addSeries(LineSeries, { color: C('--accent'), lineWidth: 1, pointMarkersVisible: true });
+chartC.candles = chartC.chart.addSeries(CandlestickSeries, {
+  upColor: C('--up'), downColor: C('--down'), borderVisible: false,
+  wickUpColor: C('--up'), wickDownColor: C('--down'), visible: false,
+});
+// Ponderado: precio ponderado por volumen de las 24h anteriores a cada punto (la Tasa K en ese momento)
+chartC.avg = chartC.chart.addSeries(LineSeries, { color: C('--avg'), lineWidth: 2, visible: false });
+chartC.line.priceScale().applyOptions({ scaleMargins: { top: 0.12, bottom: 0.08 } });
+// Precisión fina para que CUP/sat (≈ 0,9) no se redondee a 2 decimales
+for (const s of [chartC.line, chartC.candles, chartC.avg]) {
+  s.applyOptions({ priceFormat: { type: 'custom', formatter: fmtPrice, minMove: 0.0001 } });
+}
+// Volumen en su propio panel, debajo del precio y con su propio eje
+chartC.vol = chartC.chart.addSeries(HistogramSeries, {
+  priceFormat: { type: 'custom', formatter: fmtInt }, priceLineVisible: false,
+}, 1);
+chartC.vol.priceScale().applyOptions({ scaleMargins: { top: 0.1, bottom: 0 } });
+
+// Tamaño del panel de volumen (fracción de la altura) y si se ve. Se recuerda en este
+// navegador; si el almacenamiento falla, se usan los valores por defecto.
+const volPref = (() => {
+  try { return JSON.parse(localStorage.getItem('tasak.vol')) || {}; } catch { return {}; }
+})();
+let volFrac = Math.min(0.7, Math.max(0.1, Number(volPref.frac) || 0.25));
+let volOn = volPref.on !== false;
+const saveVolPref = () => { try { localStorage.setItem('tasak.vol', JSON.stringify({ frac: volFrac, on: volOn })); } catch {} };
+
+const EYE = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7 11 7 11 7-4 7-11 7S1 12 1 12z"/><circle cx="12" cy="12" r="3"/></svg>';
+const EYE_OFF = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M1 12s4-7 11-7c2.2 0 4.1.7 5.7 1.7M23 12s-4 7-11 7c-2.2 0-4.1-.7-5.7-1.7"/><circle cx="12" cy="12" r="3"/><path d="M3 3l18 18"/></svg>';
+const volTag = document.getElementById('volTag');
+const volEye = document.getElementById('volEye');
+
+// Oculto, el volumen pasa al panel del precio sin verse, y su panel desaparece
+function applyVolLayout() {
+  chartC.vol.applyOptions({ visible: volOn });
+  chartC.vol.moveToPane(volOn ? 1 : 0);
+  const panes = chartC.chart.panes();
+  if (volOn && panes[1]) {
+    panes[0].setStretchFactor(1 - volFrac);
+    panes[1].setStretchFactor(volFrac);
+  }
+  volEye.innerHTML = volOn ? EYE : EYE_OFF;
+  volEye.title = volEye.ariaLabel = t(volOn ? 'Ocultar volumen' : 'Mostrar volumen');
+  requestAnimationFrame(positionVolTag);
+}
+
+// La etiqueta va en la esquina del panel de volumen, o abajo del precio si está oculto
+function positionVolTag() {
+  const panes = chartC.chart.panes();
+  const h0 = panes[0].getHeight();
+  volTag.style.top = (volOn && panes[1] ? h0 + 8 : h0 - 30) + 'px';
+}
+
+// Tras arrastrar el separador nativo, guardamos el nuevo tamaño
+chartC.el.addEventListener('pointerup', e => requestAnimationFrame(() => {
+  const panes = chartC.chart.panes();
+  if (!volOn || !panes[1] || volTag.contains(e.target)) return;
+  const h0 = panes[0].getHeight(), h1 = panes[1].getHeight();
+  if (!h0 || !h1) return;
+  const frac = h1 / (h0 + h1);
+  if (Math.abs(frac - volFrac) > 0.005) { volFrac = frac; saveVolPref(); }
+  positionVolTag();
+}));
+chartC.el.addEventListener('pointermove', e => { if (e.buttons) positionVolTag(); });
+new ResizeObserver(() => requestAnimationFrame(positionVolTag)).observe(chartC.el);
+
+volEye.onclick = () => { volOn = !volOn; applyVolLayout(); saveVolPref(); };
+
+// Al cambiar de tema, la gráfica toma los colores nuevos (no usa CSS: hay que dárselos)
+document.addEventListener('themechange', () => {
+  chartC.chart.applyOptions({
+    layout: {
+      background: { color: C('--bg') }, textColor: C('--muted'),
+      panes: { separatorColor: C('--line'), separatorHoverColor: C('--avg-soft') },
+    },
+    grid: { vertLines: { color: C('--grid') }, horzLines: { color: C('--grid') } },
+    rightPriceScale: { borderColor: C('--line') },
+    timeScale: { borderColor: C('--line') },
+  });
+  chartC.line.applyOptions({ color: C('--accent') });
+  chartC.candles.applyOptions({ upColor: C('--up'), downColor: C('--down'), wickUpColor: C('--up'), wickDownColor: C('--down') });
+  chartC.avg.applyOptions({ color: C('--avg') });
+  scheduleRender();   // el volumen se colorea al dibujar
+});
+applyVolLayout();
+
+function setEmpty(c, show, text) {
+  const e = c.el.querySelector('.empty');
+  e.style.display = show ? 'flex' : 'none';
+  if (text) e.textContent = text;
+}
+
+// Lo que se ve en la gráfica, para la leyenda: tiempo -> datos del punto
+let view = { info: new Map(), last: null, tf: 0 };
+
+// Fecha de un tiempo del gráfico (ya en hora local, por eso se formatea como UTC)
+function fmtWhen(time, tf) {
+  const d = new Date(time * 1000);
+  const opts = { timeZone: 'UTC', day: '2-digit', month: '2-digit' };
+  if (tf === YEAR) return String(d.getUTCFullYear());
+  if (tf === MONTH) return d.toLocaleDateString(LOCALE, { timeZone: 'UTC', month: 'long', year: 'numeric' });
+  if (tf === WEEK) return t('semana del {d}', { d: d.toLocaleDateString(LOCALE, opts) });
+  if (tf === 86400) return d.toLocaleDateString(LOCALE, { ...opts, weekday: 'short' });
+  return d.toLocaleString(LOCALE, { ...opts, hour: '2-digit', minute: '2-digit', hourCycle: 'h23' });
+}
+// Porcentaje en el formato del idioma: +6,00 % (es), +6.00% (en)
+const fmtPct = (c, digits = 2) =>
+  `${c >= 0 ? '+' : '−'}${Math.abs(c).toLocaleString(LOCALE, { minimumFractionDigits: digits, maximumFractionDigits: digits })}${LANG === 'en' ? '' : ' '}%`;
+const fmtChg = c => c == null ? '' : `<span class="${c >= 0 ? 'up' : 'down'}">${fmtPct(c)}</span>`;
+const kv = (k, v, cls = '') => `<span><span class="k">${k}</span><span class="${cls}">${v}</span></span>`;
+
+// Evento Nostr de una orden, en la leyenda
+const evRow = o => o.ev ? `<div class="row">${kv(t('Evento'), esc(o.ev.id.slice(0, 8) + '…' + o.ev.id.slice(-8)))}<span class="muted">${t('clic para ver el evento firmado')}</span></div>` : '';
+
+function renderLegend(time) {
+  const el = document.getElementById('legend');
+  const tm = time ?? view.last;
+  const p = view.info.get(tm);
+  if (tm == null) { el.innerHTML = ''; return; }
+  const when = `<span class="when">${fmtWhen(tm, view.tf)}</span>`;
+  if (!p) { el.innerHTML = `<div class="row">${when}<span class="muted">${t('sin órdenes')}</span></div>`; return; }
+  const cls = p.up ? 'up' : 'down';
+  const n = nOrders(p.n);
+  if (state.mode === 'avg') {
+    el.innerHTML = p.avg == null
+      ? `<div class="row">${when}<span class="muted">${t('sin órdenes en las 24h anteriores')}</span></div>`
+      : `<div class="row">${when}${kv(t('Ponderado'), fmtPrice(p.avg), cls)}${fmtChg(p.chg)}</div>
+      <div class="row"><span class="muted">${t(p.avgN === 1 ? '{n} orden · {vol} en las 24h anteriores' : '{n} órdenes · {vol} en las 24h anteriores', { n: p.avgN, vol: `${fmtInt(p.avgVol)} ${state.fiat}` })}</span></div>
+      ${p.order ? evRow(p.order) : ''}`;
+  } else if (p.order) {
+    const o = p.order;
+    el.innerHTML = `
+      <div class="row">${when}${kv(t('Precio'), fmtPrice(o.price), cls)}${fmtChg(p.chg)}<span class="muted">${t(o.side === 'buy' ? 'compra de BTC' : 'venta de BTC')}</span></div>
+      <div class="row">${kv('Vol', fmtInt(o.size) + ' ' + state.fiat)}${kv('Sats', fmtInt(o.amt))}<span class="muted">${esc(o.pm.join(', '))}</span></div>
+      ${evRow(o)}`;
+  } else if (state.mode === 'candles') {
+    el.innerHTML = `
+      <div class="row">${when}${kv(t('A'), fmtPrice(p.open), cls)}${kv(t('Máx'), fmtPrice(p.high), cls)}${kv(t('Mín'), fmtPrice(p.low), cls)}${kv(t('C'), fmtPrice(p.close), cls)}${fmtChg(p.chg)}</div>
+      <div class="row">${kv('Vol', fmtInt(p.vol) + ' ' + state.fiat)}<span class="muted">${n}</span></div>`;
+  } else {
+    el.innerHTML = `
+      <div class="row">${when}${kv(t('Precio'), fmtPrice(p.value), cls)}${fmtChg(p.chg)}</div>
+      <div class="row">${kv('Vol', fmtInt(p.vol) + ' ' + state.fiat)}<span class="muted">${n}</span></div>`;
+  }
+}
+
+const TF_SHORT = { 0: 'Orden', 3600: '1h', 14400: '4h', 86400: '1D', 604800: '1W', 2592000: '1M', 31536000: '1Y' };
+
+function renderChart(trades) {
+  setEmpty(chartC, !trades.length, state.live ? t('No hay órdenes completadas con estos filtros') : null);
+  const mode = state.mode;
+  if (mode === 'candles' && !state.tf) state.tf = 86400;   // las velas necesitan un periodo
+  chartC.line.applyOptions({ visible: mode === 'line' });
+  chartC.candles.applyOptions({ visible: mode === 'candles' });
+  chartC.avg.applyOptions({ visible: mode === 'avg' });
+  document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
+  document.querySelectorAll('[data-tf]').forEach(b => {
+    b.classList.toggle('on', Number(b.dataset.tf) === state.tf);
+    b.hidden = mode === 'candles' && b.dataset.tf === '0';
+  });
+  document.getElementById('tfOrders').hidden = mode === 'candles';
+  document.getElementById('tfSummary').textContent = `${t(TF_SHORT[state.tf])} ▾`;
+
+  // Puntos de la gráfica: uno por periodo, o uno por orden
+  let points;
+  if (state.tf) {
+    points = buildCandles(trades, state.tf).map(c => ({ ...c, value: c.pv / c.vol, n: 0 }));
+    const byTime = new Map(points.map(p => [p.time, p]));
+    for (const t of trades) byTime.get(periodStart(toChartTime(t.ts), state.tf)).n++;
+    // En la media también cuentan los periodos sin órdenes: la media de sus 24h anteriores puede existir
+    if (mode === 'avg') {
+      for (const time of emptyPeriods(points.map(p => p.time), state.tf)) points.push({ time, vol: 0, n: 0, empty: true });
+      points.sort((a, b) => a.time - b.time);
+    }
+  } else {
+    // El gráfico exige tiempos únicos y crecientes
+    let last = 0;
+    points = trades.map(t => {
+      const time = Math.max(toChartTime(t.ts), last + 1);
+      last = time;
+      return { time, value: t.price, vol: t.size, n: 1, order: t };
+    });
+  }
+
+  // Ponderado de las 24h anteriores a cada punto: tras cada orden, o al cierre de cada periodo
+  const nowChart = toChartTime(Date.now() / 1000);
+  const tradeTimes = trades.map(t => toChartTime(t.ts));
+  let i = 0, j = 0, vol = 0, pv = 0;
+  for (const p of points) {
+    const end = state.tf ? Math.min(nextPeriod(p.time, state.tf), nowChart) : p.time;
+    for (; i < trades.length && tradeTimes[i] <= end; i++) { vol += trades[i].size; pv += trades[i].price * trades[i].size; }
+    for (; j < i && tradeTimes[j] <= end - WIN; j++) { vol -= trades[j].size; pv -= trades[j].price * trades[j].size; }
+    if (j < i) { p.avg = pv / vol; p.avgN = i - j; p.avgVol = vol; }
+  }
+
+  // Cambio respecto al punto anterior: colorea el volumen y la leyenda
+  const valueOf = p => mode === 'candles' ? p.close : mode === 'avg' ? p.avg : p.value;
+  let prevVal = null;
+  for (const p of points) {
+    const v = valueOf(p);
+    p.chg = v != null && prevVal != null ? (v / prevVal - 1) * 100 : null;
+    // Color: en velas, el de la propia vela; en los demás modos, si subió respecto al punto anterior
+    p.up = mode === 'candles' ? p.close >= p.open : p.chg == null || p.chg >= 0;
+    if (v != null) prevVal = v;
+  }
+
+  chartC.line.setData(mode === 'line' ? points.map(p => ({ time: p.time, value: p.value })) : []);
+  chartC.candles.setData(mode === 'candles' ? points.map(({ time, open, high, low, close }) => ({ time, open, high, low, close })) : []);
+  // Sin media en las 24h anteriores la línea se corta
+  chartC.avg.setData(mode === 'avg' ? points.map(p => p.avg == null ? { time: p.time } : { time: p.time, value: p.avg }) : []);
+  chartC.vol.setData(points.map(p => p.empty ? { time: p.time } :
+    { time: p.time, value: p.vol, color: C(p.up ? '--up-vol' : '--down-vol') }));
+
+  view = { info: new Map(points.map(p => [p.time, p])), last: points.at(-1)?.time ?? null, tf: state.tf };
+  renderLegend();
+  // Se ajusta a todos los datos salvo que el visitante haya movido o ampliado la gráfica en esta
+  // vista: si no, cada render (una orden nueva, el refresco de cada minuto) le perdería el zoom
+  const fitKey = [state.fiat, state.unit, mode, state.tf, [...state.nodeSel], [...(state.pmSel || [])].sort()].join('|');
+  if (fitKey !== chartFit.key) chartFit = { key: fitKey, moved: false };
+  if (!chartFit.moved) chartC.chart.timeScale().fitContent();
+  positionVolTag();
+}
+
+// La leyenda muestra el punto bajo el cursor; al salir, vuelve al último
+chartC.chart.subscribeCrosshairMove(p => renderLegend(p.time));
+chartC.chart.subscribeClick(p => { const o = view.info.get(p.time)?.order; if (o) openEvent(o); });
+chartC.el.addEventListener('mouseleave', () => renderLegend());
+// Zoom o desplazamiento hecho por el visitante (rueda, arrastre, pellizco)
+let chartFit = { key: null, moved: false };
+const userMoved = () => { chartFit.moved = true; };
+chartC.el.addEventListener('wheel', userMoved, { passive: true });
+// Arrastrar el separador de paneles (cursor row-resize) o la etiqueta «Vol.» no es mover la gráfica
+let draggingOther = false;
+// (en fase de captura: la librería de gráficas detiene la propagación de sus eventos)
+chartC.el.addEventListener('pointerdown', e => {
+  draggingOther = getComputedStyle(e.target).cursor === 'row-resize' || volTag.contains(e.target);
+}, true);
+chartC.el.addEventListener('pointermove', e => { if (e.buttons && !draggingOther) userMoved(); }, true);
+chartC.el.addEventListener('touchmove', userMoved, { passive: true });
+// Doble clic: volver a ver todos los datos
+chartC.el.addEventListener('dblclick', () => { chartFit.moved = false; chartC.chart.timeScale().fitContent(); });
+
+// ---------- Paneles ----------
+function renderStats(trades) {
+  const now = Date.now() / 1000;
+  const inWin = trades.filter(t => t.ts > now - WIN);
+  const prevWin = trades.filter(t => t.ts > now - 2 * WIN && t.ts <= now - WIN);
+  const tasa = weightedPrice(inWin);
+  const prev = weightedPrice(prevWin);
+  const vol = inWin.reduce((a, t) => a + t.size, 0);
+
+  const unit = `<span class="unit">${esc(unitName())}</span>`;
+  const sTasa = document.getElementById('sTasa');
+  sTasa.innerHTML = tasa == null ? '—' : fmtPrice(tasa) + unit;
+  // Parpadeo solo si la tasa cambió con la misma vista (moneda, unidad, nodos y métodos): así
+  // cambiar un filtro no parece un movimiento del mercado
+  const viewKey = [state.fiat, state.unit, [...state.nodeSel], [...(state.pmSel || [])].sort()].join('|');
+  const prevTasa = state.tick?.key === viewKey ? state.tick.value : null;
+  if (tasa != null && prevTasa != null && Math.abs(tasa / prevTasa - 1) > 1e-9) {
+    sTasa.classList.remove('tick-up', 'tick-down');
+    void sTasa.offsetWidth;   // reinicia la animación si ya estaba en curso
+    sTasa.classList.add(tasa > prevTasa ? 'tick-up' : 'tick-down');
+  }
+  state.tick = { key: viewKey, value: tasa };
+  document.getElementById('sTasaSub').textContent = inWin.length
+    ? `${nOrders(inWin.length)} · ${fmtInt(vol)} ${state.fiat}`
+    : t('sin órdenes en las últimas 24h');
+  const lastT = trades.at(-1);
+  document.getElementById('sLast').innerHTML = lastT ? fmtPrice(lastT.price) + unit : '—';
+  document.getElementById('sLastSub').textContent = lastT
+    ? `${fmtTime(lastT.ts)} · ${t(lastT.side === 'buy' ? 'compra de BTC' : 'venta de BTC')}` : '\u00a0';
+
+  // Volumen de lo que muestra la tabla: todo en modo Orden, o el rango de la temporalidad
+  const shown = state.tf ? trades.filter(t => t.ts > now - state.tf) : trades;
+  const shownVol = shown.reduce((a, t) => a + t.size, 0);
+  document.getElementById('lblVol').textContent = state.tf ? t('Volumen · {range}', { range: rangeTitle(state.tf) }) : t('Volumen total');
+  document.getElementById('sVol').textContent = `${fmtInt(shownVol)} ${state.fiat}`;
+  const first = shown[0] && new Date(shown[0].ts * 1000).toLocaleDateString(LOCALE, { timeZone: CONFIG.tz, day: 'numeric', month: 'numeric' });
+  document.getElementById('sVolSub').textContent =
+    nOrders(shown.length) + (!state.tf && first ? ' · ' + t('desde {d}', { d: first }) : '');
+
+  const chg = document.getElementById('sChg');
+  if (tasa != null && prev != null) {
+    const pct = (tasa / prev - 1) * 100;
+    chg.textContent = `${pct >= 0 ? '▲' : '▼'} ${fmtPct(Math.abs(pct)).slice(1)}`;
+    chg.className = 'chg num ' + (pct >= 0 ? 'up' : 'down');
+    chg.hidden = false;
+  } else { chg.hidden = true; }
+
+  const ref = yadioFiatPerUsd();
+  const refVal = ref == null ? null : state.unit === 'usd' ? ref : ref * (btcSpot() || NaN) / (state.unit === 'sat' ? 1e8 : 1);
+  document.getElementById('sYadio').innerHTML = refVal == null || isNaN(refVal) ? '—' : fmtPrice(refVal) + unit;
+  // Cuánto se separa la Tasa K de la referencia
+  const diff = tasa != null && refVal ? (tasa / refVal - 1) * 100 : null;
+  document.getElementById('sYadioSub').innerHTML = diff == null ? '&nbsp;'
+    : `${esc(CONFIG.nombreTasa)} <span class="${diff >= 0 ? 'up' : 'down'}">${fmtPct(diff, 1)}</span> ${t(diff >= 0 ? 'sobre Yadio' : 'bajo Yadio')}`;
+  return tasa;
+}
+
+function pmCell(o) {
+  const s = o.pm.join(', ');
+  return `<span class="pm" title="${esc(s)}">${esc(s)}</span>`;
+}
+
+function tradeTitle(t) {
+  const parts = [window.t(t.side === 'buy' ? 'Orden de compra de BTC' : 'Orden de venta de BTC')];
+  parts.push(t.origin ? (t.origin.fixed ? window.t('precio fijo') : window.t('precio de mercado, prima {p}%', { p: t.origin.premium })) : window.t('prima {p}%', { p: t.premium }));
+  if (CONFIG.mostros.length > 1) parts.push(nodeName(t.node));
+  return parts.join(' · ');
+}
+
+// Rango de la tabla según la temporalidad (hasta ahora); con «Orden», todas
+const RANGE_NAMES = {
+  3600: 'la última hora', 14400: 'las últimas 4 horas', 86400: 'las últimas 24 horas',
+  [WEEK]: 'los últimos 7 días', [MONTH]: 'los últimos 30 días', [YEAR]: 'el último año',
+};
+const rangeName = tf => t(RANGE_NAMES[tf]);
+const rangeTitle = tf => rangeName(tf).replace(/^\S+ /, '');   // sin el artículo
+
+function renderTrades(trades) {
+  const now = Date.now() / 1000;
+  const shown = state.tf ? trades.filter(t => t.ts > now - state.tf) : trades;
+  const n = nOrders(shown.length);
+  document.getElementById('tradesTitle').textContent =
+    state.tf ? `${t('Órdenes ejecutadas')} · ${rangeTitle(state.tf)}` : t('Órdenes ejecutadas');
+  document.getElementById('tradesHint').textContent =
+    state.tf ? n : `${n} · ${t('atenuadas: más de 24h')}`;
+  document.getElementById('tradesHead').innerHTML =
+    `<tr><th>${t('Hora')}</th><th>${t('Precio')}</th><th>${esc(state.fiat)}</th><th class="hide-sm">Sats</th><th>${t('Método')}</th></tr>`;
+  const from = now - WIN;
+  document.getElementById('trades').innerHTML = shown.slice().reverse().map(t => `
+    <tr class="${t.fresh ? 'new' : ''} ${state.tf || t.ts > from ? '' : 'out'}" data-key="${esc(t.key)}" title="${window.t('Ver el evento Nostr de esta orden')}">
+      <td class="num">${fmtTime(t.ts)}</td>
+      <td class="num ${t.side === 'buy' ? 'up' : 'down'}" title="${esc(tradeTitle(t))}">${fmtPrice(t.price)}</td>
+      <td class="num">${fmtInt(t.size)}</td>
+      <td class="num hide-sm">${fmtInt(t.amt)}</td>
+      <td>${pmCell(t)}</td>
+    </tr>`).join('') || `<tr><td colspan="5" class="muted" style="text-align:center;padding:10px">${
+      state.tf ? t('Sin órdenes completadas en {range}', { range: rangeName(state.tf) }) : t('Sin órdenes completadas')}</td></tr>`;
+  for (const o of state.orders.values()) o.fresh = false;
+}
+
+function renderBook(tasa) {
+  const { asks, bids } = getBook();
+  const max = Math.max(1, ...asks.map(o => o.size), ...bids.map(o => o.size));
+  const row = (o, cls) => `
+    <tr class="${cls}" style="--d:${(o.size / max * 100).toFixed(1)}%" data-key="${esc(o.key)}" title="${t('Ver el evento Nostr de esta orden abierta')}">
+      <td class="num" title="${t(o.fixed ? 'Precio fijo' : 'Precio de mercado + prima')}">${fmtPrice(o.price)}${o.fixed ? ' 🔒' : ''}</td>
+      <td class="num">${o.fa.length > 1 ? fmtInt(o.fa[0]) + '–' + fmtInt(o.fa[1]) : fmtInt(o.fa[0])}</td>
+      <td class="num muted">${o.fixed ? '—' : (o.premium > 0 ? '+' : '') + o.premium + '%'}</td>
+      <td>${pmCell(o)}</td>
+    </tr>`;
+  const none = txt => `<tr class="none"><td colspan="4">${txt}</td></tr>`;
+
+  let mid = '';
+  if (asks.length && bids.length) {
+    const spread = asks[0].price - bids[0].price;
+    mid = spread < 0
+      ? `${t('Libro cruzado')} <span class="muted">${t('(hay compradores por encima de vendedores)')}</span>`
+      : `Spread <strong class="num">${fmtPrice(spread)}</strong> <span class="muted num">(${(spread / asks[0].price * 100).toFixed(1)}%)</span>`;
+  }
+  if (tasa != null) mid += `${mid ? ' · ' : ''}${esc(CONFIG.nombreTasa)} <strong class="num">${fmtPrice(tasa)}</strong>`;
+
+  document.getElementById('book').innerHTML =
+    (asks.length ? asks.slice().reverse().map(o => row(o, 'ask')).join('') : none(t('Nadie vendiendo BTC ahora'))) +
+    `<tr class="mid"><td colspan="4">${mid || '&nbsp;'}</td></tr>` +
+    (bids.length ? bids.map(o => row(o, 'bid')).join('') : none(t('Nadie comprando BTC ahora')));
+}
+
+function renderFilters() {
+  // Monedas presentes en los nodos
+  const fiats = [...new Set([...state.orders.values()].map(o => o.fiat))].sort();
+  if (state.fiatAuto && fiats.length) {
+    // La moneda con más órdenes completadas (o, si no hay, con más órdenes)
+    const score = f => [...state.orders.values()].reduce((a, o) => a + (o.fiat === f ? (o.status === 'success' ? 1000 : 1) : 0), 0);
+    const best = fiats.reduce((a, b) => score(b) > score(a) ? b : a);
+    if (best !== state.fiat) { state.fiat = best; state.pmSel = null; state.pmKnown = null; }
+  }
+  if (state.fiat && !fiats.includes(state.fiat)) fiats.unshift(state.fiat);
+  const sel = document.getElementById('fiat');
+  const html = fiats.map(f => `<option${f === state.fiat ? ' selected' : ''}>${esc(f)}</option>`).join('');
+  if (sel.innerHTML !== html) sel.innerHTML = html;
+
+  // Nodos (solo si hay más de uno)
+  document.getElementById('nodesBox').hidden = CONFIG.mostros.length < 2;
+  document.getElementById('nodes').innerHTML = CONFIG.mostros.map(k =>
+    `<button class="chip${state.nodeSel.has(k) ? ' on' : ''}" data-node="${k}" title="${k}">${esc(nodeName(k))}</button>`
+  ).join(' ');
+
+  // Métodos de pago de esa moneda, con cuántas órdenes completadas tiene cada uno
+  // Por método: órdenes completadas y abiertas (pendientes sin expirar, las del order book)
+  const counts = new Map();
+  const now = Date.now() / 1000;
+  for (const o of state.orders.values()) {
+    if (o.fiat !== state.fiat || !state.nodeSel.has(o.node)) continue;
+    const open = o.status === 'pending' && !(o.expiresAt && o.expiresAt < now);
+    for (const k of o.pmKeys) {
+      const c = counts.get(k) || { done: 0, open: 0 };
+      if (o.status === 'success') c.done++;
+      if (open) c.open++;
+      counts.set(k, c);
+    }
+  }
+  const keys = [...counts.keys()].sort((a, b) =>
+    (a === 'Otros') - (b === 'Otros') || counts.get(b).done - counts.get(a).done ||
+    counts.get(b).open - counts.get(a).open || a.localeCompare(b));
+  if (!state.pmSel) state.pmSel = new Set(keys.filter(k => !hiddenByDefault(k)));
+  else for (const k of keys) if (!state.pmKnown?.has(k) && !hiddenByDefault(k)) state.pmSel.add(k);
+  state.pmKnown = new Set(keys);
+
+  const isDefault = keys.every(k => state.pmSel.has(k) === !hiddenByDefault(k));
+  const summary = document.getElementById('pmSummary');
+  summary.classList.toggle('filtered', !isDefault);
+  summary.textContent = isDefault ? `${t('Método de pago')} ▾` : `${t('Método de pago')} (${keys.filter(k => state.pmSel.has(k)).length}/${keys.length}) ▾`;
+
+  document.getElementById('pms').innerHTML = keys.map(k =>
+    `<button class="chip${state.pmSel.has(k) ? ' on' : ''}" data-pm="${esc(k)}" title="${t('{d} completadas · {o} abiertas', { d: counts.get(k).done, o: counts.get(k).open })}">${esc(t(k))}<span class="c">${counts.get(k).done} · ${counts.get(k).open}</span></button>`
+  ).join(' ');
+}
+
+function updatePair() {
+  const nodes = CONFIG.mostros.length === 1 ? nodeName(CONFIG.mostros[0]) : t('{n} nodos Mostro', { n: CONFIG.mostros.length });
+  const pic = CONFIG.mostros.length === 1 && state.nodeMeta.get(CONFIG.mostros[0])?.profile?.picture;
+  const btn = document.getElementById('nodeBtn');
+  const img = btn.querySelector('img');
+  if (pic && /^https:\/\//.test(pic)) {
+    if (!img) btn.insertAdjacentHTML('afterbegin', `<img alt="" src="${esc(pic)}" onerror="this.remove()">`);
+  } else img?.remove();
+  document.getElementById('pair').textContent = nodes;
+  document.querySelectorAll('[data-unit]').forEach(b => b.textContent = `${state.fiat || '…'}/${{ usd: 'USD', btc: 'BTC', sat: 'sat' }[b.dataset.unit]}`);
+  // Textos que nombran la moneda o el nodo (ayuda de /sat y FAQ)
+  const fiat = state.fiat || t('la moneda local');
+  document.querySelector('[data-unit="sat"]').title =
+    t('Cuántos {f} cuesta 1 sat: {f} pagados ÷ sats de cada orden, sin conversión a USD', { f: fiat });
+  for (const el of document.querySelectorAll('.fiat-name')) el.textContent = state.fiat || 'XXX';
+  for (const el of document.querySelectorAll('.node-names')) el.textContent = CONFIG.mostros.map(nodeName).join(', ');
+}
+
+// ---------- Render ----------
+// Los renders van en cola para que no se solapen mientras se cargan las velas de Coinbase
+let renderQueued = false, rendering = Promise.resolve();
+function scheduleRender() {
+  if (renderQueued) return;
+  renderQueued = true;
+  rendering = rendering
+    .then(() => new Promise(r => requestAnimationFrame(r)))
+    .then(async () => {
+      renderQueued = false;
+      renderFilters();
+      updatePair();
+      if (state.unit === 'usd') {
+        const ts = [...state.orders.values()].filter(o => o.status === 'success').map(o => o.ts);
+        if (ts.length) await loadBtcHistory(Math.min(...ts));
+      }
+      const trades = getTrades();
+      renderChart(trades);
+      const tasa = renderStats(trades);
+      renderTrades(trades);
+      renderBook(tasa);
+      setStatus();
+    })
+    .catch(e => console.error(e));
+}
+
+document.getElementById('pms').onclick = e => {
+  const b = e.target.closest('[data-pm]');
+  if (!b) return;
+  const k = b.dataset.pm;
+  state.pmSel.has(k) ? state.pmSel.delete(k) : state.pmSel.add(k);
+  scheduleRender();
+};
+document.getElementById('nodes').onclick = e => {
+  const b = e.target.closest('[data-node]');
+  if (!b) return;
+  const k = b.dataset.node;
+  // Siempre queda al menos un nodo seleccionado
+  if (state.nodeSel.has(k)) { if (state.nodeSel.size > 1) state.nodeSel.delete(k); }
+  else state.nodeSel.add(k);
+  scheduleRender();
+};
+document.getElementById('fiat').onchange = e => {
+  state.fiat = e.target.value;
+  state.fiatAuto = false;
+  state.pmSel = null;
+  state.pmKnown = null;
+  scheduleRender();
+};
+document.querySelectorAll('[data-unit]').forEach(b => b.onclick = () => {
+  document.querySelectorAll('[data-unit]').forEach(x => x.classList.toggle('on', x === b));
+  state.unit = b.dataset.unit;
+  scheduleRender();
+});
+document.querySelectorAll('[data-tf]').forEach(b => b.onclick = () => {
+  state.tf = Number(b.dataset.tf);
+  document.getElementById('tfMenu').open = false;
+  saveView();
+  scheduleRender();
+});
+document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => {
+  state.mode = b.dataset.mode;
+  if (state.mode === 'candles' && !state.tf) state.tf = 86400;
+  saveView();
+  scheduleRender();
+});
+
+// Evento Nostr de una orden
+const evDlg = document.getElementById('evDlg');
+function openEvent(o) {
+  const ev = o.ev;
+  if (!ev) return;
+  const row = (k, v) => `<dt>${k}</dt><dd>${v}</dd>`;
+  const STATUS = { pending: 'abierta, esperando a que alguien la tome', success: 'completada', canceled: 'cancelada', expired: 'caducada' };
+  const statusName = s => STATUS[s] ? t(STATUS[s]) : s;
+  const amount = o.fa.length > 1 ? `${fmtInt(o.fa[0])}–${fmtInt(o.fa[1])} ${esc(o.fiat)}` : `${fmtInt(o.fa[0])} ${esc(o.fiat)}`;
+  // En una orden abierta, amt = 0 significa precio de mercado (Yadio + prima); si trae sats, el precio es fijo
+  const pricing = o.status !== 'pending' ? `${fmtInt(o.amt)} sats`
+    : o.amt > 0 ? t('precio fijo: {n} sats', { n: fmtInt(o.amt) })
+    : t('precio de mercado (Yadio) {p} % de prima', { p: `${o.premium >= 0 ? '+' : ''}${o.premium}` });
+  document.getElementById('evMeta').innerHTML =
+    row(t('Estado'), `${esc(statusName(o.status))} <span class="muted">(${esc(o.status)})</span>`) +
+    row(t('Nodo'), esc(nodeName(ev.pubkey))) +
+    row(t('Fecha'), esc(fmtTime(ev.created_at))) +
+    row(t('Orden'), `${t(o.side === 'buy' ? 'compra de BTC' : 'venta de BTC')} · ${amount} · ${pricing}`) +
+    row(t('Métodos de pago'), esc(o.pm.join(', ') || '—')) +
+    (o.status === 'pending' && o.expiresAt ? row(t('Caduca'), esc(fmtTime(o.expiresAt))) : '') +
+    row(t('Id del evento'), `<span class="num">${esc(ev.id)}</span>`) +
+    row(t('Firma'), state.sigs === 'ok' ? `<span class="up">${t('verificada en este navegador')}</span>` : `<span class="muted">${t('sin verificar (no cargó nostr-tools)')}</span>`);
+  document.getElementById('evJson').textContent = JSON.stringify(ev, null, 2);
+  const link = document.getElementById('evLink');
+  link.hidden = true;
+  evDlg.showModal();
+  const nip19 = window.NostrTools?.nip19;
+  if (nip19) {
+    link.href = 'https://njump.me/' + nip19.neventEncode({ id: ev.id, author: ev.pubkey, kind: ev.kind, relays: CONFIG.relays.slice(0, 2) });
+    link.hidden = false;
+  }
+}
+document.getElementById('evClose').onclick = () => evDlg.close();
+evDlg.addEventListener('click', e => { if (e.target === evDlg) evDlg.close(); });
+document.getElementById('evCopy').onclick = async e => {
+  try {
+    await navigator.clipboard.writeText(document.getElementById('evJson').textContent);
+    e.target.textContent = t('Copiado ✓');
+  } catch { e.target.textContent = t('No se pudo copiar'); }
+  setTimeout(() => { e.target.textContent = t('Copiar JSON'); }, 1500);
+};
+// Clic en una orden ejecutada o del order book: su evento Nostr
+for (const id of ['trades', 'book']) document.getElementById(id).onclick = e => {
+  const tr = e.target.closest('tr[data-key]');
+  const o = tr && state.orders.get(tr.dataset.key);
+  if (o) openEvent(o);
+};
+
+// Separador entre order book y órdenes ejecutadas: fracción de altura del order book,
+// recordada en este navegador
+const rightCol = document.querySelector('.col.right');
+const rightSplit = document.getElementById('rightSplit');
+let bookFrac = (() => {
+  try { return Number(localStorage.getItem('tasak.book')) || 0.5; } catch { return 0.5; }
+})();
+function applyBookFrac() {
+  bookFrac = Math.min(0.85, Math.max(0.15, bookFrac));
+  rightCol.style.setProperty('--book', bookFrac + 'fr');
+  rightCol.style.setProperty('--trades', 1 - bookFrac + 'fr');
+}
+const saveBookFrac = () => { try { localStorage.setItem('tasak.book', bookFrac); } catch {} };
+rightSplit.onpointerdown = e => {
+  e.preventDefault();
+  rightSplit.setPointerCapture(e.pointerId);
+  rightSplit.classList.add('drag');
+  const r = rightCol.getBoundingClientRect();
+  rightSplit.onpointermove = ev => { bookFrac = (ev.clientY - r.top) / r.height; applyBookFrac(); };
+  rightSplit.onpointerup = rightSplit.onpointercancel = () => {
+    rightSplit.onpointermove = rightSplit.onpointerup = rightSplit.onpointercancel = null;
+    rightSplit.classList.remove('drag');
+    saveBookFrac();
+  };
+};
+// También con el teclado (flechas arriba/abajo)
+rightSplit.onkeydown = e => {
+  if (e.key !== 'ArrowUp' && e.key !== 'ArrowDown') return;
+  e.preventDefault();
+  bookFrac += e.key === 'ArrowUp' ? -0.05 : 0.05;
+  applyBookFrac();
+  saveBookFrac();
+};
+applyBookFrac();
+
+
+// La página del nodo conserva los parámetros de la URL (mismo nodo y relays)
+for (const id of ['nodeBtn', 'nodeBtn2']) document.getElementById(id).href = 'nodo.html' + location.search;
+
+// Preguntas frecuentes
+const faq = document.getElementById('faq');
+for (const el of document.querySelectorAll('.hidden-pms')) el.textContent = CONFIG.metodosOcultos.map(m => t(m)).join(', ') || '—';
+document.getElementById('faqBtn').onclick = () => faq.showModal();
+document.getElementById('faqClose').onclick = () => faq.close();
+faq.addEventListener('click', e => { if (e.target === faq) faq.close(); });   // clic fuera del cuadro
+
+// Cerrar los menús desplegables al pulsar fuera
+document.addEventListener('click', e => {
+  for (const menu of document.querySelectorAll('details.menu')) {
+    if (menu.open && !menu.contains(e.target)) menu.open = false;
+  }
+});
+
+// Pantalla completa del panel de la gráfica (Esc para salir)
+const chartPanel = document.getElementById('chartPanel');
+const fsBtn = document.getElementById('fsBtn');
+const isFull = () => document.fullscreenElement === chartPanel || chartPanel.classList.contains('max');
+function syncFs() {
+  fsBtn.title = t(isFull() ? 'Salir de pantalla completa' : 'Pantalla completa');
+  fsBtn.setAttribute('aria-label', fsBtn.title);
+}
+fsBtn.onclick = () => {
+  if (document.fullscreenElement) document.exitFullscreen();
+  else if (chartPanel.classList.contains('max')) chartPanel.classList.remove('max');
+  else if (chartPanel.requestFullscreen) chartPanel.requestFullscreen().catch(() => { chartPanel.classList.add('max'); syncFs(); });
+  else chartPanel.classList.add('max');
+  syncFs();
+};
+document.addEventListener('fullscreenchange', syncFs);
+document.addEventListener('keydown', e => {
+  if (e.key === 'Escape' && chartPanel.classList.contains('max')) { chartPanel.classList.remove('max'); syncFs(); }
+});
+
+updatePair();
+if (!CONFIG.mostros.length || !CONFIG.relays.length) {
+  const msg = CONFIG.fromEnv
+    ? t('Configuración sin nodos o sin relays válidos')
+    : t('Falta config.js: ejecuta "node build.mjs" o pasa ?mostro=…&relays=… en la URL');
+  setStatus(msg);
+  setEmpty(chartC, true, msg);
+} else {
+  setStatus();
+  loadYadio().then(scheduleRender);
+  CONFIG.relays.forEach(url => connect(url));
+  setInterval(loadYadio, 5 * 60 * 1000);
+  setInterval(scheduleRender, 60 * 1000);   // expira órdenes del book y desplaza las 24h
+}
+</script>
+</body>
+</html>
