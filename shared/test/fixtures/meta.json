@@ -1,0 +1,18 @@
+{
+ "ahora": 1791194400,
+ "zonaNavegador": "America/Havana",
+ "capturado": "2026-10-05T10:16:06.959Z",
+ "eventos": {
+  "archivo": "2026-10-05.jsonl",
+  "total": 136,
+  "ordenes": 133
+ },
+ "btcusd": {
+  "fuente": "Coinbase BTC-USD candles granularity=3600 (close)",
+  "horas": 304
+ },
+ "yadio": {
+  "fuente": "https://api.yadio.io/exrates/USD",
+  "BTC": 85977.7
+ }
+}

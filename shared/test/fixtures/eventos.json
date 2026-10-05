@@ -1,0 +1,9505 @@
+[
+ {
+  "tags": [
+   [
+    "d",
+    "b903ace9-1ce5-4b29-a995-6fd8400cd822"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "19723"
+   ],
+   [
+    "fa",
+    "12250"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790182730"
+   ],
+   [
+    "expiration",
+    "1791405014"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ],
+  "content": "",
+  "sig": "b2e61aae29a0fca6f7e987dcb873bb94dfe63cbc281b509efe9634f872e9faa9e7fb442281eb28f99dc3a6c6c900d1265764d53133110b91f8013ac72eb80c96",
+  "id": "80107c9d60c5c25653dc2fa680cc6745901af771dd56820420a15fabcb6e95b4",
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "created_at": 1790109014,
+  "kind": 38383
+ },
+ {
+  "content": "",
+  "created_at": 1790520015,
+  "id": "cc5b7a716269fa7436c4281fd555c3e3bfe0a3f695a094a06be5edb14c021a30",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "b9a09b728d77dc7e36caa733b1d6936f709241f1a444bbd58a9a1e9b43326ebc15bdd6a588e5784c49a240cafae0185479594bab0d407a96294f362bec2ebf1d",
+  "tags": [
+   [
+    "d",
+    "9b8f89ba-0977-4504-b08d-f323a8ca015b"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "10886"
+   ],
+   [
+    "fa",
+    "10000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "32"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790559316"
+   ],
+   [
+    "expiration",
+    "1791816015"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790524855,
+  "id": "235173dcc61c2053c7b7350d6e16b53016e80d8ea8ae0845ea1161f30bd5bc3b",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "3c5bb4319a75d6230f09abba9ef9c7d6048f5ecd24cb78f9a56b946910ecce8d1f00436edca34faba2bdec6151508a59ae1baaff66742eaf47f638731012444f",
+  "tags": [
+   [
+    "d",
+    "f0e03d3c-8b8a-4613-8c98-5d8a1b4fdcd8"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "800"
+   ],
+   [
+    "pm",
+    "Saldo móvil",
+    "360 CUP de saldo móvil 📲"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790524328"
+   ],
+   [
+    "expiration",
+    "1791820855"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790528475,
+  "id": "57919dff71a44c0f348245335550c4cab630931b5aa9a417e9d9cad03cd7bf20",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "0a3dd79a56f8883f47e1c1fc263d550076b42fecd09762b91af24387e82782a0f697c9b826be4452d37baf074a6a6ec02e6aec9b87dad5d74eaa86078ae74992",
+  "tags": [
+   [
+    "d",
+    "9e65024e-02af-443b-aadc-b4a2e35011a5"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "16930"
+   ],
+   [
+    "fa",
+    "15000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona",
+    "MiTransfer"
+   ],
+   [
+    "premium",
+    "30"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790566687"
+   ],
+   [
+    "expiration",
+    "1791824475"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790531725,
+  "id": "2514a07496c289842fddc25940596474bbec5c7bca252e4d02978dd3821e1380",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "83975bd1c3612d0397dc5abfe964ae881df3d17beb684017118e6e34d94e8f19ad520c55cf6cdba131bb578343c1df21ed66c415f44de23755abaf0de73e1d80",
+  "tags": [
+   [
+    "d",
+    "ca4885f1-5c93-44ca-9a16-7fbbb5f301ce"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "11438"
+   ],
+   [
+    "fa",
+    "11000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "35"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790617370"
+   ],
+   [
+    "expiration",
+    "1791827725"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790535696,
+  "id": "ab89f7b70a7ada61524919e6464032f821080af029dfc2d3cee84605a5fa0bd1",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "3d9633976347e4214e86c47de5050b6e7c446761cfc53d2356661f51a0b080004a88ed71ac40f070dd9095efa19317f54664c80c1ace6e51fb399f75c9d82955",
+  "tags": [
+   [
+    "d",
+    "5cffa665-8183-4f2c-b61e-2d14053320ae"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "21"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790535127"
+   ],
+   [
+    "expiration",
+    "1791831696"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790541976,
+  "id": "db574d538f902b8c78533786986abccd6cfc169d7aa90f438adb8741b8361002",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "52f1b6166c088f45913350b9ebe3e13c00dae492674cbd8967e3574341d6cf4b3fec77dd7f7f8b560d912ccfce552bbb93bd339e062e61e2ea431065c3d21ab0",
+  "tags": [
+   [
+    "d",
+    "40a21fdc-a1e3-4a91-89e0-63c761e1103b"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "38"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790541445"
+   ],
+   [
+    "expiration",
+    "1791837976"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790553116,
+  "id": "7ab632c22c996e062a9af9791d23ff18d8a11fdce7cd0e9a40259a8aabf33270",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "5980f2247b4413c22ed3c2657e1d26e7ace4759ade9def6f1099567cc3e1c1a17aa3952c51e50a1e44a3576f1b9015669f4315a589be221c38bc79d5ac548ea7",
+  "tags": [
+   [
+    "d",
+    "5509fa78-d676-49fc-871c-22bb31310d99"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "1100"
+   ],
+   [
+    "pm",
+    "Saldo móvil",
+    "360"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790552526"
+   ],
+   [
+    "expiration",
+    "1791849116"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790557186,
+  "id": "d99ff9d748c700f08fa5e9afa2a679c0d5139d28702d9cd5d5a767f3e34c1e8a",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "9438b08b83273240117e75c89c117d57397f6fb0c778576850e5ff6406f1125739ffb1624927599c5ba7284ea184a3ec311264975725040922bccaf752f463c3",
+  "tags": [
+   [
+    "d",
+    "3842d4d4-60c9-4ff4-bc1a-8f9367766926"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "1100"
+   ],
+   [
+    "pm",
+    "Saldo móvil",
+    "360 CUP de saldo móvil 📲"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790556616"
+   ],
+   [
+    "expiration",
+    "1791853186"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790557456,
+  "id": "422af7c3084c6bb73d24ff60c0767b63b29998091eb52c91ee5d425d30b4ecae",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "cf4131ec2f520f46cf54740f2ccf31cc6e39ac51874279dcefe89d5ffcda6c2a7bfbc4171607c433d9f686b1c7c6f1ed7262b32d27219a2b6e0a7d519cc78728",
+  "tags": [
+   [
+    "d",
+    "d20227c4-e7d7-4592-a0ea-a241bd9f5ea0"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "10000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "20"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790556858"
+   ],
+   [
+    "expiration",
+    "1791853456"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790559926,
+  "id": "1a3ce7ab72e870d423022fc7b116b16fc29313c684591bbeee989b289f7e2957",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "971a1404224614b28648f1313e2aec8078f3effa4d3c616b330feb5b8b11ff721c28315fcdad9ebf9c9cb352d4a648c9835b4a624abd439185175168c7b57ee3",
+  "tags": [
+   [
+    "d",
+    "52dd9aef-14ca-4938-b3bc-27e5f82c6a21"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona",
+    "MiTransfer"
+   ],
+   [
+    "premium",
+    "30"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790566687"
+   ],
+   [
+    "expiration",
+    "1791855926"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790559936,
+  "id": "ccc62583bdb087b35e2e7c7b287c6173217bb3b40443b31100ae52929eb2e982",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "c94a0b886f6f44a04649011202d01b2b69fc1e4ff63990c88d7f986d8d0644b4c0e750ba117eac549802620f0a000144f8543f59fd29408825ec078fae594e3a",
+  "tags": [
+   [
+    "d",
+    "0f8655b5-11a8-4a97-893c-627035af572d"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "38"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790559349"
+   ],
+   [
+    "expiration",
+    "1791855936"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790563336,
+  "id": "0f74a9d584b13f18b4b0758e6441c233bb4abe6be65e439aaf588188dcf85588",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "a644db907909fd40656cd6d9cca6871d68a11c3d99c1acf71ffd02424190f51e14507bd684660cdac90d2ef414b8cb6ee6400eee4a1ed23c58d70f45f283bef8",
+  "tags": [
+   [
+    "d",
+    "256242cb-bcc4-46d0-ac2d-bfb50924604b"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "9000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "25"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790562757"
+   ],
+   [
+    "expiration",
+    "1791859336"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790570216,
+  "id": "c834420c7713174c1bd7a685e99225172f657a37d0144d9a4322d6a37ae379b1",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "8fff2a43f5a08552449018cfa1a20656b0b462d9cd733025a88a740405d61b7f4eab7607ba06fb5f87c8b27eba4df1e8dca69678d21aa38b42a50080aa06ee76",
+  "tags": [
+   [
+    "d",
+    "987230b3-c999-4b21-9a66-316e71af8bc2"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "800"
+   ],
+   [
+    "pm",
+    "Saldo móvil",
+    "360 de saldo móvil"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790569619"
+   ],
+   [
+    "expiration",
+    "1791866216"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790576406,
+  "id": "c66360b6d2568fa3adb18c173fd027df6955ba3506290f6fa18dceaa002270a2",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "64db79fe01fc796528b64c2d09a8f5d68110fe256be6f6308d5a827927e4b7b436a10ca40178084871613b02ccc3b2513e84f655327b294d2b2ea1a462422056",
+  "tags": [
+   [
+    "d",
+    "a22da0a8-e1d9-46b2-a025-831e32f8313e"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "9000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "25"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790594460"
+   ],
+   [
+    "expiration",
+    "1791872406"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790599137,
+  "id": "e1e8e456803aa2bf0c619b7701836fb73fc3de0bda636739794c7d91baabd575",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "fdbff683de5aa1f8e915b016095d97050d5014b56f0f1cdb88e03f10aef5200de6053f96445b636c0163da24e5de1f62da7a71c1fc49e9080875a1d09ff279da",
+  "tags": [
+   [
+    "d",
+    "d8d8293a-a498-4575-a2b8-21747db539ac"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "25"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790598556"
+   ],
+   [
+    "expiration",
+    "1791895137"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790600857,
+  "id": "a7500273ca662b8e5bcd48c3bb1855a3d6ea1d067a61b2e1c98898ee784892c5",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "33e3ee78165a9b5498a7e1f7002727fd8519d539a2f366cd60871cacf80190f2ddf74ba735d20c1cdcfc43131227d4ca0c983db82c1b33bb180a357fc5cff9cc",
+  "tags": [
+   [
+    "d",
+    "babe03dd-0c95-42f0-8a5c-8c3b702d9fe9"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "850"
+   ],
+   [
+    "pm",
+    "Saldo móvil",
+    "360 CUP de saldo móvil 📲"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790600323"
+   ],
+   [
+    "expiration",
+    "1791896857"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790602217,
+  "id": "87b25e787ff383966f47cd4b061f1e3e265d5a99f9c2e909650ee6e08ae9ee18",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "d9df63346fa4dc4bfa2a1f0cf6d014ff5077926801a5c508a25e9e06bb5b34aad78197096394ba286fb67c086425307760615d1a08b2a90d029d5911a0aa323b",
+  "tags": [
+   [
+    "d",
+    "92abea60-2c84-48e7-b316-c2ec9cc7facc"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "26"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790601615"
+   ],
+   [
+    "expiration",
+    "1791898217"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790617057,
+  "id": "e4137795f54deffe0ae033030e1cc6998301d35693aaddae6b47df0f0dc26688",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "3d1f3200826842159be69c358a9575d718edd9b544f807ae8c4588ad935cd0d333d299075be69d32c09bd71fef6f1cec08d99fb92a2eb6b7e37a6048641c39ed",
+  "tags": [
+   [
+    "d",
+    "aa950312-57f1-457d-8f3c-3ccd22c7541a"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "USD"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Cash",
+    "Arroyo Naranjo La Habana"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790616474"
+   ],
+   [
+    "expiration",
+    "1791913057"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790617937,
+  "id": "6444c4f0ca451a87057671b2d477d5bc34cba052dc7f6f375138b7d656121edb",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "f08cc1bf125ee3ff2e92d28be9f75fbc50d785e7ff64d147b34188c0eeed52a6bbc852a6c7f274c7eba18cdedfe3c26ad74686f5ad3bf81d4082f38b9905c2ed",
+  "tags": [
+   [
+    "d",
+    "7cb47dbf-7083-40bc-ab0a-56647806d976"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "35"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790617370"
+   ],
+   [
+    "expiration",
+    "1791913937"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790642725,
+  "id": "0cf8003ca222ef251b04c283a7f7564fe23543944fa3e1f8de99095d76494071",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "00e04bbd52767e58f244a8a99d60b3f3a9119e63c9d25e720b9706de80f8420426cda1c4e2d9a559d2e03b36d419b285d983e628b0f95a37bc7eca6372eccf70",
+  "tags": [
+   [
+    "d",
+    "d7ceab7e-b114-4ef6-8bc2-e08700d68b7c"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "10604"
+   ],
+   [
+    "fa",
+    "10000"
+   ],
+   [
+    "pm",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "34"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790727070"
+   ],
+   [
+    "expiration",
+    "1791938725"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790648971,
+  "id": "1ad4766bc23fed78edaf6a57a24bfb84984b865b6919f579a2b7c0c8115c91ea",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "8ae4200d06e9329be7bcb8d6f96ad2f33319b792e1c979f97bcb520393a4251672eada07df71c79259d55abcdf23c3ec8bf50da5515333fb1813b3766048b9b6",
+  "tags": [
+   [
+    "d",
+    "720e4c77-1e58-485f-bfa9-8bee0389b39c"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "10191"
+   ],
+   [
+    "fa",
+    "9000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "30"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790662312"
+   ],
+   [
+    "expiration",
+    "1791944971"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790697993,
+  "id": "5447164916623856a3ec4097592096b1076417c1914b05b9367689eedf71d73f",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "83089787a0d683471d92fbfb8f19730129579965f73f2478ad64ffe79d8abf7f0887f3cdc38a50962e532ddd7011c26ffcf574c4c97e3f09a533d6a4c87d67eb",
+  "tags": [
+   [
+    "d",
+    "395a2d14-f5f5-48fd-82c7-198b87cd50f7"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "1100"
+   ],
+   [
+    "pm",
+    "Saldo móvil",
+    "360 CUP de saldo móvil 📲"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790700208"
+   ],
+   [
+    "expiration",
+    "1791993993"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790698298,
+  "id": "af625e7be75cafa5be33ca5f6698fc83285d4c98fbdf4b59ed4c9fd10fccc045",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "29c644a7d02feac36087bce5e70b78fd3688b71180275a36a14e645d4bd17fd4787d6d2fe6a67db96d164ac40791d8bf370cf1e11210b268de0d7b5e34ccff5e",
+  "tags": [
+   [
+    "d",
+    "3f9dae8e-4b80-435a-85ef-7543f9590b84"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "10086"
+   ],
+   [
+    "fa",
+    "9000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Tarjeta Clásica"
+   ],
+   [
+    "premium",
+    "30"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790759385"
+   ],
+   [
+    "expiration",
+    "1791994298"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790700099,
+  "id": "ffe4d7c9861fe1665042cb618c8c774b0d075dc0f1017063f857033aa81bbbe9",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "ca18ca983a93968903d394dbc2403e0eab323982916aba786c333a5329dcb0716323d2db6afa6215060b8600079f7bce3f517232898f606c6542026cec96b136",
+  "tags": [
+   [
+    "d",
+    "99c1706f-2e65-4211-9637-4676877dbdd7"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "20000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "30"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790707726"
+   ],
+   [
+    "expiration",
+    "1791996099"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790708380,
+  "id": "d8c6a9b53a6686e0696ce60760a6f0f581a3036d82c5891c6d34d40909736a87",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "4b6cb9ba761c572413b3db320f9e17a2966bf5114477e9552811706c2f06089707c4b853245f3c924ebba7d7087d1ac96c84fa610401cf64ceaf2eb278fca252",
+  "tags": [
+   [
+    "d",
+    "d8c52732-15f7-4a93-9f74-1e18c04ea5dc"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "8377"
+   ],
+   [
+    "fa",
+    "7500"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "30"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790786521"
+   ],
+   [
+    "expiration",
+    "1792004380"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790709073,
+  "id": "e617e1a5d634f30094ecacea2a1fe98b1869031e28c80378ef0af58340d3b48a",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "56523a97f66a2c8d5a2c909ec8413728e2ee0473e7e6a566ee698645d5a647462976caa9b3871ef22450add22bfe43d1818a1b1302d50c5a2891ff4f9e3f0206",
+  "tags": [
+   [
+    "d",
+    "058990f4-30ee-4918-a201-78f626264436"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "5262"
+   ],
+   [
+    "fa",
+    "5000"
+   ],
+   [
+    "pm",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "34"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790795284"
+   ],
+   [
+    "expiration",
+    "1792005073"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790710360,
+  "id": "53b499aaa10d21d7445a5381f8fb5e2181199c156b6e7e7c0a656fa4b0df3838",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "76afa77610651a569589af2f5b3e3f8f72fc3c51d85248a0602806994bc1883cdd59685e79a89f7013f119588c40336000827b6ea6d4f07e5ca340c5006925cd",
+  "tags": [
+   [
+    "d",
+    "974d23f3-0a9c-4ddc-a3de-c55c20011354"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "6317"
+   ],
+   [
+    "fa",
+    "5500"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona",
+    "También pago por KeyCard BBM"
+   ],
+   [
+    "premium",
+    "28"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790711552"
+   ],
+   [
+    "expiration",
+    "1792006360"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790712460,
+  "id": "502e9818484edf6aee9e87f0e47ef4d29110e8fddc3a5bc6ec3ccb4901fab5e0",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "740a0ce3a930ea51fc6fffb225e68148526bc7631f93f2676fbe92614476150cc55a417a3d0a43309ea1c20de99df3030ed7d0229a83957add54590d06be395e",
+  "tags": [
+   [
+    "d",
+    "a9cd2825-f8aa-4867-a6cf-3b45ab651e7b"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "5904"
+   ],
+   [
+    "fa",
+    "5000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "26"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790787864"
+   ],
+   [
+    "expiration",
+    "1792008460"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790713636,
+  "id": "12bb319780d052948ee7ab1e86118d08eb2db1497e9cc5f892c2704c406d831f",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "5164fd2aaccb212250306db549b28154bd03063c9741fc65e1c0f5837e72af65a62d4d991d1af17619957b0f0b8f2a8c2e36708917c3c3a47f3241ea986cd729",
+  "tags": [
+   [
+    "d",
+    "79510c00-e30f-479b-8e8c-4b7d0a43ba07"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "5905"
+   ],
+   [
+    "fa",
+    "5000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "26"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790799153"
+   ],
+   [
+    "expiration",
+    "1792009636"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790713995,
+  "id": "3ec4cf9bf76a11059fa4e736ddd845bc24d197b2ce4a7456d0fdd66bf146c102",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "331d4a9a7b4206a728cc36d6a98c6c32aebb877daffa1c4cc8e376ef2d4f9ae9bc31d60c9656b05034184a1dbeccd432d8e2c1a798a9ce7f09af2cd227afe1c0",
+  "tags": [
+   [
+    "d",
+    "94fd8a42-e3f6-46ce-a55f-40493590fd7a"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "5900"
+   ],
+   [
+    "fa",
+    "5000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "26"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790799153"
+   ],
+   [
+    "expiration",
+    "1792009995"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790715478,
+  "id": "6bea4d36f8fa6e0245dd26178520397168fd9cf0d45d249f6e687b15785f9f92",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "c05ef22ab85db2169dd88624749dbd796e5ed4d15cb22b3bdcb7874f6b957c7739026e37b317a432fe041c645ebc268f747a0e6292e968d8ffb963e3e9d76597",
+  "tags": [
+   [
+    "d",
+    "e635946d-ab4f-4e75-a016-174ec96fbf0f"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "26"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790799153"
+   ],
+   [
+    "expiration",
+    "1792011478"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790733416,
+  "id": "094a3999746f28c6bd603d212485e68f4f6c11090d9f0b2c9d75790cfd4f6a58",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "4d34a84b87c9fb1e4873587d9929b929f32eabbc9e3543e109161a0c74dd6e6d0a635bde9f512535a255ac91aff29364618c1d2566e82f68a568e1d813ea7c71",
+  "tags": [
+   [
+    "d",
+    "c10c0f11-3ecc-4bc0-ba41-5e5e4af72605"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "26"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790801913"
+   ],
+   [
+    "expiration",
+    "1792029416"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790767165,
+  "id": "82dbe4005fbb6cdea311d7806451525a3152f8ce45f1e90bca73fc59a1f6c8b2",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "eabb82a1585a9b22cf3db15d703fc03879efb862cd851acf5554fad60ce7ca5f844817571f8ffa7601fc81f158d417120ae849630b9d1178c45f473cdb69835d",
+  "tags": [
+   [
+    "d",
+    "73a16472-6b7a-4719-83dc-c07ced51db55"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "26"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790819845"
+   ],
+   [
+    "expiration",
+    "1792063165"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790768686,
+  "id": "282f183f4bc50d1af1b27c89615b7f74e76020ffaf1e24e69df2acc2c4e29643",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "211147dbe8b1db76813a300d235156535b1a2d3474205beeac996660cc372b72415e401f23fadbf069ae4d676c6a13051332d70d3c9de0623bbcfb1da1af8c2a",
+  "tags": [
+   [
+    "d",
+    "9ca3fcaf-7fa8-4bda-aa3f-bcdf7428d4a6"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "5000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "25"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790768633"
+   ],
+   [
+    "expiration",
+    "1792064686"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790780923,
+  "id": "1187e80db81f901f7ccc6faaa2275843366f95a6be2700a08001d509bc7e311d",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "0ab4e82e1ad6a46303012ed06c5705f99a3e09e9fe2c91ea4e33a0cc10413954f95f95a44dae1a5f048a7b9df1c43a5eac3576ab1a43ac48f0d44a13b495a9b9",
+  "tags": [
+   [
+    "d",
+    "8b0728e5-b8a1-460c-a6bc-cb19ae9a8cb6"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "5549"
+   ],
+   [
+    "fa",
+    "5000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "30"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790795363"
+   ],
+   [
+    "expiration",
+    "1792076923"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790782004,
+  "id": "34951fe58158bcb2f867f91e9e7cf5cabd2759158153ab6cbc0a4fd8c80779ba",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "2435f38eb21ff47b78f66aba4420e61e877df5ba3845c4b845949166034cb584a0c5ba199bbb209ba19ccda2b6656750d5fea2b4c7123a6a9e76d63eeb0f33d4",
+  "tags": [
+   [
+    "d",
+    "b06eb2f9-ef4c-41bf-94ce-09a318134ee9"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "10583"
+   ],
+   [
+    "fa",
+    "10000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "33"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790798675"
+   ],
+   [
+    "expiration",
+    "1792078004"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790782261,
+  "id": "c4f3f2e025171a75bb428ee62a0d34705fe210701938902e2cbef1483bf9d1f1",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "581a0082726148705a893de8fa10d9f191775c1376805f48f984594b8dfe89b155f390b351546efd5162092378af073bcea51e81d874bcdc8507b027a0ce2138",
+  "tags": [
+   [
+    "d",
+    "dae81d04-0f85-4804-9d4c-28d6a9934de8"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "7500"
+   ],
+   [
+    "pm",
+    "Tarjeta Clásica",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "25"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790796841"
+   ],
+   [
+    "expiration",
+    "1792078261"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790790647,
+  "id": "69a9eec086e9e4eb1e0f0d835fc329eecafa5654ffa735bebcf40933dcb09645",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "e9880eba4bad540ba7decbb165e2ae6de7cb0c5d8111ac8bc296f8b21db5229168d791d815203fb74b76ed6b9407d0ca5327fcc36bc4d69bf0323a71caa0a47e",
+  "tags": [
+   [
+    "d",
+    "32d86af8-bf70-4601-b804-6d43f89ac32c"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "1100"
+   ],
+   [
+    "pm",
+    "Saldo móvil",
+    "360 CUP de saldo móvil 📲"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790790609"
+   ],
+   [
+    "expiration",
+    "1792086647"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790795328,
+  "id": "3f93ba23d396c8f78a492156a57c30f76c8e2e896ecf049aae82491ab36643d9",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "161474de1983e6fc7ff7ebfd34c9b731a0c560c439312924bbf3a2a7aaa48e31005c3208c95467a2fceac624041125f496dccb9913caf10392d2dad774fe09ef",
+  "tags": [
+   [
+    "d",
+    "9dd10d9a-a8bb-4f6c-b07e-4858a08cdcad"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "5000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "35"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790795289"
+   ],
+   [
+    "expiration",
+    "1792091328"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790800723,
+  "id": "ac2d4c4c1d610ffcc4e07d340213078e690ab9b4738e7823917698a51a45c4fa",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "1c28cefd92a05d9eee6389472d9aaef344e3fbfa912aba0a3a0f7295311631f6ca36add44c37b1e6f226e4364cb5d63e0800f4db37723a7bebc4952d0b7336ed",
+  "tags": [
+   [
+    "d",
+    "40720070-3ba7-4447-aa4a-159958a09a85"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "26"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790853631"
+   ],
+   [
+    "expiration",
+    "1792096723"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790812746,
+  "id": "80175e25f607b45baeb30631f7d67815e778e41b8ff5a14bcba23e93be57ac3c",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "3263d2cc533cfc0bd1a30a0bef6100242dc6c6b4880df9a4b6a8898674acf20e2762d8534a417d8355ed5c2f6200f6ad5f0cf289d29004713e02d239c53ec3c3",
+  "tags": [
+   [
+    "d",
+    "cf6e8383-eb88-4f47-9cb7-23e58836ad96"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790899137"
+   ],
+   [
+    "expiration",
+    "1792108746"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790813207,
+  "id": "eb4473ab772f6bccb9f0534bc8a4488754a6304d2b2a40665587aa05690fe259",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "653819b600bf43dada08fee489e07ec5aa205a5f34f292fe6a18de871f289b4b70312d5bb0d3f86fff8ae8ff1c489508da6ab0bf9c5d10624f2e39cf1d75d51e",
+  "tags": [
+   [
+    "d",
+    "96857578-e3a7-4876-b950-409bc421c155"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "29"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790899175"
+   ],
+   [
+    "expiration",
+    "1792109207"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790827767,
+  "id": "e569d0b70126ae4cd79a57849874c66623dfcb3959fb7847eb0e0d20b708e306",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "1033a2e1fcdad75e686378c08ecbbb0f696d06dc1efd2db875b9373a274e6a8d396f4af5c8a62a1e2441d20093abc9343621eac0879081a4e334ae93b258c018",
+  "tags": [
+   [
+    "d",
+    "efdb6229-9ba9-4301-a4a1-f3797ecb5eba"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790887150"
+   ],
+   [
+    "expiration",
+    "1792123767"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790827800,
+  "id": "d176f289308c5be74b26fd1daa40324e81b3bfabc14efaa5ccfb66c73bd036b2",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "4ef8df9ba05d43b66dbcaa421e3e1e915f4f7a590f3d58ccd6cd69f462897fdf7db3f04360c6be755373d92e8ccb781ff7ee4b6242b16de3c898adb3fcd948da",
+  "tags": [
+   [
+    "d",
+    "0b127d67-7fe9-4c70-8b43-2d615bf33c94"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790914192"
+   ],
+   [
+    "expiration",
+    "1792123800"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790855090,
+  "id": "9af61bf61425568dbfda09b26fea69960e3db9c7609b7e7701bff0372cc7b3e4",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "3fcbf4e3e6bc51031579c8be6ab9555cc8bb5a38426bcb9c58230dbf23567d38b5926de6d7265d865443200bc3b9199f9f9a62eae49586f78927377ac231c4ac",
+  "tags": [
+   [
+    "d",
+    "a59ea8aa-9f89-4698-b1b2-028afe392c50"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "1000"
+   ],
+   [
+    "pm",
+    "Saldo móvil",
+    "360 CUP de saldo móvil 📲"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790855058"
+   ],
+   [
+    "expiration",
+    "1792151090"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790860837,
+  "id": "c82fe3532a5dc818264d514feaa8eafe0dd5d84227b2df77e0320c7f61e244a4",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "b70b01558ef66aeed18cc89e6d42e398782040034202096d7f4b83319380f4415a02d45b12bff52de3abe3a8a1e0f7560b79975503029a99e9d4b64ea950ccaa",
+  "tags": [
+   [
+    "d",
+    "e9f6acaa-6a0a-467f-94ab-dcd67972099f"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "30"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790879169"
+   ],
+   [
+    "expiration",
+    "1792156837"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790866847,
+  "id": "e5ec78a7c0c04c31510e2228845486e78d736860bd54e23428f8891bb56fd925",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "595d937b9d9dbfdcf91b91af261e7f07c2430c6efa21254e7cc2edb64962b9dd28c397e7e818ab5996a124278621f9773e356e135efbcb4d42824497820c0c62",
+  "tags": [
+   [
+    "d",
+    "ad027a35-5b72-40a4-a7e8-cf831f2e54ed"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "20027"
+   ],
+   [
+    "fa",
+    "20000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "36"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790887152"
+   ],
+   [
+    "expiration",
+    "1792162847"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790867208,
+  "id": "5300ba75365c4562fcb7dc99a1e14c342682675ea82e0e209b3ad098f9e79809",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "5b98c6daac98a2f0747bb1022ab4ba04330154f6f1a43693110bf13015c6c44e6f1b7eebdae852779f94a1623337ac1e5fd18423c266515a56907365e641fbaf",
+  "tags": [
+   [
+    "d",
+    "c7e281f4-3007-4303-8995-b3d89e07f5cc"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "21929"
+   ],
+   [
+    "fa",
+    "20000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "30"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790947259"
+   ],
+   [
+    "expiration",
+    "1792163208"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790871836,
+  "id": "ff6d02e226752020fc322d06bcd5ec61ad20daf93d0c9451342ee919797136ba",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "05f9af6c7bf08b81d5c8d80623a60af677ebf0c43e79c48b42215b260ce6b2df3657174ac18389158071578baca983cce6d371578586f1c958aa102607631272",
+  "tags": [
+   [
+    "d",
+    "6295e438-38ea-4aa4-84ce-3c34cd87c5ed"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "10412"
+   ],
+   [
+    "fa",
+    "9000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "26"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790914219"
+   ],
+   [
+    "expiration",
+    "1792167836"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790880709,
+  "id": "f789721a7072ec2b05a6d831ab7b5c553d53d47c82b8fe9fc9ea88f81c183806",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "014ce8fd5541eb850ce43f4b58064c7b072f50119f96badc598509efd514de0f750c262b399440b9605a9c8db810a900317b5eccb08df23439959e3fc1b31d0c",
+  "tags": [
+   [
+    "d",
+    "8eea4fa8-880a-44a0-8945-1a84a8916083"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "6050"
+   ],
+   [
+    "fa",
+    "5000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "22"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790885885"
+   ],
+   [
+    "expiration",
+    "1792176709"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790884406,
+  "id": "c1f888c2ac8123f44ad47e905e19302a209c99b70874d8c2f17887e045c33703",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "123df11add05081678b4ca76196d40144de93f0d4ceec76f0f086fa7ab8ce76308d3fbfaefbc5c40db80c8e903490bbd219ecaa660e972791d9200e8362dafd1",
+  "tags": [
+   [
+    "d",
+    "bdd53bc7-a6a3-4e00-a7e3-ccbe4c3aabe2"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "14049"
+   ],
+   [
+    "fa",
+    "12000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "25"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790883358"
+   ],
+   [
+    "expiration",
+    "1792180406"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790884432,
+  "id": "5e078910e1b567e88606de5dd92833187092164dc7b2e37e8900bad4df96f079",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "880848d1dbe80012c8703f41d8807fdab6f7cde6f39865f08cf4a3e609d872ecd593126d4f6c35ec21373678bb7a32ae68aaa841bdf13500b2687fc68495453e",
+  "tags": [
+   [
+    "d",
+    "f918ba8a-b4d6-44ad-8d1a-bf43a696bdee"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "25"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790883358"
+   ],
+   [
+    "expiration",
+    "1792180432"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790885407,
+  "id": "fcafe7f46162d29eb5c316569115c353627980b43774e93c29606205c04010e5",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "4b5e792813b2d21b9bd13aedfcaa96a123af9181cd5f253e6af025f0c12ca2a406efdfc0530e857ce8ca394973b33b338f2c7571b983f179d702439463357b0f",
+  "tags": [
+   [
+    "d",
+    "1a0a1780-3415-409f-8c20-cab0aa22b2f5"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "13897"
+   ],
+   [
+    "fa",
+    "12000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "25"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790970939"
+   ],
+   [
+    "expiration",
+    "1792181407"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790885857,
+  "id": "44cd98fdb9debef755b4aa1294372d1ad293bb1ed38facfbb1e9e76baef7bf09",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "5f6acc2c932cd1abfa65eaded6b1dbec81034424024521796b1781410b611b14d3e32ba69ede8d4b38358590a7db217fa5d5759f626ff825712df9ce94666d83",
+  "tags": [
+   [
+    "d",
+    "c0694c72-53ee-4a21-a1cd-ef78e735b9e2"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "6939"
+   ],
+   [
+    "fa",
+    "6000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "25"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790970939"
+   ],
+   [
+    "expiration",
+    "1792181857"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790886585,
+  "id": "24986bc4f2502f67ef3aa44822e7f8f829cce1da1176f10b5749d901c38b17e0",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "bcdc5649cb0abf777c48d1141ffc26d5edbc1a01ce0f077d3f766afe8c7345b7e3e4162b3185bb0a75d5d385c9ef6c820b7710fb88591fe13544e4ffc2e8f5c8",
+  "tags": [
+   [
+    "d",
+    "5112f7d0-0398-4b61-8d3f-ba0faa8da6ee"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "3145"
+   ],
+   [
+    "fa",
+    "3000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "32"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790954141"
+   ],
+   [
+    "expiration",
+    "1792182585"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790948047,
+  "id": "f43d623ca056fb07b1e59ab95fbb4a5e111d1d29cb695ade789076e8449d5c72",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "08efdfd0906f1d4bf127f692c53a36cb1bdc8feaff08f35dcbd3f801e32ebd124f08bd47a82f456cf289e7e9bb5ea1e2541e81825ccf6240647b672245250452",
+  "tags": [
+   [
+    "d",
+    "672f54a2-89bd-43fe-84d9-86e66a9c4ff0"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "30"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790960058"
+   ],
+   [
+    "expiration",
+    "1792244047"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790953795,
+  "id": "45e1eff27d370cda16e774ef83e6ac75a1f9f7ab4f1832ad423550a8bd44922b",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "7f4b7bb10d64ea9fb69098768f711ec2e2cb26c94e83c165c3d2bfbd005e80cbebe6d98de5460dfedc297d4a9ff25e3a16cd16ae03cb8cea741a0f0d9d8dce79",
+  "tags": [
+   [
+    "d",
+    "0fee6187-c519-4282-8fee-a8526c698d0f"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "5000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "36"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790953772"
+   ],
+   [
+    "expiration",
+    "1792249795"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790954156,
+  "id": "e77955a53b99d71e92e07b7c8f28454fe64562d29f84156c73ad65058f83373f",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "57be071aedefcfa1416d22fb0b4dac1d4e06d2fa71819fb2940abce5b537edddaeab5741a50130a8af5feecc70e8235c8194e9c906796a735c395da26e555988",
+  "tags": [
+   [
+    "d",
+    "11275c26-7b73-4bde-8404-a97f80b11904"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "32"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790954141"
+   ],
+   [
+    "expiration",
+    "1792250156"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790966174,
+  "id": "e60d5b1ed017eac9702613773dcaa5edede45e2e7e38c0a06dfa91b083804e45",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "b31dbc0b31b29fed8eab17f4d6c86ce000104bf8b0609e69942bde70cefbbc23f8cd4de95037f6cfbdbaa4379ba3fbb5ae9ac0ad95bd03d30600849e6f19ebb9",
+  "tags": [
+   [
+    "d",
+    "29e9a32c-96d4-45e2-a35c-3995d69e4ef8"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "45720"
+   ],
+   [
+    "fa",
+    "40000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "25"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1790970939"
+   ],
+   [
+    "expiration",
+    "1792262174"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790966432,
+  "id": "bfd3c9f46f20ebfaab7e9e613aa6856284a6033412b4f5a277db8eb5d250659f",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "ca696b85b0aeae808f94d3b57a6a9b00592768b9f343decd921ccf45f0a09a0a4ad527fe307216fc0547ae37ca322fb77c2c74857af75b57196c196ee2dba336",
+  "tags": [
+   [
+    "d",
+    "29da9284-e224-431a-8b0e-bd5b8aa45b6d"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "25"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1791049655"
+   ],
+   [
+    "expiration",
+    "1792262432"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790966633,
+  "id": "e673f26b1b15553d9677759d9f95ff3b13124a2619ecf63d0b0184ddf747f8c7",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "fe916e7580dc00c75fa7d446e1e77ec78634ab22d4a8b7bf94b1dcfe3fed918bd0e7b474cbb4bd7a1699c965ad9e8a54ecd20409a88100af681fcd2bb5038ede",
+  "tags": [
+   [
+    "d",
+    "8c8f4a74-5b62-4544-81bf-1ebef239ce54"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "22585"
+   ],
+   [
+    "fa",
+    "19000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "22"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1791036156"
+   ],
+   [
+    "expiration",
+    "1792262633"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790966901,
+  "id": "7ecccbf0e92c773c029b2af20418c37e886f91ef515a05095dd6974f24ec0e2c",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "f118d8220860f7f94df7118e4b5e8bfdb1052804bc64aa40a61e5fa481974952153ba4009e9d90fbc27fc6dc220f283ce4af5c6f83b455ffcb860805598fc4f6",
+  "tags": [
+   [
+    "d",
+    "52339738-b763-48e2-b967-fd1c8e5bce64"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "25"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1791053281"
+   ],
+   [
+    "expiration",
+    "1792262901"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790967507,
+  "id": "31eb905fdadceb44fa01600b8c622da9402c748edef7cdca5d23ad9994ba829c",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "d02df7c0ee35de52a898e1cd5038e348ed748cdaf725b07ef30905f9dde284b5c3b12ae012bd5f9c1e228731f1e29d7705123b2add67bf68c5a8143a43aa39e9",
+  "tags": [
+   [
+    "d",
+    "3cf4cbb4-00cc-40e4-91ae-a36808471dbf"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "20643"
+   ],
+   [
+    "fa",
+    "18000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "25"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1791018604"
+   ],
+   [
+    "expiration",
+    "1792263507"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790968290,
+  "id": "a2216fadcc6e91228adf420411518dda9c9bd66a7d1ad8512b35564f7f4bc827",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "1d63f12b42fd906565c37af9c084aa36dae5f6784449b0930e3f0b4ebaf57f0121d5cdbfb244c6067afc88ec6b0b6e6478381cf17d745cd2dd885afd37886960",
+  "tags": [
+   [
+    "d",
+    "17894250-9209-4c03-81f1-864bf088f62f"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "25"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1791053345"
+   ],
+   [
+    "expiration",
+    "1792264290"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790971211,
+  "id": "f8087a0d664ba82cd3078c45f32874acad6a0c10c6e3bdfc8c0ae2dc48aa3322",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "40b8cd7015e34db96128151ba34301fc545e242f33934a7de821ee60049132210f46110f90423f1d625e274377f112c2313c0acb2f36a9a36e0b02afc5de4731",
+  "tags": [
+   [
+    "d",
+    "afeadf11-d620-475a-a151-ffdb02230ecd"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "22000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "22"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1791057588"
+   ],
+   [
+    "expiration",
+    "1792267211"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790972406,
+  "id": "6c1de39bdb2e83c18e2e3a60a09bfe1199b896a893687e0821ed056400ad6b0f",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "f290d543d9f857f860dea64594c71e08309bfcd47aabd6011c634a5b482c7a6cd60b62dceb969d1c0fe3970f15f8516ab6244d6d6022591d54f6380e368e00f3",
+  "tags": [
+   [
+    "d",
+    "3f03b787-e735-455b-a93e-0fe63642020f"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "22669"
+   ],
+   [
+    "fa",
+    "19000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "22"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1791057756"
+   ],
+   [
+    "expiration",
+    "1792268406"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790973514,
+  "id": "00e1dd197aef94fb6a8b4dd79fbaae386f033bf87596f522e4e564ae3212b0ad",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "589090510f6297969b8574b0f5f06566ccefd7375b5a4d751997454f1d426aefaf88fffbb7329cf23c1eb594ddfee52ce8fff1dd30cdf96a3b0ae71fda0be10d",
+  "tags": [
+   [
+    "d",
+    "4918b7b0-ad2a-4cca-b36e-bdbc2638ae42"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "2538"
+   ],
+   [
+    "fa",
+    "2000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "17"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1791059086"
+   ],
+   [
+    "expiration",
+    "1792269514"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790973572,
+  "id": "f8d4dd1ebce01c01ef90a8fd15e3112d9e4260b451af62a76c234209f94089b9",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "c75acfd33c15eab2e2339056d999c7c0d4cc682a13daa7a164f1589d2253bb82964f88d1503998934287e9648f86183433625db704e7ec65c05f5e51ce5bc18e",
+  "tags": [
+   [
+    "d",
+    "bc6924fd-ff17-4b38-a08f-237f1410024a"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "27687"
+   ],
+   [
+    "fa",
+    "22000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "18"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1791053622"
+   ],
+   [
+    "expiration",
+    "1792269572"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790974674,
+  "id": "e9581922de6faba8b6c9769ade81aab3ce4de3999447f106c669b21b089abae1",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "69a457588db811828a6a48d72ffbd73ee6d39415933c0d1e048c77127ddc719272dd8621232fc8320e6cc73c5cee3238abcd04448083b32a31f63dbac3e2e2c3",
+  "tags": [
+   [
+    "d",
+    "dfc1f88b-9fc0-49f2-8cb1-54c4b3723a18"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "2536"
+   ],
+   [
+    "fa",
+    "2000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "17"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1791058995"
+   ],
+   [
+    "expiration",
+    "1792270674"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790975703,
+  "id": "065e38d7833600b806fb43ec47e65441ff60b707c10e2d1b2944ca8974df3c85",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "aedf5fd2240bc7ba8f6956b3f22928da29b166ea4c013274280a9e12a06dd9f09f2c7fe08b5812a46ba94f090ddcbc41396e7e318ab2ab006d047a7ee00dfcd2",
+  "tags": [
+   [
+    "d",
+    "fe7dbed6-b58a-4f0d-bd4a-9dd951c1a9e3"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "33615"
+   ],
+   [
+    "fa",
+    "22000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1791054975"
+   ],
+   [
+    "expiration",
+    "1792271703"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790975768,
+  "id": "d66c8b0910ae1af0b4015d31da2004fd99a8295a15315b54f4b1d0fdef4389f8",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "dc5130d7896286969c04c4662704527eb2ae23bcf81cd12a2808d175983e2dd13f99fc136ad471093ca7b8a702a96b2966468d50eb726752a3df63cdead6b2fc",
+  "tags": [
+   [
+    "d",
+    "8245e43a-b91d-49d8-998a-f505838eef5e"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "18"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1791053622"
+   ],
+   [
+    "expiration",
+    "1792271768"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790980018,
+  "id": "076d67a9c5a17f2b164ad25bb5e4b984f69f51a6369a0058faaee3d9a0f532ad",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "3cdf087f6c9062fc91544f72e2475377baed3c16b4cf1512b0898bd7646c5fe2fbb3410e224e14d51bd4429fa644070021874b21486d02aea2e391e6553eb1fe",
+  "tags": [
+   [
+    "d",
+    "e1f3b7b7-4857-479f-aab1-6a83f1ac70a6"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "30"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1791034476"
+   ],
+   [
+    "expiration",
+    "1792276018"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790980950,
+  "id": "e62ea8d0af769e51cbe33b558432a59b86e6d0ec95c8293406121bf38986757e",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "a12e7674da0cb672e156d16f603856268a537fe28e729704265db3bc95d05e4e5a6c34d3bedb1c3a19b18e2834512ba1113c9009a6042a5b2b69473a89b2947d",
+  "tags": [
+   [
+    "d",
+    "5c5b7267-0c51-4ab2-ad14-102a8b624d83"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "19000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "22"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1791057198"
+   ],
+   [
+    "expiration",
+    "1792276950"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790981164,
+  "id": "94fe2df14a1305b33328502b1091d6b07fbd76e4fa16ddf3dd6913f6b9d0dcf8",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "dd310801fb7c3db887f1e005f9ee61ee914ae69bc245d719b213dc352e2e2dc2325f47ad33f7a82dee7b39562705f05ed71cedc000f56c853bd4a16ef6fd1ccb",
+  "tags": [
+   [
+    "d",
+    "37d97b6f-afed-4435-abec-29fd89ce4590"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "2533"
+   ],
+   [
+    "fa",
+    "2000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "17"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1791058961"
+   ],
+   [
+    "expiration",
+    "1792277164"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1790996195,
+  "id": "927e78dd29f5b80407e9d10e1affae80e7f09c76cc1f20859d19e3cbebfa307a",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "792887acb0ec65e0d7217c7dae5894f3e51ef5e48d3bf2139a98caf50cd1fe00e11dde8ed4907ef742eca3bd06c25b8b0ba1ad0da098794b4e0bbaedcd9a399b",
+  "tags": [
+   [
+    "d",
+    "a965e874-eaff-491a-8776-77ba7634e327"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "5390"
+   ],
+   [
+    "fa",
+    "5200"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "32"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1791068838"
+   ],
+   [
+    "expiration",
+    "1792292195"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791031653,
+  "id": "c13ade3295f321275ddfca58fa78a6428865e98d5505aa982a3c0eca6171855a",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "25245267de0587acdccc44d8c6d8ece13be796f28435733b997f35fc35f19417290ed149312a002c23fd0a09758cda32d4b8470e561aaaba1dc8d292f152c765",
+  "tags": [
+   [
+    "d",
+    "ec3fe67d-5def-43ac-8ef0-77fe42751218"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "10000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "30"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1791116131"
+   ],
+   [
+    "expiration",
+    "1792327653"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791036120,
+  "id": "a0080fa170551ead01d5b88d932f46842ea47170a02300258a24e6323702f71c",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "936865000c5bc8e48d517c2afe730844e77cb22151f533aee0d1e9b0e960a7b61509e62da544048c2fe1acd8348d2ee6a1f9c937f2860be8916b2609f87f4de4",
+  "tags": [
+   [
+    "d",
+    "af67ae37-52da-4728-aa19-fa62289822e9"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "19000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "28"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1791036064"
+   ],
+   [
+    "expiration",
+    "1792332120"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791040835,
+  "id": "94087ec7ae4584913791bb587857b4f82b93fe2923abd884fe030543f52df66c",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "a12b72e89b640bac0525889ad579d75637ed2269df01173efcee0026699b65f6267b25caa448c6d05a7420f6eeebde95ea106920c89e55fa585ccbdc982237ae",
+  "tags": [
+   [
+    "d",
+    "28796920-70b2-4d3b-8897-6d3df47beca2"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "INR"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Bank Transfer",
+    "UPI"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1791127172"
+   ],
+   [
+    "expiration",
+    "1792336835"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791040962,
+  "id": "d337fc761b6b42687730aa4c499910723d30b27d531a44db20aaec14bd280636",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "e2e51fe7e829e31ccef5d7ad78fe8bcd84cb3baac91ec5c2369d0619b9df87781d8c0bf24ab09f92705b4746540a01e0de338344d46d2df22b72636876f36226",
+  "tags": [
+   [
+    "d",
+    "06c805e4-794c-4879-bcc3-2194c1ed3456"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "INR"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "117"
+   ],
+   [
+    "fa",
+    "10"
+   ],
+   [
+    "pm",
+    "Bank Transfer",
+    "UPI"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1791127255"
+   ],
+   [
+    "expiration",
+    "1792336962"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791041913,
+  "id": "da63cd1af08dfce7dabbc907b7b95ac962bcb6cb53cbc2c23acbd6c0465246ff",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "db6d95e6f05df6792b8630dfc5e8fd093666ed903b412545c9817b312a61d3753c18f64d6ab3fd62d7c17c5c1c9934f308a06b673500a22f331cccf41b9c017e",
+  "tags": [
+   [
+    "d",
+    "d964b692-f2b0-46f5-890b-99baa2081bc0"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "INR"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "175"
+   ],
+   [
+    "fa",
+    "15"
+   ],
+   [
+    "pm",
+    "Bank Transfer",
+    "UPI"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "expires_at",
+    "1791127255"
+   ],
+   [
+    "expiration",
+    "1792337913"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791050530,
+  "id": "f8bd633cb5ee5fbd95a34e93983fe4b4c233abf2c9182e0c8dc563d8992f44ef",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "afbf6e8b1e2449ea065ee10263a2cff3f9adb470b20c334d8948d5656fed5ff16b80dd2f4e3aa4af71a88a21e80210cb2412d7fde7c87e80c703f632e3f783df",
+  "tags": [
+   [
+    "d",
+    "4d59afe7-f989-4830-bde2-65f68e926d9e"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "36"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1790964125"
+   ],
+   [
+    "expires_at",
+    "1791050525"
+   ],
+   [
+    "expiration",
+    "1792346530"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791055030,
+  "id": "64244ca710502ae02ed96a66df546a7d93ac33a42e81693914e4bf38e442875e",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "8c040e4939f0bc7cc228aaeb801d938c2b1a87ea24f8f9aae6a4ca7d345b77735c2ef23deb731da5f3c8f3931ea78744a79518a1e1a8a7190eef470afde6b5f7",
+  "tags": [
+   [
+    "d",
+    "f8574436-4e2d-4dd9-877f-cfb7553ea0ad"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "22000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "25"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1790968588"
+   ],
+   [
+    "expires_at",
+    "1791054988"
+   ],
+   [
+    "expiration",
+    "1792351030"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791062231,
+  "id": "132e9e5151bb06d9f292ceb5d6bc1aebc789f5cf41a494418d2d394b0d34e636",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "09bf095316f5988611ce9d271da4d8cd28af31c69a2f8d57d9e8f8f89b54945582dc18d7bd9c1d53209d4cd271d3adfbf4b27f15b2821e102a086c970c104526",
+  "tags": [
+   [
+    "d",
+    "f098e5cf-e92f-4f5f-b5ac-b3543f07325b"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "18"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1790975815"
+   ],
+   [
+    "expires_at",
+    "1791062215"
+   ],
+   [
+    "expiration",
+    "1792358231"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791063337,
+  "id": "b68dc69856abc12be1996e99fd08d04be8bd1459b79327cf5afd363e1813f50c",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "38cca9c2a52bc940f00b230457aa29beb0f34296693fa27c0cd0684b2aba6203fe9297e45edb7c0172a899ef21e1fb31c418f7b9b6d1d70e60fb63c928778920",
+  "tags": [
+   [
+    "d",
+    "ff3590d8-9723-4566-92e0-f759feb2ae1e"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "10000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "30"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791037607"
+   ],
+   [
+    "expires_at",
+    "1791124007"
+   ],
+   [
+    "expiration",
+    "1792359337"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791065711,
+  "id": "fdce8e880a8792ab86e36f0e0c56ce44d0c3554532d0ada408826cabe06ff8d9",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "ebbc6b2b8d0dee4d619a49fc830390b760592180b5e6d2d80dc01fcffce2243e2d9a6d3db332f665e00be3c87493cbf7f940235e7cfdbbe6463bd47f6d312c34",
+  "tags": [
+   [
+    "d",
+    "a336be0f-58cf-415c-8413-a0c053665e68"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "20000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "20"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1790979261"
+   ],
+   [
+    "expires_at",
+    "1791065661"
+   ],
+   [
+    "expiration",
+    "1792361711"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791066491,
+  "id": "37d18df1bc3b00f3c8cc9c7979417d1ebb050155644ce9d0fdffcb6ee44d3d9c",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "7cd99584646d4bddf50d81ba1c2aa1bad3d08ed7312f73888e2d18583fcc02d0b30f07aa7e3dc30f1e0ff113748712eef596c5f709ab2681a5e0f52844fde724",
+  "tags": [
+   [
+    "d",
+    "526723cd-5cc7-4811-a4f4-595bc851b32f"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "50"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1790980082"
+   ],
+   [
+    "expires_at",
+    "1791066482"
+   ],
+   [
+    "expiration",
+    "1792362491"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791067331,
+  "id": "41a0e4082e8b23423f14093ddb5bfa0f741f1382f9903748ed07b05d49d62ed2",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "a035bd9d5776114891e9d7497876850fa9552517b8aea7e2026c18d32bd8f01a377ef58e932766d001df2de3cdf1fbb5974d426a42e960fd4e778af0cbfcd0dc",
+  "tags": [
+   [
+    "d",
+    "0e01dce5-e93f-41c4-b331-7219c379fd36"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "22000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "20"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1790980923"
+   ],
+   [
+    "expires_at",
+    "1791067323"
+   ],
+   [
+    "expiration",
+    "1792363331"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791068892,
+  "id": "794e63379e215c41f055948e8f56156a940f43c58a8af343f438136bd7feb1d6",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "6b7f9875d4a6c862014af84c1ad32989b1859469687fdddd85de5f6b439dc71fa6d9fa940ea88ea0b5e7a79f91f18b2c4279ab962521c92f8c4b6e7872baffae",
+  "tags": [
+   [
+    "d",
+    "85d127d8-e206-42da-8da4-afab3865c02b"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "32"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1790982438"
+   ],
+   [
+    "expires_at",
+    "1791068838"
+   ],
+   [
+    "expiration",
+    "1792364892"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791078372,
+  "id": "67216f1a45ae6a270f6ab150e69d87b33fa2c97ea6027ed48d5fc579406fd914",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "e5cc1f2ab5a6d2beea59ed4bcbcbca015785142e8e243f78436c8e833d716a9ad611af308aaee7ce187e6c361f9f497b4a9a4e840a20d5a5845b843a3677a145",
+  "tags": [
+   [
+    "d",
+    "9220ca20-ec86-43cb-a28b-a185ae21d430"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "20"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1790991935"
+   ],
+   [
+    "expires_at",
+    "1791078335"
+   ],
+   [
+    "expiration",
+    "1792374372"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791088540,
+  "id": "2b91cc32f46a8814f88e6e9def19343d2e82b61898d4aab367321a96d3c8e6c0",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "1506dbfdd6c25abd5d72bcc99273b785529a589ea2605ce3bda5d5470bf35696155f3dc6f51e8b41f475f7f6d689e2a5072051be94349b309ca662dcbe92f29b",
+  "tags": [
+   [
+    "d",
+    "ca141f3a-221f-4b4d-8adf-094339bd1005"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "5510"
+   ],
+   [
+    "fa",
+    "5000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "27"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791048822"
+   ],
+   [
+    "expires_at",
+    "1791135222"
+   ],
+   [
+    "expiration",
+    "1792384540"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791089011,
+  "id": "851494478ed906744e45d00c2a88276bdfc5a336140ec12dd5008227f3c6bdb8",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "6a75f4b36a2f877eeb6dce4b57fd7618e205fa3e2babf69f77e28abcf38cb0e2092c17868078fd771f30573b656c9a305f5959018cd09e0ca779c1e62b86b7aa",
+  "tags": [
+   [
+    "d",
+    "f5247c77-db3d-4efc-913e-b645b823db2c"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "301"
+   ],
+   [
+    "fa",
+    "200"
+   ],
+   [
+    "pm",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791079695"
+   ],
+   [
+    "expires_at",
+    "1791166095"
+   ],
+   [
+    "expiration",
+    "1792385011"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791089536,
+  "id": "568f142f47e33e649ebc614473ef9ffa2c76fe6fb6277eab6656baeb43ad58aa",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "af6547d238ee80022e9ffca1bcab0e223a33cb3c8ffc2c52e9341f655f02599b847a04affc7c8212735cefa3790ae98b77758b2b9479e3a65318464079711e5b",
+  "tags": [
+   [
+    "d",
+    "8bd3840e-db2d-4a82-8f40-1c33dfa117e9"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "10253"
+   ],
+   [
+    "fa",
+    "10000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "32"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791080982"
+   ],
+   [
+    "expires_at",
+    "1791167382"
+   ],
+   [
+    "expiration",
+    "1792385536"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791116193,
+  "id": "7bc20848d7c4c07ac9a935cda55c53cfe7f2fd1c1163526e93c6b1be5d814de0",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "d6b6194fcaa307b50bab000f0295c59f1b4fc3ed1d2f0d2072526f83d3e14de75f481e4fb6ea915d7adae58507130d602dc39c9a1954e28d825315ff61ed4591",
+  "tags": [
+   [
+    "d",
+    "188d361c-f106-498e-9951-aa37caa43c1b"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "INR"
+   ],
+   [
+    "s",
+    "pending"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "20",
+    "75"
+   ],
+   [
+    "pm",
+    "Bank Transfer",
+    "UPI"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "rating",
+    "[\"rating\",{\"days\":0,\"since\":1790985600,\"total_rating\":0.0,\"total_reviews\":0}]"
+   ],
+   [
+    "source",
+    "mostro:188d361c-f106-498e-9951-aa37caa43c1b?relays=wss://relay.mostro.network,wss://nos.lol,wss://mostro-p2p.tech,wss://relay.shadowbip.com&mostro=00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791115933"
+   ],
+   [
+    "expires_at",
+    "1791202333"
+   ],
+   [
+    "expiration",
+    "1791202333"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791116199,
+  "id": "c0e048dfc4a9a81c52e2e20e18a3492cbe9358b2b7dbe76145031f43ce1f7e43",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "ebf291be7020bcb3a92050c6a611a39b2509d7812d24e5681053ddb05d487e9c7c3b0c01844f3d7cf487f2447029e89809f2f8318a75169ea62d6dae5ee2c7da",
+  "tags": [
+   [
+    "d",
+    "ef2017ec-10d1-42b3-9799-27276c2fd955"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "INR"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "291"
+   ],
+   [
+    "fa",
+    "25"
+   ],
+   [
+    "pm",
+    "Bank Transfer",
+    "UPI"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791115933"
+   ],
+   [
+    "expires_at",
+    "1791202333"
+   ],
+   [
+    "expiration",
+    "1792412199"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791120238,
+  "id": "c2a5a11f752bee09b5772ceee1a939ad3143196a76865cbff2917d6650ed3768",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "d3246fd1d56d591f29050dde7e1d0ed879b6948a1d80cbb2ad65356fbff1b0a0666fb0c7e88a1b5689c56bc0873660b6e5f54406dc7b51b5afe483491f543f3e",
+  "tags": [
+   [
+    "d",
+    "449564ff-0e83-42eb-85e1-bedca5d42e3e"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "USD"
+   ],
+   [
+    "s",
+    "pending"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "50"
+   ],
+   [
+    "pm",
+    "Zelle"
+   ],
+   [
+    "premium",
+    "3"
+   ],
+   [
+    "rating",
+    "[\"rating\",{\"days\":54,\"since\":1786320000,\"total_rating\":4.375,\"total_reviews\":4}]"
+   ],
+   [
+    "source",
+    "mostro:449564ff-0e83-42eb-85e1-bedca5d42e3e?relays=wss://relay.mostro.network,wss://nos.lol,wss://mostro-p2p.tech,wss://relay.shadowbip.com&mostro=00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791120238"
+   ],
+   [
+    "expires_at",
+    "1791206638"
+   ],
+   [
+    "expiration",
+    "1791206638"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791126489,
+  "id": "c494fa6dd4375c2ac4fea330f4d565ebc182183f9d78a663cae56a9a4da714e7",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "82049c9e11051dba992aaed127af72b03fcaaff161ded9bc8e1f38ecb00d1ff02faa758e1a583bd5bdc070d7062c0e959eb9ab1248aca4c3ab31af2755996cca",
+  "tags": [
+   [
+    "d",
+    "d2f3424a-703b-4b5f-a494-8679421bbc28"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "3367"
+   ],
+   [
+    "fa",
+    "3000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "25"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791040681"
+   ],
+   [
+    "expires_at",
+    "1791127081"
+   ],
+   [
+    "expiration",
+    "1792422489"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791127269,
+  "id": "d963dfe148ba9fc2ce6cf8cb7d7a201e6573f07c50598f2b546092970e5ce2d9",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "55e41433367bfb0121aecd78b83806233f5007babc8e065cc348dedeaf59e0a5b79bc79e20342a4335390e93fc1fa240e401cbb2131eb98521ad52b0662e8d1a",
+  "tags": [
+   [
+    "d",
+    "4fc3dcec-702a-41fd-98fd-7a6fd2277fd5"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "INR"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Bank Transfer",
+    "UPI"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791040855"
+   ],
+   [
+    "expires_at",
+    "1791127255"
+   ],
+   [
+    "expiration",
+    "1792423269"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791128052,
+  "id": "e08a111421dc19838c89842429bae5196682e9367fce320a6683a2851b238c44",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "b81828eb47b6e076d70139821d50e509c6cd967b7885efcd8eb0c1e928e90c4c900e33e4e8b3e79994b619bc6fc856078e95eb77f8e2fecbe1520eba7cfae57a",
+  "tags": [
+   [
+    "d",
+    "b4990fe4-09aa-46f0-afc3-7a36fa727807"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "25"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791128020"
+   ],
+   [
+    "expires_at",
+    "1791214420"
+   ],
+   [
+    "expiration",
+    "1792424052"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791128672,
+  "id": "a508a59b4a6917c51cc4c7f756be1cff53237b32b9ce7551b53625b8bf4e4f8b",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "e56beffcf66805e9dd17d1a469a4463250b8cd9d592222bc7438402a3285922185452710356888384f402bb2891ae6a18b1c4a83f039c6c735f2ee7461f4d5a2",
+  "tags": [
+   [
+    "d",
+    "568558a1-cf7a-445f-b268-4a8d15ef52c5"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "10455"
+   ],
+   [
+    "fa",
+    "10000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "30"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791063507"
+   ],
+   [
+    "expires_at",
+    "1791149907"
+   ],
+   [
+    "expiration",
+    "1792424672"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791129790,
+  "id": "714ddc7603cf5756c09b377481ba882d159dd1d0b81c57871c5c5b2a4daff69b",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "e384039df2c321ecb4ed284d452a89b290d6ae0b45db922f374607c266186baf28855d8a78d3e542df0f61bb540fab699d22f1cffa424224aa3cb75f652e8e3b",
+  "tags": [
+   [
+    "d",
+    "d6faa712-1ed5-44fc-bdbc-94774dff68ae"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "23762"
+   ],
+   [
+    "fa",
+    "21500"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "26"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791127811"
+   ],
+   [
+    "expires_at",
+    "1791214211"
+   ],
+   [
+    "expiration",
+    "1792425790"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791130867,
+  "id": "89c6a71895e960e203a417f1291fd70c6d91df4f129d2a6badea83a9ccf7397a",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "4daf7462773ea99fffa6aaa93ce013a4774e8486fd22db0dbe32f0960d2c8ca5f262d8ce4691ec3b9a7faf172b33a19ee3a8df899921736d5ceee1281df98030",
+  "tags": [
+   [
+    "d",
+    "8f5c5d05-c737-4d3f-a842-98d61e6fd53e"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "26"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791130858"
+   ],
+   [
+    "expires_at",
+    "1791217258"
+   ],
+   [
+    "expiration",
+    "1792426867"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791132260,
+  "id": "3e26de9636d689ac4c1d84b29a777ea36bf951002c94cfbc098038b5202b7fe1",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "2a0a1c9382acbc467df8e6730493e4f1dbf4426af60cd1034acb6774974ce6758e2589fbfc80f6abddb8bb7803d9d6687cb4253d18121ab60f6698e7563a11da",
+  "tags": [
+   [
+    "d",
+    "2d7a3941-6dd7-470c-8297-2195c96de0eb"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "23781"
+   ],
+   [
+    "fa",
+    "21500"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "26"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791130889"
+   ],
+   [
+    "expires_at",
+    "1791217289"
+   ],
+   [
+    "expiration",
+    "1792428260"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791132325,
+  "id": "9fb50f90b582b58706d5a77eab870da41933330b17b7062e5e53754704d1a3ad",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "b5d59b899283c25db9a0115c24aa2d7db22b3b43b4f948522eb85d7dcac98aed597b09fe3cbdc7b8d85b66f8cc79bc1aa61357e4de6ab892a0002795aa03639d",
+  "tags": [
+   [
+    "d",
+    "502916c9-42c2-485f-8361-f34abe1f4eba"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transferencia CUP"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791132317"
+   ],
+   [
+    "expires_at",
+    "1791218717"
+   ],
+   [
+    "expiration",
+    "1792428325"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791132368,
+  "id": "70c2859d24106c14f9e842387ca3df38138e58347c70cba1a37d838e4a351eb9",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "335862ee5731ccea1932e72f13375ca6274fb3d7d300fdb4bbc288e94e4891853718b8cd3f35e36d2a7ea0f39ea01d485b4496a2a96822185afef763ad7fccdd",
+  "tags": [
+   [
+    "d",
+    "3b219376-e891-4f38-a8b0-f991c335d09d"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "26"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791132355"
+   ],
+   [
+    "expires_at",
+    "1791218755"
+   ],
+   [
+    "expiration",
+    "1792428368"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791132683,
+  "id": "444a3f67617d7708c89260bc227ae2aedd4e24e50f312d0de743638edd33bf33",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "b2c064cc584b0a0fc4571b7209ad73ad91db29e99a54faa4801e4c48a35a38e85ea37a56307b267e5c1f9854eb091e7be447719b83515b246e15ba634ca2866f",
+  "tags": [
+   [
+    "d",
+    "08b60086-dee8-4e53-a5e9-2afd9770711a"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "26"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791132399"
+   ],
+   [
+    "expires_at",
+    "1791218799"
+   ],
+   [
+    "expiration",
+    "1792428683"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791134447,
+  "id": "8b3d7a992ddd225f75aac8fc5f18d136554bdc5ebafd02205a628981620966c9",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "6569d8e92125f3bfbd1e9d3a9cc2a2f4486282d881200bdeb0e825f7944544c86cdba65b5fb4dfcfab700e40ee05589fa308d25f4fbec230c70beb8863676466",
+  "tags": [
+   [
+    "d",
+    "939447c1-59a4-4dc5-b7f8-0a4904ec82a2"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "26"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791133918"
+   ],
+   [
+    "expires_at",
+    "1791220318"
+   ],
+   [
+    "expiration",
+    "1792430447"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "tags": [],
+  "content": "{\"name\":\"Kmbalache 🇨🇺\",\"about\":\"Where Bitcoin becomes P2P again\",\"website\":\"https://cubabitcoin.org/kmbalache/index.html\",\"picture\":\"https://cubabitcoin.org/kmbalache/img/kmbalache%20128x128.png\"}",
+  "sig": "e96f588744b53732e19e2393ea95b8262c99e17d0720c992ee7ba2855418addbeec29a4125c2db06be82160ed561e1799681152ea4641c3b4d3f0f1ef48dbc10",
+  "id": "30536dedfd7efacf0e8c2f51585eef37edfdc156fca239102c1ef29eb2c0a3b3",
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "created_at": 1791149084,
+  "kind": 0
+ },
+ {
+  "content": "",
+  "created_at": 1791151033,
+  "id": "589c734a4972da8086d7726cefd7afe82e9e1443d0b112dda9ee119733a85ba3",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "96d90261dfa501fbbfceecafdb30c3e46c6ecd049942fb222d20fac61008ad059f06c54d12c3ad8ca560953bbc4d34aee96d116c5e35213c20cdfd0f68c32607",
+  "tags": [
+   [
+    "d",
+    "8890730f-b95d-4288-97cd-4b395caf446c"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "5568"
+   ],
+   [
+    "fa",
+    "5000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "25"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791138155"
+   ],
+   [
+    "expires_at",
+    "1791224555"
+   ],
+   [
+    "expiration",
+    "1792447033"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791151376,
+  "id": "aec3e1f4332f9265688b2d2a44a43bb5324750bc8402e7e73291fa364217dca2",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "ee58378342fdd262a01fea7e05a5087a3ff98eeecb5b24184bae6ad8b85b0a578e0fc09a06ae117d4e4389b9d277c563f08f00f2316de8d6416df79fc9183f3c",
+  "tags": [
+   [
+    "d",
+    "4e353388-de18-4af8-af2e-7e9c5a8a8879"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "1185"
+   ],
+   [
+    "fa",
+    "800"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "No tomar es una prueba"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791151275"
+   ],
+   [
+    "expires_at",
+    "1791237675"
+   ],
+   [
+    "expiration",
+    "1792447376"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791151554,
+  "id": "21ba8fe795f96dd6f930cf4dcc2283eef911ed448355d5120d4dfd7966f78e36",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "505a1b4af80add2b98bad838e2381db279fd8dcc2b9ebcd34b34f9e0d004ca2d3c81273cec898afb7f75c339625ddd5984c97ea075c3c4115ed3a1c158c81ecc",
+  "tags": [
+   [
+    "d",
+    "f0cdadbe-051d-4229-9711-2006bd60095d"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "32"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791137257"
+   ],
+   [
+    "expires_at",
+    "1791223657"
+   ],
+   [
+    "expiration",
+    "1792447554"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791151578,
+  "id": "92ba350648ecac0cc9a38cb90e3b6d4b728588c656476040a62659eb79d53298",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "ee50d56f3a92ef7fd6e0032bbcb63d335f760300fc82a049002ebad526c78df87f302045ee43014e3dc77b24f04dae6df2f5d808f93af326baf4d9e3fd8f2416",
+  "tags": [
+   [
+    "d",
+    "4ba62ace-f152-4f5f-a157-8579dcce048b"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "pending"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "1000",
+    "10000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "32"
+   ],
+   [
+    "rating",
+    "[\"rating\",{\"days\":230,\"since\":1771113600,\"total_rating\":4.950980392156864,\"total_reviews\":51}]"
+   ],
+   [
+    "source",
+    "mostro:4ba62ace-f152-4f5f-a157-8579dcce048b?relays=wss://relay.mostro.network,wss://nos.lol,wss://mostro-p2p.tech,wss://relay.shadowbip.com&mostro=00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791151578"
+   ],
+   [
+    "expires_at",
+    "1791237978"
+   ],
+   [
+    "expiration",
+    "1791237978"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791153484,
+  "id": "fc65fee2df6cbad910a1a7697c4ea6aa1bb72dd81fbdf69c352ac5b6916a6aa0",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "0966696e55b4b3963e9a9f2967e2ed639542cbb9c260c0eba2d6dc046118a01af50f2c44dd7b1515ee636c36f27acea72fc58b428384dca2dc3cd7d67eb3d339",
+  "tags": [
+   [
+    "d",
+    "f4a4238e-cb06-4e3c-ab01-6a00b92e13b6"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "11679"
+   ],
+   [
+    "fa",
+    "10000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "21"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791123494"
+   ],
+   [
+    "expires_at",
+    "1791209894"
+   ],
+   [
+    "expiration",
+    "1792449484"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791153565,
+  "id": "095a81b9b06f54e1999fd92d42ebcccc49d59ca30e75f457cc393c1b6643718b",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "1382add79076536abe8ffbb717547077cf869d3b37ea880e38e15d72bdd62503bab96965af539de34ff274fe2425e4e077cda46ebd75a7951808232817f52662",
+  "tags": [
+   [
+    "d",
+    "3f02c274-166f-4802-8fa4-45f5476600d1"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "29154"
+   ],
+   [
+    "fa",
+    "25000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "21"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791152116"
+   ],
+   [
+    "expires_at",
+    "1791238516"
+   ],
+   [
+    "expiration",
+    "1792449565"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791154461,
+  "id": "74db8484564226b855c495cc4c435f249f726a912f61990e1199fd3711059cb1",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "7f479048cf039ea03eb58d220c40f4c745ec39e7b37683d9b252c52efe18a962c05feefc375381398c1eae35b9f16929879ae17b1f97e82a1d89c8a267c943da",
+  "tags": [
+   [
+    "d",
+    "481d9701-2754-4d66-8115-ee8e9835a072"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "21058"
+   ],
+   [
+    "fa",
+    "18000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "21"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791153512"
+   ],
+   [
+    "expires_at",
+    "1791239912"
+   ],
+   [
+    "expiration",
+    "1792450461"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791154906,
+  "id": "47b21f47797b5209a905913b610d071208b3ae03596531fc35e96cf097d64ea9",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "81290f4b422b1299ebb7daba5965fe16dbdb3919390316f6ad1763102fcdb6427bda76c9223d3ad954e690dfe3d7f6bd8866e9f7adbda3dc92c5d09d2bb417e8",
+  "tags": [
+   [
+    "d",
+    "b237cfae-21ed-44e7-9ee1-b4b3457b3f1b"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "20"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791068447"
+   ],
+   [
+    "expires_at",
+    "1791154847"
+   ],
+   [
+    "expiration",
+    "1792450906"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791155561,
+  "id": "88b6b77e3a354c84cc70c74e7c6901c1355749639f74ea0009c7fa0353cd6852",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "e1571fc118d136aed009d6919e7ad4bc96c1f95a6b754fa9a8d992ff69b7144417de793a31f6a70f70ef1bae9a15c09d15f74ef4c080284ae9bf8a5ced464c40",
+  "tags": [
+   [
+    "d",
+    "17b011ce-f1a8-46cc-99a8-fe45b1769a78"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "33233"
+   ],
+   [
+    "fa",
+    "28000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "20"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791082016"
+   ],
+   [
+    "expires_at",
+    "1791168416"
+   ],
+   [
+    "expiration",
+    "1792451561"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791156526,
+  "id": "27d21f691917a25714279f4c1b2853360aa18d67b759a5f1c10111da20b05bb5",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "9a23501537a4488779bf353377ef2d5594a4f237821260661296061d9e9632ef5b4b4251fc00dd7bd4dd0624f7f5f7390999b42d07adc2e8a4caeda680f1c3dd",
+  "tags": [
+   [
+    "d",
+    "0a73ac0c-75d2-4f69-9654-d5054e4df462"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "23737"
+   ],
+   [
+    "fa",
+    "20000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "20"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791112460"
+   ],
+   [
+    "expires_at",
+    "1791198860"
+   ],
+   [
+    "expiration",
+    "1792452526"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791158486,
+  "id": "383c9340a44fccf90ba487843fe03d59c56d2f676c88758bc10af60d9fd1c0a5",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "81314f0ac0d2abf72bcf46327b7f53d0e6a3ceae835f35d1ec1066f6e7d2bbb07c1a3ed53b062c21abe0c6b0523162c07b80556e118167be73736fb05fa6e00c",
+  "tags": [
+   [
+    "d",
+    "74c0dbfa-7cdd-495e-b84a-33e007d7721c"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "10000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "30"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791130445"
+   ],
+   [
+    "expires_at",
+    "1791216845"
+   ],
+   [
+    "expiration",
+    "1792454486"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791161406,
+  "id": "41be7906ea33dfe880d76d2b964cb9a399b8c7f217b459f25aa7adb9b5060e64",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "b2a9cc6e9a5eeb8ce9cad08b11d010984eedf90c56f8bf1b66d6d7d86100ad8035e840d45b83ca7a3864b1360511a07d4f8e1a6fe3b2cfc102465181e398b4e5",
+  "tags": [
+   [
+    "d",
+    "1976f279-0dc2-411f-9528-4b35da181c55"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "850"
+   ],
+   [
+    "pm",
+    "Saldo móvil",
+    "360 CUP en SALDO MÓVIL 📲"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791155091"
+   ],
+   [
+    "expires_at",
+    "1791241491"
+   ],
+   [
+    "expiration",
+    "1792457406"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791162632,
+  "id": "353f11fa0be8ac22896ad293b8e1189b74163a121fa3b2870d974ef43fa1bd5f",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "570ef21a5f49f535645d425123d882c8990b4f9424c39bf57c3f820cdedf104fa1dba640a42b43f8b89d25a1f8bb5a2076c4fb8116856a2b81bfb773558ded13",
+  "tags": [
+   [
+    "d",
+    "487fcd8b-a79d-4a20-995f-976052bc1d1f"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "pending"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "1000",
+    "28000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "18"
+   ],
+   [
+    "rating",
+    "[\"rating\",{\"days\":231,\"since\":1771200000,\"total_rating\":4.861111111111111,\"total_reviews\":18}]"
+   ],
+   [
+    "source",
+    "mostro:487fcd8b-a79d-4a20-995f-976052bc1d1f?relays=wss://relay.mostro.network,wss://nos.lol,wss://mostro-p2p.tech,wss://relay.shadowbip.com&mostro=00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791162632"
+   ],
+   [
+    "expires_at",
+    "1791249032"
+   ],
+   [
+    "expiration",
+    "1791249032"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791163480,
+  "id": "eb064d320c37386e63d6c2097614a049f9fbe38b0b3f8626804151cdfb1294d1",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "c6b2e214c47d5bc073d1113e510a9007875bb27b8efdd56f9c22cf4579e5bf747614fd2399ff723fd603ffaab2a82d8810d21930ceb30b85eeca0451c2490e1b",
+  "tags": [
+   [
+    "d",
+    "94f50b7e-83fe-414a-9341-c7f30bb67633"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "pending"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "1150"
+   ],
+   [
+    "pm",
+    "Saldo móvil",
+    "360 CUP de saldo móvil 📲"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "rating",
+    "[\"rating\",{\"days\":231,\"since\":1771200000,\"total_rating\":4.861111111111111,\"total_reviews\":18}]"
+   ],
+   [
+    "source",
+    "mostro:94f50b7e-83fe-414a-9341-c7f30bb67633?relays=wss://relay.mostro.network,wss://nos.lol,wss://mostro-p2p.tech,wss://relay.shadowbip.com&mostro=00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791163480"
+   ],
+   [
+    "expires_at",
+    "1791249880"
+   ],
+   [
+    "expiration",
+    "1791249880"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791164837,
+  "id": "699a72712dc5f12ac65f09cc9edd499dbe2e8ba271472daff33e4b3389262112",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "a8e5c7d7d7229b164337c0a4b9ad2a3f63e102d0c6e3f2de9459a16ba6cef3d8eafd4213ea8175feaa5f591cb20192586c890ca4a6095006c352b5988f6dccdb",
+  "tags": [
+   [
+    "d",
+    "4325cade-035a-4a78-a52b-4b090cc6b3ef"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "294"
+   ],
+   [
+    "fa",
+    "200"
+   ],
+   [
+    "pm",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791162395"
+   ],
+   [
+    "expires_at",
+    "1791248795"
+   ],
+   [
+    "expiration",
+    "1792460837"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791165227,
+  "id": "fb285a4e4fbc0a07dd82136d9e3ab8ad9a166ff54b98e31f19ba873d82c31542",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "16a9f48f8b5ab7a3fb91cb4a932eecd23be5e9996e6c76f3cfbea34157e2b70392e09bb9d4751e529d115655db96f9a664b41bc4ea235a85eb2db70cb715ad70",
+  "tags": [
+   [
+    "d",
+    "89f0e5ae-70f6-491e-b4c9-db22b8e59549"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "1629"
+   ],
+   [
+    "fa",
+    "1100"
+   ],
+   [
+    "pm",
+    "Saldo móvil",
+    "360 CUP de saldo móvil 📲"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791162431"
+   ],
+   [
+    "expires_at",
+    "1791248831"
+   ],
+   [
+    "expiration",
+    "1792461227"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791165417,
+  "id": "a430f62e84629624c68c3b1be8fa6ea14150b54eb8ae112ccd304c87f69936f3",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "e0501d96816eb84aa9a4a9f0601b86e445d238556285d01ba5e0396853a62e2bd8b4a75b3a164458e1b8bb1c6accb40564d3aa0fdcc1ea86508a6431643f8e27",
+  "tags": [
+   [
+    "d",
+    "5172d963-0933-4428-96d0-529115fbf5b2"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "in-progress"
+   ],
+   [
+    "amt",
+    "2220"
+   ],
+   [
+    "fa",
+    "2000"
+   ],
+   [
+    "pm",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "25"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791164363"
+   ],
+   [
+    "expires_at",
+    "1791250763"
+   ],
+   [
+    "expiration",
+    "1792461417"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791165479,
+  "id": "7b90ece6530f967c639a4f5c43c157c67f4a25ea269f976887956edb2dba93f7",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "4229d17d36e900f06f3b10a0c1480cd8c63463a235ccde0ddad3c96abbb46ba719c96fbe94866fd863b236f3346523ea93be3b894132d29424445cfe2a81ec7b",
+  "tags": [
+   [
+    "d",
+    "981786d6-0eef-4423-9ca1-f38502c00f4f"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "10645"
+   ],
+   [
+    "fa",
+    "10000"
+   ],
+   [
+    "pm",
+    "Transfermovil",
+    "EnZona"
+   ],
+   [
+    "premium",
+    "28"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791158540"
+   ],
+   [
+    "expires_at",
+    "1791244940"
+   ],
+   [
+    "expiration",
+    "1792461479"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791168406,
+  "id": "31b5f5b29af24d77897046d92f0061374df170b59f6a3ec1bd583fdd1652d53f",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "f9a80d9ff0f84626a8879951f24c58ad326512ff7fe96f36d590d7da2e8854d1cf6e83291b4702b31fc2a5d1b6ed7fb97ef63564f2264cf6c5ce827200c43da4",
+  "tags": [
+   [
+    "d",
+    "c4bcd336-91cb-4f9f-b0ee-a2a534a19ef9"
+   ],
+   [
+    "k",
+    "buy"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "1100"
+   ],
+   [
+    "pm",
+    "Saldo móvil",
+    "360 CUP de saldo móvil 📲"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791081989"
+   ],
+   [
+    "expires_at",
+    "1791168389"
+   ],
+   [
+    "expiration",
+    "1792464406"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791168509,
+  "id": "eb7c78d2dedaf965c0581b39bff44f050032eec689245fb64b7519b0074239ca",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "721a3bf16985ebe24e0a488068eccb3db5824494ca1731031a0d057cacb9d4ee94f0d9317a20fd97adc1a29349a982d0504848d49ec12f7b150a3f560924b59f",
+  "tags": [
+   [
+    "d",
+    "a60a0a56-f1f6-4c46-9c69-ac9818354f28"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "success"
+   ],
+   [
+    "amt",
+    "6025"
+   ],
+   [
+    "fa",
+    "5500"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "26"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791165710"
+   ],
+   [
+    "expires_at",
+    "1791252110"
+   ],
+   [
+    "expiration",
+    "1792464509"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791168791,
+  "id": "842bc231a00b3a289ddd4816e60bf81fec416fff35dd71b2fa44573aefa66c53",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "600899d56f71a026e558b1d77ce48955b4a3c4a7100b4744af6d3c3a1f6dce2b234684b7ef87863ea1c78e11e260195e5c802c1fb3c22f1c00687bf9a0d3a40b",
+  "tags": [
+   [
+    "d",
+    "36e6bda7-35ce-40f5-98f7-efedc3e8471e"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "0"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil",
+    "Transferencia CUP 🇨🇺"
+   ],
+   [
+    "premium",
+    "26"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791165710"
+   ],
+   [
+    "expires_at",
+    "1791252110"
+   ],
+   [
+    "expiration",
+    "1792464791"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791172456,
+  "id": "4b3959d0289814a9d55516fe1c3cd755e057932feebf1cf9fef5b54989b279b2",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "5b3c4d0f7a1d528b233becf20ef8da908d9bdccecc8ab03e580f4f725adcdc68e7221113a4a5e583094d5cbd2621d849d3d4b86abd327da62c8cadf2d74ceb03",
+  "tags": [
+   [
+    "d",
+    "40ad9a55-ee96-4ab7-b9a3-dfaee672a908"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "pending"
+   ],
+   [
+    "amt",
+    "23000"
+   ],
+   [
+    "fa",
+    "18000"
+   ],
+   [
+    "pm",
+    "Efectivo",
+    "llamar al 52361255"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "rating",
+    "[\"rating\",{\"days\":54,\"since\":1786492800,\"total_rating\":3.75,\"total_reviews\":2}]"
+   ],
+   [
+    "source",
+    "mostro:40ad9a55-ee96-4ab7-b9a3-dfaee672a908?relays=wss://relay.mostro.network,wss://nos.lol,wss://mostro-p2p.tech,wss://relay.shadowbip.com&mostro=00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791172456"
+   ],
+   [
+    "expires_at",
+    "1791258856"
+   ],
+   [
+    "expiration",
+    "1791258856"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791172558,
+  "id": "7e4fff672015309bdd981944c5d152c9736f7f04e4eac81cc6cfcf76fd28af19",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "36b35e0368913bd54418afcd616a33a0c5614d92559818a4f6abc69d4fec0ef5aab4c31da2220249a1985c2966e306a3d65bd73827832bdd62b9d889433aec00",
+  "tags": [
+   [
+    "d",
+    "d461a175-b785-4b98-8ae6-dd5fe016b4b4"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "pending"
+   ],
+   [
+    "amt",
+    "23000"
+   ],
+   [
+    "fa",
+    "18000"
+   ],
+   [
+    "pm",
+    "Efectivo"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "rating",
+    "[\"rating\",{\"days\":54,\"since\":1786492800,\"total_rating\":3.75,\"total_reviews\":2}]"
+   ],
+   [
+    "source",
+    "mostro:d461a175-b785-4b98-8ae6-dd5fe016b4b4?relays=wss://relay.mostro.network,wss://nos.lol,wss://mostro-p2p.tech,wss://relay.shadowbip.com&mostro=00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791172558"
+   ],
+   [
+    "expires_at",
+    "1791258958"
+   ],
+   [
+    "expiration",
+    "1791258958"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791176027,
+  "id": "93425cba32bb55365d61638ccb468139e6853e0f108ea8a828e4ca596fe21224",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "b080a87d6c38ce17ca8b4ec545b864288ff0bbfffd6de2f27779b4eaeb561e9e5bb5bcba7232e6ada53bd02a056d27d0c12dd0376aacfa00ee93b24ecccb12d3",
+  "tags": [
+   [
+    "d",
+    "b5058e7c-fc78-4e3e-ac78-218914661fa6"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "canceled"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "6800"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "35"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791089612"
+   ],
+   [
+    "expires_at",
+    "1791176012"
+   ],
+   [
+    "expiration",
+    "1792472027"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791178900,
+  "id": "b435c0ae828d3b356453a8fd01a81e05301436e7674a60750ac1a1a215c1f558",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "3a9b23aca8a7a35e6494450b068da228a8c81761158f057de657f0d5017d8016ed274dc5ad7239e0146db7e2902c647d372224c132bbf8c6e2b1760c9e947218",
+  "tags": [
+   [
+    "d",
+    "91c35a1c-92fc-4d9a-89e3-dae9f6aca949"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "pending"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "900"
+   ],
+   [
+    "pm",
+    "Saldo móvil",
+    "360 CUP en SALDO MÓVIL 📲"
+   ],
+   [
+    "premium",
+    "0"
+   ],
+   [
+    "rating",
+    "[\"rating\",{\"days\":8,\"since\":1790380800,\"total_rating\":4.642857142857142,\"total_reviews\":7}]"
+   ],
+   [
+    "source",
+    "mostro:91c35a1c-92fc-4d9a-89e3-dae9f6aca949?relays=wss://relay.mostro.network,wss://nos.lol,wss://mostro-p2p.tech,wss://relay.shadowbip.com&mostro=00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791161450"
+   ],
+   [
+    "expires_at",
+    "1791247850"
+   ],
+   [
+    "expiration",
+    "1791247850"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "content": "",
+  "created_at": 1791179030,
+  "id": "e073008d8f913f6cb06cb71ba173d920496ed4a1b3872425e70057a8405ba8c6",
+  "kind": 38383,
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "sig": "46b4baa5f047f7660e6929772f0424ff8630ed5c3a38171b34494ea456ee788b8d44ed6d3505c9f7aeba203ab3b458a296a9c41ea6f12864860d77c8ecbbe88b",
+  "tags": [
+   [
+    "d",
+    "91c4b6e7-1b9a-46a0-b9b0-016605a47349"
+   ],
+   [
+    "k",
+    "sell"
+   ],
+   [
+    "f",
+    "CUP"
+   ],
+   [
+    "s",
+    "pending"
+   ],
+   [
+    "amt",
+    "0"
+   ],
+   [
+    "fa",
+    "1000",
+    "30000"
+   ],
+   [
+    "pm",
+    "EnZona",
+    "Transfermovil"
+   ],
+   [
+    "premium",
+    "30"
+   ],
+   [
+    "rating",
+    "[\"rating\",{\"days\":231,\"since\":1771113600,\"total_rating\":4.952830188679246,\"total_reviews\":53}]"
+   ],
+   [
+    "source",
+    "mostro:91c4b6e7-1b9a-46a0-b9b0-016605a47349?relays=wss://relay.mostro.network,wss://nos.lol,wss://mostro-p2p.tech,wss://relay.shadowbip.com&mostro=00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a"
+   ],
+   [
+    "network",
+    "mainnet"
+   ],
+   [
+    "layer",
+    "lightning"
+   ],
+   [
+    "published_at",
+    "1791158005"
+   ],
+   [
+    "expires_at",
+    "1791244405"
+   ],
+   [
+    "expiration",
+    "1791244405"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "order"
+   ]
+  ]
+ },
+ {
+  "tags": [
+   [
+    "d",
+    "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a"
+   ],
+   [
+    "mostro_version",
+    "0.19.2"
+   ],
+   [
+    "mostro_commit_hash",
+    "e041963fcdc8f8d0be6149edd2e49136df3b87d3"
+   ],
+   [
+    "max_order_amount",
+    "500000"
+   ],
+   [
+    "min_order_amount",
+    "100"
+   ],
+   [
+    "expiration_hours",
+    "24"
+   ],
+   [
+    "expiration_seconds",
+    "900"
+   ],
+   [
+    "fiat_currencies_accepted",
+    ""
+   ],
+   [
+    "max_orders_per_response",
+    "100"
+   ],
+   [
+    "fee",
+    "0.005"
+   ],
+   [
+    "pow",
+    "0"
+   ],
+   [
+    "pow_first_contact",
+    "0"
+   ],
+   [
+    "protocol_version",
+    "2"
+   ],
+   [
+    "hold_invoice_cltv_delta",
+    "144"
+   ],
+   [
+    "lnd_version",
+    "0.20.4-beta commit=v0.20.4-beta"
+   ],
+   [
+    "lnd_node_pubkey",
+    "021bdcbe12751e02cc9a2eb2daff67c8ddb3fd680457eae91b5c52b3d0dd651fdc"
+   ],
+   [
+    "lnd_commit_hash",
+    "e09aee067580cdb17bfcc85da15bf25c24beb986"
+   ],
+   [
+    "lnd_node_alias",
+    "Kmbalache ⚡"
+   ],
+   [
+    "lnd_chains",
+    "bitcoin"
+   ],
+   [
+    "lnd_networks",
+    "mainnet"
+   ],
+   [
+    "lnd_uris",
+    "021bdcbe12751e02cc9a2eb2daff67c8ddb3fd680457eae91b5c52b3d0dd651fdc@31.97.22.221:9735,021bdcbe12751e02cc9a2eb2daff67c8ddb3fd680457eae91b5c52b3d0dd651fdc@tfktsrcpw3sq5wghzjqyyxibfabltai3vc2y2kopff2flrxbud7hyrqd.onion:9735"
+   ],
+   [
+    "y",
+    "mostro",
+    "Kmbalache 🇨🇺"
+   ],
+   [
+    "z",
+    "info"
+   ],
+   [
+    "invoice_expiration_window",
+    "3600"
+   ],
+   [
+    "hold_invoice_expiration_window",
+    "300"
+   ],
+   [
+    "bond_enabled",
+    "false"
+   ],
+   [
+    "maintenance_mode",
+    "false"
+   ]
+  ],
+  "content": "",
+  "sig": "49b341cf740f0da15fa66fe973d52ec1552a4e3ac155208530b133f258b4ba123c8ed610deee88f4f6ab4de428aa69715c75c3ee03aedc1b1cd9e1599338bba2",
+  "id": "a48826c6fd3bb1ad64d7fd5daccec3c9039f0ca1a7d1df6917da57e3f1fc2397",
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "created_at": 1791193226,
+  "kind": 38385
+ },
+ {
+  "tags": [
+   [
+    "r",
+    "wss://relay.mostro.network"
+   ],
+   [
+    "r",
+    "wss://mostro-p2p.tech"
+   ],
+   [
+    "r",
+    "wss://nos.lol"
+   ],
+   [
+    "r",
+    "wss://relay.shadowbip.com"
+   ]
+  ],
+  "content": "",
+  "sig": "cbc43ae9ceee29166ca4c1835180f436933a3aa476044609580896edb2007c4783e5b10122d5e9f16fc7428aa3ff349a47ea7e3bf80e8caf0e2dd85f62d90cff",
+  "id": "6b2d136cecc1c5905ed7719b360bd6c4715259c1016130efd370d64ed5889495",
+  "pubkey": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a",
+  "created_at": 1791193441,
+  "kind": 10002
+ }
+]
