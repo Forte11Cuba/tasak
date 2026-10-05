@@ -121,6 +121,18 @@ Para que arranque solo como servicio, ver `indexer/tasak-archivador.service`. Do
 máquinas distintas se pueden unir después (los eventos se deduplican por id). Estos archivos
 alimentarán el futuro indexador.
 
+El historial anterior al archivador lo puede recuperar el operador del nodo desde la base de datos de
+Mostro. Sobre una copia (`sqlite3 mostro.db ".backup mostro-copia.db"`):
+
+```sh
+node indexer/exportar-mostro.mjs mostro-copia.db
+```
+
+Necesita Node.js ≥ 22.13 y escribe las órdenes ejecutadas en `indexer/data/mostro-db/`. Solo exporta
+datos públicos de la operación (moneda, montos, prima, métodos de pago, horas, precio de mercado o
+fijo), nunca claves, facturas ni la tabla de usuarios. Esas órdenes no van firmadas: una orden cuenta
+como confirmada cuando su evento firmado de Nostr también está archivado.
+
 ## Archivos
 
 | Archivo | Qué es |
@@ -130,7 +142,7 @@ alimentarán el futuro indexador.
 | `i18n.js` | idioma (español / inglés): diccionario y traducción de textos |
 | `comun.js`, `comun.css` | configuración, formato, colores y tarjeta del nodo, compartidos por las dos páginas |
 | `build.mjs` | lee `.env` y genera `config.js` |
-| `indexer/` | el archivador de eventos y su servicio de systemd |
+| `indexer/` | el archivador de eventos, su servicio de systemd y el exportador de la base de datos de Mostro |
 | `vendor/` | librerías copiadas (sin depender de CDN) y la lista de métodos de pago por moneda de la app de Mostro (`mostro-payment-methods.js`) |
 
 ## Idiomas

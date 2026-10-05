@@ -126,6 +126,18 @@ To run it as a service that starts by itself, see `indexer/tasak-archivador.serv
 different machines can be merged later (events are deduplicated by id). These files will feed the
 future indexer.
 
+The history from before the archiver can be recovered by the node's operator from the Mostro
+database. On a copy (`sqlite3 mostro.db ".backup mostro-copy.db"`), run:
+
+```sh
+node indexer/exportar-mostro.mjs mostro-copy.db
+```
+
+It needs Node.js ≥ 22.13 and writes the executed orders to `indexer/data/mostro-db/`. It exports only
+public trade data (currency, amounts, premium, payment methods, times, market or fixed price), never
+keys, invoices or the users table. Those orders are unsigned: an order counts as confirmed when its
+signed Nostr event is also archived.
+
 ## Files
 
 | File | What it is |
@@ -135,7 +147,7 @@ future indexer.
 | `i18n.js` | language (Spanish / English): dictionary and text translation |
 | `comun.js`, `comun.css` | configuration, formatting, colours and node card, shared by both pages |
 | `build.mjs` | reads `.env` and generates `config.js` |
-| `indexer/` | the event archiver and its systemd service |
+| `indexer/` | the event archiver, its systemd service and the Mostro database exporter |
 | `vendor/` | copied libraries (no CDN) and the Mostro app's payment methods per currency (`mostro-payment-methods.js`) |
 
 ## Languages
