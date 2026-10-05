@@ -1,4 +1,4 @@
-# tasaK · proof of concept 2
+# tasaK
 
 **English** · [Español](README.es.md)
 
