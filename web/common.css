@@ -1,4 +1,4 @@
-/* Estilos compartidos por index.html y nodo.html */
+/* Styles shared by index.html and node.html */
 :root {
   --bg: #0b0e11;
   --panel: #14171c;
@@ -12,7 +12,7 @@
   --down-bg: rgba(234, 57, 67, .12);
   --accent: #f0b90b;
   --avg: #5b8def;
-  /* Derivados, para no escribir colores a mano en las páginas */
+  /* Derived, so the pages never write colours by hand */
   --accent-bg: rgba(240, 185, 11, .1);
   --accent-line: rgba(240, 185, 11, .45);
   --accent-flash: rgba(240, 185, 11, .25);
@@ -25,7 +25,7 @@
   color-scheme: dark;
 }
 
-/* Tema claro: colores más oscuros para que acento, subidas y bajadas se lean sobre blanco */
+/* Light theme: darker colours so accent, rises and falls read well on white */
 :root[data-theme="light"] {
   --bg: #ffffff;
   --panel: #f5f6f8;
@@ -59,7 +59,7 @@
 .brand span { color: var(--accent); }
 .brand-logo { display: block; height: 34px; width: auto; margin: -2px 0; }
 
-/* Tarjeta con la información de un nodo Mostro */
+/* Card with the information of a Mostro node */
 .node-card { padding: 12px 0 4px; }
 .node-card + .node-card { border-top: 1px solid var(--line); }
 .node-top { display: flex; gap: 12px; align-items: center; }
@@ -77,10 +77,10 @@
 .node-kv dt { color: var(--muted); }
 .node-kv dd { margin: 0; word-break: break-all; }
 
-/* Textos largos escritos en los dos idiomas: solo se ve el elegido (lang en <html>) */
+/* Long texts written in both languages: only the chosen one is shown (lang on <html>) */
 html:not([lang="es"]) [data-lang="es"], html:not([lang="en"]) [data-lang="en"] { display: none !important; }
 
-/* Selector de idioma ES | EN */
+/* Language switch ES | EN */
 .lang-switch { display: inline-flex; border: 1px solid var(--line); border-radius: 4px; overflow: hidden; }
 .lang-switch button {
   background: none; border: 0; color: var(--muted); font: inherit; font-size: 11px; font-weight: 600;
@@ -89,9 +89,15 @@ html:not([lang="es"]) [data-lang="es"], html:not([lang="en"]) [data-lang="en"] {
 .lang-switch button:hover { color: var(--text); }
 .lang-switch button.on { background: var(--line); color: var(--text); }
 
-/* Botón de tema ☀ / ☾ */
+/* Theme button ☀ / ☾ */
 .theme-btn {
   background: none; border: 1px solid var(--line); border-radius: 4px; color: var(--muted);
   font: inherit; font-size: 13px; line-height: 1; padding: 4px 8px; cursor: pointer;
 }
 .theme-btn:hover { color: var(--text); }
+
+/* Warning when the page is opened as a file (file://) */
+.file-warning {
+  padding: 10px 16px; background: var(--accent-bg); color: var(--text);
+  border-bottom: 1px solid var(--accent-line); font-size: 13px;
+}

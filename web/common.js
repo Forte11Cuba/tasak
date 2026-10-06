@@ -1,6 +1,6 @@
-// Código compartido por index.html y nodo.html: configuración, formato e información del nodo.
+// Shared by index.html and node.html: configuration, formatting and node information.
 
-// npub (bech32) -> hex. Sin dependencias para que funcione aunque el CDN esté bloqueado.
+// npub (bech32) -> hex, without dependencies.
 function toHex(key) {
   const s = String(key).trim().toLowerCase();
   if (/^[0-9a-f]{64}$/.test(s)) return s;
@@ -8,7 +8,7 @@ function toHex(key) {
   const m = s.match(/^npub1([02-9ac-hj-np-z]+)$/);
   if (!m) return null;
   let acc = 0, bits = 0, hex = '';
-  for (const c of m[1].slice(0, -6)) {   // los últimos 6 caracteres son el checksum
+  for (const c of m[1].slice(0, -6)) {   // the last 6 characters are the checksum
     acc = ((acc << 5) | CH.indexOf(c)) & 0xfff;
     bits += 5;
     if (bits >= 8) { bits -= 8; hex += ((acc >> bits) & 0xff).toString(16).padStart(2, '0'); }
@@ -16,10 +16,10 @@ function toHex(key) {
   return hex.length === 64 ? hex : null;
 }
 
-// Relays: solo cifrados (wss://); ws:// únicamente para un relay local de pruebas
+// Relays: encrypted only (wss://); ws:// just for a local test relay
 const validRelay = u => /^wss:\/\/\S+$/i.test(u) || /^ws:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/\S*)?$/i.test(u);
 
-// Configuración: .env (config.js) con los parámetros de la URL por encima
+// Configuration: .env (config.js) with the URL parameters on top
 const CONFIG = (() => {
   const base = window.TASAK_CONFIG || {};
   const qs = new URLSearchParams(location.search);
@@ -28,34 +28,34 @@ const CONFIG = (() => {
   const relays = list('relays').length ? list('relays') : base.relays || [];
   return {
     fromEnv: !!window.TASAK_CONFIG,
-    // La comunidad y sus redes describen los nodos del .env; no se muestran si la URL cambia de nodo
-    comunidad: list('mostro').length ? null : base.comunidad,
-    rrss: list('mostro').length ? [] : (base.rrss || []).filter(u => /^https:\/\//i.test(u)),
+    // The community and its links describe the .env nodes; not shown if the URL changes the node
+    community: list('mostro').length ? null : base.community,
+    socialLinks: list('mostro').length ? [] : (base.socialLinks || []).filter(u => /^https:\/\//i.test(u)),
     mostros: [...new Set(mostros.map(toHex).filter(Boolean))],
     relays: [...new Set(relays.filter(validRelay))],
-    nombreSitio: base.nombreSitio || 'tasaK',
-    nombreTasa: base.nombreTasa || 'Tasa K',
+    siteName: base.siteName || 'tasaK',
+    rateName: base.rateName || 'Tasa K',
     logo: base.logo || '',
-    logoClaro: base.logoClaro || '',
-    tema: base.tema || '',
-    metodosOcultos: base.metodosOcultos || ['Pruebas', 'Otros'],
-    // Sin moneda configurada, la página elige la más usada en el nodo
+    logoLight: base.logoLight || '',
+    theme: base.theme || '',
+    hiddenPaymentMethods: base.hiddenPaymentMethods || ['Pruebas', 'Otros'],
+    // Without a configured currency, the page picks the most traded one on the node
     fiat: (qs.get('fiat') || base.fiat || '').toUpperCase(),
-    tz: base.zonaHoraria || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    tz: base.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
   };
 })();
 
-// ---------- Tema claro / oscuro ----------
-// Elección guardada en este navegador > THEME del .env > tema del sistema.
-// Se aplica nada más cargar comun.js (en <head>) para que la página no parpadee.
+// ---------- Light / dark theme ----------
+// Choice saved in this browser > THEME in .env > system theme.
+// Applied as soon as common.js loads (in <head>) so the page does not flicker.
 let THEME = (() => {
   try { const s = localStorage.getItem('tasak.theme'); if (s === 'light' || s === 'dark') return s; } catch {}
-  if (CONFIG.tema === 'light' || CONFIG.tema === 'dark') return CONFIG.tema;
+  if (CONFIG.theme === 'light' || CONFIG.theme === 'dark') return CONFIG.theme;
   return matchMedia('(prefers-color-scheme: light)').matches ? 'light' : 'dark';
 })();
 document.documentElement.dataset.theme = THEME;
 
-// Cambia el tema sin recargar; las páginas escuchan 'themechange' para repintar lo que no es CSS (gráfica)
+// Switches the theme without reloading; pages listen to 'themechange' to repaint what is not CSS (chart)
 function setTheme(theme) {
   THEME = theme;
   document.documentElement.dataset.theme = theme;
@@ -76,25 +76,25 @@ document.addEventListener('DOMContentLoaded', () => {
   for (const b of document.querySelectorAll('.theme-btn')) b.onclick = () => setTheme(THEME === 'light' ? 'dark' : 'light');
 });
 
-// ---------- Nombre del sitio y de la tasa (configurables en .env) ----------
-// Logo: si el nombre termina en mayúsculas (tasaK), esa parte va resaltada
-function brandHtml(name = CONFIG.nombreSitio) {
+// ---------- Site and rate names (configurable in .env) ----------
+// Logo: if the name ends in capitals (tasaK), that part is highlighted
+function brandHtml(name = CONFIG.siteName) {
   const m = name.match(/^(.*[^A-Z])([A-Z]+)$/);
   return m ? `${esc(m[1])}<span>${esc(m[2])}</span>` : esc(name);
 }
-// Rellena los textos marcados con data-name, el título de la pestaña y el icono
+// Fills the texts marked with data-name, the tab title and the icon
 function applyNames() {
-  for (const el of document.querySelectorAll('[data-name="sitio"]')) {
-    // Con LOGO en el .env se muestra la imagen (LOGO_LIGHT en el tema claro); si no carga, el nombre en texto
-    const logo = THEME === 'light' && CONFIG.logoClaro ? CONFIG.logoClaro : CONFIG.logo;
+  for (const el of document.querySelectorAll('[data-name="site"]')) {
+    // With LOGO in .env the image is shown (LOGO_LIGHT in the light theme); if it fails, the name as text
+    const logo = THEME === 'light' && CONFIG.logoLight ? CONFIG.logoLight : CONFIG.logo;
     el.innerHTML = logo
-      ? `<img class="brand-logo" src="${esc(logo)}" alt="${esc(CONFIG.nombreSitio)}">`
+      ? `<img class="brand-logo" src="${esc(logo)}" alt="${esc(CONFIG.siteName)}">`
       : brandHtml();
     el.querySelector('img')?.addEventListener('error', () => { el.innerHTML = brandHtml(); });
   }
-  for (const el of document.querySelectorAll('[data-name="tasa"]')) el.textContent = CONFIG.nombreTasa;
-  document.title = document.title.replace('tasaK', CONFIG.nombreSitio);
-  const letter = (CONFIG.nombreSitio.match(/[A-Z]+$/)?.[0] || CONFIG.nombreSitio[0] || 'K').slice(0, 2);
+  for (const el of document.querySelectorAll('[data-name="rate"]')) el.textContent = CONFIG.rateName;
+  document.title = document.title.replace('tasaK', CONFIG.siteName);
+  const letter = (CONFIG.siteName.match(/[A-Z]+$/)?.[0] || CONFIG.siteName[0] || 'K').slice(0, 2);
   const icon = document.querySelector('link[rel="icon"]');
   if (icon) icon.href = 'data:image/svg+xml,' + encodeURIComponent(
     `<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 32 32"><rect width="32" height="32" rx="6" fill="#0b0e11"/>` +
@@ -102,16 +102,26 @@ function applyNames() {
 }
 document.addEventListener('DOMContentLoaded', applyNames);
 
+// Opened as a file (file://), browsers don't load ES modules, so the page stays empty: say how to open it
+document.addEventListener('DOMContentLoaded', () => {
+  if (location.protocol !== 'file:' || !document.querySelector('script[type="module"]')) return;
+  const box = document.createElement('div');
+  box.className = 'file-warning';
+  box.textContent = t('Esta página no funciona abierta como archivo. Sírvela con un servidor web: en la carpeta del repositorio ejecuta «{cmd}» y abre {url}',
+    { cmd: 'python3 -m http.server 8765 -d web', url: 'http://localhost:8765/' });
+  document.body.prepend(box);
+});
+
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const fmtInt = n => Math.round(n).toLocaleString(LOCALE);
 const fmtTime = ts => new Date(ts * 1000).toLocaleString(LOCALE, {
   timeZone: CONFIG.tz, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
 });
 
-// ---------- Información del nodo: perfil (0), información (38385) y relays (10002) ----------
+// ---------- Node information: profile (0), information (38385) and relays (10002) ----------
 const META_KINDS = [0, 38385, 10002];
 
-// Guarda en `metaMap` (pubkey -> { profile, info, relays }) la versión más reciente de cada evento
+// Keeps in `metaMap` (pubkey -> { profile, info, relays }) the newest version of each event
 function applyMeta(metaMap, ev) {
   const m = metaMap.get(ev.pubkey) || {};
   const slot = { 0: 'profile', 38385: 'info', 10002: 'relays' }[ev.kind];
@@ -131,7 +141,7 @@ function applyMeta(metaMap, ev) {
   return true;
 }
 
-// Nombre legible de una red social a partir de su enlace
+// Readable name of a social network from its link
 function linkLabel(u) {
   try {
     const url = new URL(u);
@@ -147,7 +157,7 @@ function linkLabel(u) {
 }
 const extLink = (u, label) => /^https:\/\//i.test(u) ? `<a href="${esc(u)}" target="_blank" rel="noopener">${esc(label)} ↗</a>` : '';
 
-// Tarjeta HTML de un nodo. `activity` son filas [etiqueta, valor HTML] con datos de sus órdenes.
+// HTML card of a node. `activity` are rows [label, HTML value] with data from its orders.
 function nodeCardHtml(pk, m = {}, activity = []) {
   const fmtSats = n => `${fmtInt(Number(n))} sats`;
   const fmtDur = sec => sec >= 3600 ? `${sec / 3600} h` : `${Math.round(sec / 60)} min`;
@@ -157,8 +167,8 @@ function nodeCardHtml(pk, m = {}, activity = []) {
 
   const links = [
     p.website && extLink(p.website, t('Web del nodo')),
-    CONFIG.comunidad?.url && extLink(CONFIG.comunidad.url, CONFIG.comunidad.nombre || t('Comunidad')),
-    ...CONFIG.rrss.map(u => extLink(u, linkLabel(u))),
+    CONFIG.community?.url && extLink(CONFIG.community.url, CONFIG.community.name || t('Comunidad')),
+    ...CONFIG.socialLinks.map(u => extLink(u, linkLabel(u))),
     extLink('https://njump.me/' + npub, t('El nodo en Nostr')),
   ].filter(Boolean).join('');
 
@@ -168,7 +178,7 @@ function nodeCardHtml(pk, m = {}, activity = []) {
       <div>
         <h3>${esc(p.name || pk.slice(0, 8) + '…')}</h3>
         ${p.about ? `<p>${esc(p.about)}</p>` : ''}
-        ${CONFIG.comunidad?.nombre ? `<p>${t('Comunidad:')} <strong>${esc(CONFIG.comunidad.nombre)}</strong></p>` : ''}
+        ${CONFIG.community?.name ? `<p>${t('Comunidad:')} <strong>${esc(CONFIG.community.name)}</strong></p>` : ''}
       </div>
     </div>
     ${links ? `<div class="node-links">${links}</div>` : ''}

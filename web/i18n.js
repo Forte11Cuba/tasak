@@ -1,19 +1,19 @@
-// Idioma de la página (español o inglés) y traducción de textos.
+// Page language (Spanish or English) and text translation.
 //
-// El texto original está en español. t('texto en español', { variables }) devuelve la
-// traducción del idioma elegido. En el HTML:
-//   data-i18n          el texto del elemento se traduce
-//   data-i18n-title    el atributo title (y aria-label) se traduce
-//   data-lang="es|en"  bloques largos escritos en los dos idiomas; solo se ve el elegido
+// The original text is Spanish. t('Spanish text', { variables }) returns its translation in the
+// chosen language. In the HTML:
+//   data-i18n          the element's text is translated
+//   data-i18n-title    the title attribute (and aria-label) is translated
+//   data-lang="es|en"  long blocks written in both languages; only the chosen one is shown
 //
-// Idioma: ?lang= en la URL > elección guardada en este navegador > LANGUAGE del .env > navegador.
+// Language: ?lang= in the URL > choice saved in this browser > LANGUAGE in .env > browser.
 
 const LANGS = ['es', 'en'];
 const LANG = (() => {
   const q = new URLSearchParams(location.search).get('lang');
   if (LANGS.includes(q)) return q;
   try { const s = localStorage.getItem('tasak.lang'); if (LANGS.includes(s)) return s; } catch {}
-  const c = window.TASAK_CONFIG?.idioma;
+  const c = window.TASAK_CONFIG?.language;
   if (LANGS.includes(c)) return c;
   return (navigator.language || 'es').toLowerCase().startsWith('es') ? 'es' : 'en';
 })();
@@ -21,7 +21,7 @@ document.documentElement.lang = LANG;
 const LOCALE = LANG === 'en' ? 'en-US' : 'es';
 
 const EN = {
-  // Cabecera y barra
+  // Header and bar
   'últimas 24h': 'last 24h',
   'Cambio respecto a las 24 horas anteriores': 'Change from the previous 24 hours',
   'Referencia Yadio': 'Yadio reference',
@@ -41,7 +41,7 @@ const EN = {
   'Idioma': 'Language',
   'Tema claro': 'Light theme',
   'Tema oscuro': 'Dark theme',
-  // Estado
+  // Status
   'Conectando…': 'Connecting…',
   'Conectando con los relays…': 'Connecting to relays…',
   'En vivo: {live} de {total} relays conectados': 'Live: {live} of {total} relays connected',
@@ -55,7 +55,7 @@ const EN = {
   'USD aproximado: sin precio histórico de Coinbase, se usa el BTC/USD actual de Yadio': 'Approximate USD: no historical price from Coinbase, using the current Yadio BTC/USD',
   'Configuración sin nodos o sin relays válidos': 'Configuration has no valid nodes or relays',
   'Falta config.js: ejecuta "node build.mjs" o pasa ?mostro=…&relays=… en la URL': 'config.js is missing: run "node build.mjs" or pass ?mostro=…&relays=… in the URL',
-  // Cifras de la cabecera
+  // Header figures
   '{n} orden': '{n} order',
   '{n} órdenes': '{n} orders',
   'cambio vs 24h anteriores': 'change vs previous 24h',
@@ -66,7 +66,7 @@ const EN = {
   'compra de BTC': 'BTC buy',
   'venta de BTC': 'BTC sell',
   '{n} nodos Mostro': '{n} Mostro nodes',
-  // Gráfica
+  // Chart
   'Precio': 'Price',
   'Velas': 'Candles',
   'Ponderado': 'Weighted',
@@ -102,7 +102,7 @@ const EN = {
   'Evento': 'Event',
   'clic para ver el evento firmado': 'click to see the signed event',
   'A': 'O', 'Máx': 'H', 'Mín': 'L', 'C': 'C',
-  // Métodos de pago (nombres que se muestran)
+  // Payment methods (names shown)
   'Saldo móvil': 'Mobile top-up',
   'Pruebas': 'Tests',
   'Otros': 'Other',
@@ -110,7 +110,7 @@ const EN = {
   'Transferencia': 'Bank transfer',
   'Sin método': 'No method',
   '{d} completadas · {o} abiertas': '{d} completed · {o} open',
-  // Order book y órdenes ejecutadas
+  // Order book and executed orders
   'intenciones abiertas': 'open intentions',
   'Monto': 'Amount',
   'Prima': 'Premium',
@@ -140,7 +140,7 @@ const EN = {
   '(hay compradores por encima de vendedores)': '(buyers above sellers)',
   'Nadie vendiendo BTC ahora': 'Nobody selling BTC right now',
   'Nadie comprando BTC ahora': 'Nobody buying BTC right now',
-  // Evento Nostr
+  // Nostr event
   'Evento Nostr de la orden': 'Nostr event of the order',
   'Cerrar': 'Close',
   'Copiar JSON': 'Copy JSON',
@@ -161,7 +161,7 @@ const EN = {
   'caducada': 'expired',
   'precio fijo: {n} sats': 'fixed price: {n} sats',
   'precio de mercado (Yadio) {p} % de prima': 'market price (Yadio) {p}% premium',
-  // Información del nodo
+  // Node information
   'Nodo Mostro': 'Mostro node',
   'Web del nodo': 'Node website',
   'Comunidad': 'Community',
@@ -191,9 +191,10 @@ const EN = {
   '← Volver a la tasa': '← Back to the rate',
   'Cargando la información del nodo desde los relays…': 'Loading node information from relays…',
   'No hay nodos configurados: ejecuta «node build.mjs» o pasa ?mostro=… en la URL.': 'No nodes configured: run "node build.mjs" or pass ?mostro=… in the URL.',
+  'Esta página no funciona abierta como archivo. Sírvela con un servidor web: en la carpeta del repositorio ejecuta «{cmd}» y abre {url}': 'This page does not work opened as a file. Serve it with a web server: in the repository folder run «{cmd}» and open {url}',
 };
 
-// Traduce un texto en español y sustituye {variables}
+// Translates a Spanish text and fills in {variables}
 function t(s, vars) {
   let r = LANG === 'en' ? (EN[s] ?? s) : s;
   if (vars) r = r.replace(/\{(\w+)\}/g, (m, k) => (k in vars ? vars[k] : m));
@@ -202,7 +203,7 @@ function t(s, vars) {
 // «1 orden» / «3 órdenes»
 const nOrders = n => t(n === 1 ? '{n} orden' : '{n} órdenes', { n });
 
-// Traduce los textos marcados en el HTML
+// Translates the texts marked in the HTML
 function applyI18n(root = document) {
   if (LANG === 'es') return;
   for (const el of root.querySelectorAll('[data-i18n]')) el.textContent = t(el.textContent.trim());
@@ -212,7 +213,7 @@ function applyI18n(root = document) {
   }
 }
 
-// Selector ES | EN: guarda la elección y recarga la página en ese idioma
+// ES | EN switch: saves the choice and reloads the page in that language
 function setLang(l) {
   try { localStorage.setItem('tasak.lang', l); } catch {}
   const u = new URL(location.href);

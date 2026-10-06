@@ -1,10 +1,10 @@
 {
- "nombreSitio": "tasaK",
- "nombreTasa": "Tasa K",
+ "siteName": "tasaK",
+ "rateName": "Tasa K",
  "logo": "tasak-logo-dark.svg",
- "logoClaro": "tasak-logo-light.svg",
- "tema": "",
- "idioma": "",
+ "logoLight": "tasak-logo-light.svg",
+ "theme": "",
+ "language": "",
  "mostros": [
   "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a"
  ],
@@ -15,12 +15,12 @@
   "wss://relay.shadowbip.com"
  ],
  "fiat": "CUP",
- "zonaHoraria": "America/Havana",
- "comunidad": {
-  "nombre": "Cuba Bitcoin",
+ "timeZone": "America/Havana",
+ "community": {
+  "name": "Cuba Bitcoin",
   "url": "https://cubabitcoin.org"
  },
- "rrss": [
+ "socialLinks": [
   "https://t.me/Cuba_Bitcoin",
   "https://t.me/CUBA_lnp2p",
   "https://x.com/Cuba_BTC",
@@ -28,7 +28,7 @@
   "https://github.com/Cuba-Bitcoin",
   "https://primal.net/p/npub1huyn6ru55pv6l7p0sxvlu3vfpq7pan958sl4weft0kte6lvdvvksd5s34t"
  ],
- "metodosOcultos": [
+ "hiddenPaymentMethods": [
   "Saldo móvil",
   "Pruebas",
   "Otros"

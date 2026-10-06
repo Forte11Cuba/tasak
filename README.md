@@ -23,13 +23,17 @@ pay, not what was actually paid. tasaK starts from the opposite:
 
 ## Setup
 
-Requirements: Node.js ≥ 18 (only to generate `config.js`, no dependencies) and any static web server.
+Requirements: Node.js ≥ 18 (only to generate `web/config.js`, no dependencies) and any static web server.
 
 ```sh
-cp .env.example .env     # set your node, relays, currency and community (the example is Kmbalache)
-node build.mjs           # generates config.js
-python3 -m http.server   # or any static server; open http://localhost:8000
+cp .env.example .env            # set your node, relays, currency and community (the example is Kmbalache)
+node build.mjs                  # generates web/config.js and copies shared/ into web/shared/
+python3 -m http.server -d web   # or any static server; open http://localhost:8000
 ```
+
+The folder to publish is `web/` (after running `node build.mjs`): everything the site needs is in it.
+It needs a web server, also to try it locally: opened as a file (`file://`) browsers don't load its
+ES modules and the page shows a warning instead.
 
 `.env` variables:
 
@@ -37,7 +41,7 @@ python3 -m http.server   # or any static server; open http://localhost:8000
 |---|---|
 | `SITE_NAME` | Site name: logo, browser tab and icon (default `tasaK`; if it ends in capitals, that part is highlighted) |
 | `RATE_NAME` | Name of the rate across the page (default `Tasa K`) |
-| `LOGO` | Site logo: file next to `index.html` (svg, png, jpg, webp) or https link. Empty = the name as text |
+| `LOGO` | Site logo: file in `web/`, next to `index.html` (svg, png, jpg, webp), or https link. Empty = the name as text |
 | `LOGO_LIGHT` | Logo for the light theme (optional; if missing, `LOGO` is used) |
 | `THEME` | Default theme, `light` or `dark` (empty = the system theme). Visitors can switch it with ☀ / ☾ |
 | `LANGUAGE` | Default language, `es` or `en` (empty = the browser language). Visitors can switch it with ES · EN |
@@ -55,7 +59,7 @@ Each currency's payment methods come from the Mostro app's list; anything not on
 (in the Cuba example, «Saldo móvil»).
 
 The node information (name, description, website, fee, amounts, version, Lightning node, relays) is read
-from its own Nostr events (kind 0, 38385 and 10002). It has its own page, `nodo.html`, reached with the
+from its own Nostr events (kind 0, 38385 and 10002). It has its own page, `node.html`, reached with the
 «Mostro node» button or by clicking the node name in the currency bar (it keeps the URL parameters). The
 community and social links are only shown for the nodes in `.env`.
 
@@ -91,7 +95,7 @@ The methods in `HIDDEN_PAYMENT_METHODS` are left out by default; they can be ena
 ## Working when services are blocked
 
 Designed for countries or networks where some services are blocked. The page doesn't depend on any CDN:
-the libraries are copied into `vendor/` (lightweight-charts 5.2.1 and nostr-tools 2.25.2), about 105 KB
+the libraries are copied into `web/vendor/` (lightweight-charts 5.2.1 and nostr-tools 2.25.2), about 105 KB
 compressed.
 
 External services it uses and what happens if they are blocked:
@@ -107,7 +111,7 @@ External services it uses and what happens if they are blocked:
 Relays keep orders for about 15 days and only their latest version: once an order is completed, the
 `pending` version (market or fixed price) and the `in-progress` one (when it was taken) are gone. The
 node's `mostro-rates` (BTC price in every currency, from Yadio) expire after 10 minutes. To keep a full
-history, `indexer/archivador.mjs` subscribes to the `.env` relays and stores everything the node
+history, `indexer/archiver.mjs` subscribes to the `.env` relays and stores everything the node
 publishes, verified (signature and author), in daily files:
 
 - `indexer/data/eventos/YYYY-MM-DD.jsonl`: orders of every currency (one line per relay that had it, to
@@ -119,10 +123,10 @@ It needs Node.js ≥ 22 (native WebSocket), no dependencies, and must run all th
 while it is off is lost, except the latest version of each order. Around 1 MB per day.
 
 ```sh
-node indexer/archivador.mjs
+node indexer/archiver.mjs
 ```
 
-To run it as a service that starts by itself, see `indexer/tasak-archivador.service`. Two archivers on
+To run it as a service that starts by itself, see `indexer/tasak-archiver.service`. Two archivers on
 different machines can be merged later (events are deduplicated by id). These files will feed the
 future indexer.
 
@@ -130,7 +134,7 @@ The history from before the archiver can be recovered by the node's operator fro
 database. On a copy (`sqlite3 mostro.db ".backup mostro-copy.db"`), run:
 
 ```sh
-node indexer/exportar-mostro.mjs mostro-copy.db
+node indexer/export-mostro.mjs mostro-copy.db
 ```
 
 It needs Node.js ≥ 22.13 and writes the executed orders to `indexer/data/mostro-db/`. It exports only
@@ -142,24 +146,25 @@ signed Nostr event is also archived.
 
 | File | What it is |
 |---|---|
-| `index.html` | the rate: chart, order book and executed orders |
-| `nodo.html` | Mostro node information |
-| `i18n.js` | language (Spanish / English): dictionary and text translation |
-| `comun.js`, `comun.css` | configuration, formatting, colours and node card, shared by both pages |
-| `build.mjs` | reads `.env` and generates `config.js` |
-| `indexer/` | the event archiver, its systemd service and the Mostro database exporter |
-| `tools/` | development checks in headless Chrome (Node, no dependencies); `reference.mjs` freezes what the site computes from fixed data into `shared/test/expected.json` |
-| `shared/` | pure logic of the rate (ES modules: payment methods, orders, time zones and periods, units, Tasa K and candles); not used by the site yet |
+| `web/` | the site, the folder to publish |
+| `web/index.html` | the rate: chart, order book and executed orders |
+| `web/node.html` | Mostro node information |
+| `web/i18n.js` | language (Spanish / English): dictionary and text translation |
+| `web/common.js`, `web/common.css` | configuration, formatting, colours and node card, shared by both pages |
+| `web/vendor/` | copied libraries (no CDN) and the Mostro app's payment methods per currency (`mostro-payment-methods.js`) |
+| `shared/` | pure logic of the rate (ES modules: payment methods, orders, time zones and periods, units, Tasa K and candles), used by `web/index.html` (`build.mjs` copies it to `web/shared/`) |
 | `shared/test/` | tests of `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), fixed real data (`fixtures/`), the reference values the code must reproduce (`expected.json`) and hand-written cases (`cases.json`) |
-| `vendor/` | copied libraries (no CDN) and the Mostro app's payment methods per currency (`mostro-payment-methods.js`) |
+| `build.mjs` | reads `.env`, generates `web/config.js` and copies `shared/` into `web/shared/` |
+| `indexer/` | the event archiver, its systemd service and the Mostro database exporter |
+| `tools/` | development checks in headless Chrome (Node, no dependencies); `node tools/reference.mjs` checks that `web/` computes the values in `shared/test/expected.json` from fixed data |
 
 ## Languages
 
 The page is in Spanish and English. The language is chosen in this order: `?lang=` in the URL, the
 ES · EN switch (remembered in the browser), `LANGUAGE` in `.env` and, otherwise, the browser language.
-The original texts are in Spanish; translations live in `i18n.js` (`EN`). Adding another language is
+The original texts are in Spanish; translations live in `web/i18n.js` (`EN`). Adding another language is
 just another dictionary like it.
 
 ## License
 
-[MIT](LICENSE). The third-party code in `vendor/` keeps its own licenses (see `vendor/README.md`).
+[MIT](LICENSE). The third-party code in `web/vendor/` keeps its own licenses (see `web/vendor/README.md`).

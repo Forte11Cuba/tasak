@@ -12,7 +12,7 @@ export const expected = json('./expected.json');
 export const cases = json('./cases.json');
 export const config = json('./fixtures/config.json');
 export const now = expected.now;
-export const tz = config.zonaHoraria;
+export const tz = config.timeZone;
 export const nodes = new Set(config.mostros);
 const events = json('./fixtures/events.json');
 const btcusd = new Map(Object.entries(json('./fixtures/btcusd.json')).map(([t, close]) => [Number(t), close]));
@@ -20,7 +20,7 @@ const yadio = json('./fixtures/yadio.json');
 
 // Payment methods of the Mostro app: a classic script that sets window.MOSTRO_PAYMENT_METHODS
 const win = {};
-new Function('window', read('../../vendor/mostro-payment-methods.js'))(win);
+new Function('window', read('../../web/vendor/mostro-payment-methods.js'))(win);
 export const PM_LISTS = win.MOSTRO_PAYMENT_METHODS;
 export const pmList = fiat => pmListFor(PM_LISTS, fiat);
 
@@ -42,7 +42,7 @@ export function loadOrders() {
 // What the site shows for a currency and unit with the default payment methods
 export function viewOf(orders, fiat, unit) {
   const keys = pmStats(orders, { fiat, nodes, now }).map(s => s.key);
-  const pmSel = defaultPmSelection(keys, hiddenSet(config.metodosOcultos));
+  const pmSel = defaultPmSelection(keys, hiddenSet(config.hiddenPaymentMethods));
   const filters = { fiat, nodes, pmSel };
   // BTC/USD: the hourly Coinbase close; without it, Yadio's current price (approximate)
   let approx = false;

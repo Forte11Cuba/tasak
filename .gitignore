@@ -1,3 +1,4 @@
 .env
-config.js
+web/config.js
+web/shared/
 indexer/data/

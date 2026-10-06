@@ -13,17 +13,20 @@ const TYPES = {
   '.css': 'text/css; charset=utf-8', '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png',
 };
 
-// Serves the folder `root` on 127.0.0.1; `overrides` maps a path (e.g. '/config.js') to the
-// content served instead of the file on disk
-export function serve(root, overrides = {}) {
+// Serves the folder `root` on 127.0.0.1. `overrides` maps a path (e.g. '/config.js') to the content
+// served instead of the file on disk; `mounts` maps a path prefix (e.g. '/shared/') to another folder
+export function serve(root, overrides = {}, mounts = {}) {
   const server = createServer((req, res) => {
     const path = decodeURIComponent(new URL(req.url, 'http://x').pathname);
     if (path in overrides) {
       res.writeHead(200, { 'Content-Type': TYPES[extname(path)] || 'text/plain' });
       return res.end(overrides[path]);
     }
-    const file = join(root, normalize(path === '/' ? '/index.html' : path));
-    if (!file.startsWith(root) || !existsSync(file)) { res.writeHead(404); return res.end(); }
+    const prefix = Object.keys(mounts).find(p => path.startsWith(p));
+    const base = prefix ? mounts[prefix] : root;
+    const rel = prefix ? '/' + path.slice(prefix.length) : path === '/' ? '/index.html' : path;
+    const file = join(base, normalize(rel));
+    if (!file.startsWith(base) || !existsSync(file)) { res.writeHead(404); return res.end(); }
     res.writeHead(200, { 'Content-Type': TYPES[extname(file)] || 'application/octet-stream' });
     res.end(readFileSync(file));
   });
