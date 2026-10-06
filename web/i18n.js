@@ -146,7 +146,7 @@ const EN = {
   'Copiar JSON': 'Copy JSON',
   'Copiado ✓': 'Copied ✓',
   'No se pudo copiar': 'Could not copy',
-  'Ver en njump.me ↗': 'View on njump.me ↗',
+  'Verificar en Nostr Inspect ↗': 'Verify on Nostr Inspect ↗',
   'Estado': 'Status',
   'Fecha': 'Date',
   'Métodos de pago': 'Payment methods',
