@@ -26,7 +26,7 @@ test('payment methods of every order', () => {
 
 test('methods selected by default, per currency', () => {
   const orders = loadOrders();
-  const hidden = hiddenSet(config.metodosOcultos);
+  const hidden = hiddenSet(config.hiddenPaymentMethods);
   for (const [fiat, c] of Object.entries(expected.currencies)) {
     const keys = pmStats(orders, { fiat, nodes, now }).map(s => s.key);
     assert.deepEqual([...defaultPmSelection(keys, hidden)].sort(), c.activePaymentMethods, fiat);

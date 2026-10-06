@@ -1,6 +1,6 @@
-// Métodos de pago por moneda de la app oficial de Mostro, la lista que ve el usuario al crear una orden.
-// Origen: https://github.com/MostroP2P/mobile/blob/913019069e09/assets/data/payment_methods.json
-// Para actualizarla, vuelve a descargar ese archivo y regenera este.
+// Payment methods per currency of the official Mostro app, the list users see when creating an order.
+// Source: https://github.com/MostroP2P/mobile/blob/913019069e09/assets/data/payment_methods.json
+// To update it, download that file again and regenerate this one.
 window.MOSTRO_PAYMENT_METHODS = {
  "ARS": [
   "Mercado Pago",

@@ -1,21 +1,29 @@
-// Freezes what the CURRENT site computes from the fixed data in shared/test/fixtures/ and writes it
-// to shared/test/expected.json. Those are the values the restructured code (shared/) must reproduce.
+// Runs web/index.html in headless Chrome on the fixed data in shared/test/fixtures/ and checks that
+// it computes exactly the values in shared/test/expected.json (frozen from the site before it was
+// restructured). With --write it rewrites expected.json instead: only to change it on purpose.
 //
-// Usage: node tools/reference.mjs [--screenshot out.png]   (Node >= 22 and Google Chrome)
+// Usage: node tools/reference.mjs [--write] [--screenshot out.png]   (Node >= 22 and Google Chrome)
 //
-// The real index.html runs in headless Chrome with everything external replaced:
-// - config.js: shared/test/fixtures/config.json (not the local .env);
+// Everything external is replaced:
+// - config.js: shared/test/fixtures/config.json (not the local .env), and shared/ served from the
+//   repository (no build needed);
 // - relays: a fake WebSocket that answers REQs from fixtures/events.json, as a relay would;
 // - Coinbase and Yadio: fixtures/btcusd.json and fixtures/yadio.json;
 // - clock and time zone: fixtures/meta.json (now and the visitor's time zone);
 // - any other host is unreachable.
-import { readFileSync, writeFileSync } from 'node:fs';
+//
+// cases.buggyOffsets is not checked: it froze a bug of the old tzOffset that is fixed now (the
+// correct values are in cases.json); --write keeps it as it was.
+import { readFileSync, writeFileSync, existsSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { serve, openChrome } from './cdp.mjs';
 
 const root = new URL('../', import.meta.url);
 const fixture = n => JSON.parse(readFileSync(new URL(`shared/test/fixtures/${n}`, root), 'utf8'));
 const meta = fixture('meta.json');
 const FIX = { events: fixture('events.json'), btcusd: fixture('btcusd.json'), yadio: fixture('yadio.json'), now: meta.now };
+const expectedFile = new URL('shared/test/expected.json', root);
+const write = process.argv.includes('--write');
 
 // Runs in the page before any of its scripts
 function simulation(FIX) {
@@ -73,16 +81,23 @@ function simulation(FIX) {
   };
 }
 
-// Runs in the page once it has loaded the fixtures: reads what the site computed
+// Runs in the page once it has loaded the fixtures: reads what the site computed. The page's
+// state comes from window.tasak; what the old site computed inline comes from the same shared/
+// modules the page uses
 async function extract() {
+  const T = window.tasak;
+  const load = p => import(new URL(p, location.href).href);
+  const [rate, time, pms, orders] = await Promise.all(
+    ['shared/rate.js', 'shared/time.js', 'shared/payment-methods.js', 'shared/orders.js'].map(load));
   const settle = async () => {
     for (let i = 0; i < 100; i++) {
-      await rendering;
+      await T.rendering;
       await new Promise(r => setTimeout(r, 20));
-      if (!renderQueued) { await rendering; return; }
+      if (!T.renderQueued) { await T.rendering; return; }
     }
   };
   await settle();
+  const state = T.state;
   const now = Date.now() / 1000;
   const text = id => document.getElementById(id)?.textContent.trim() ?? null;
   const r = {};
@@ -105,43 +120,43 @@ async function extract() {
   r.currencies = {};
   for (const fiat of fiats) {
     state.fiat = fiat; state.pmSel = null; state.pmKnown = null;
-    renderFilters();
+    T.renderFilters();
     const c = r.currencies[fiat] = { activePaymentMethods: [...state.pmSel].sort(), units: {} };
     for (const unit of ['usd', 'btc', 'sat']) {
       state.unit = unit;
-      const trades = getTrades();
-      const inWindow = trades.filter(t => t.ts > now - WIN);
-      const before = trades.filter(t => t.ts > now - 2 * WIN && t.ts <= now - WIN);
+      const trades = T.getTrades();
+      const approximateUsd = state.btcApprox;
+      const k = rate.tasaK(trades, now);
       const u = c.units[unit] = {
-        approximateUsd: state.btcApprox,
-        rate: weightedPrice(inWindow),
-        previousRate: weightedPrice(before),
-        orders24h: inWindow.length,
-        volume24h: inWindow.reduce((a, t) => a + t.size, 0),
-        trades: trades.map(t => ({ key: t.key, ts: t.ts, size: t.size, price: t.price, chartTime: toChartTime(t.ts) })),
+        approximateUsd,
+        rate: k.rate,
+        previousRate: k.previous,
+        orders24h: k.count,
+        volume24h: k.volume,
+        trades: trades.map(t => ({ key: t.key, ts: t.ts, size: t.size, price: t.price, chartTime: time.toChartTime(t.ts, CONFIG.tz) })),
         candles: {},
       };
-      for (const tf of [3600, 14400, 86400, 604800, 2592000, 31536000]) {
-        const candles = buildCandles(trades, tf).sort((a, b) => a.time - b.time);
-        u.candles[tf] = { candles, emptyPeriods: emptyPeriods(candles.map(k => k.time), tf) };
+      for (const tf of time.TIMEFRAMES) {
+        const candles = rate.buildCandles(trades, tf, CONFIG.tz).sort((a, b) => a.time - b.time);
+        u.candles[tf] = { candles, emptyPeriods: time.emptyPeriods(candles.map(k => k.time), tf) };
       }
-      const book = getBook();
+      const book = T.getBook();
       const row = o => ({ key: o.key, price: o.price, size: o.size, fixed: o.fixed });
       u.book = { asks: book.asks.map(row), bids: book.bids.map(row) };
       // Chart points in Weighted mode (it adds the empty periods): value, volume and the moving
       // 24 h weighted average of each point
       u.points = {};
-      for (const tf of [0, 3600, 14400, 86400, 604800, 2592000, 31536000]) {
+      for (const tf of [0, ...time.TIMEFRAMES]) {
         state.mode = 'avg'; state.tf = tf;
-        renderChart(trades);
-        u.points[tf] = [...view.info.values()].map(p => ({ time: p.time, value: p.value ?? null, vol: p.vol, n: p.n,
+        T.renderChart(trades);
+        u.points[tf] = [...T.view.info.values()].map(p => ({ time: p.time, value: p.value ?? null, vol: p.vol, n: p.n,
           avg: p.avg ?? null, avgN: p.avgN ?? null, avgVol: p.avgVol ?? null, empty: !!p.empty, key: p.order?.key ?? null }));
       }
     }
   }
   Object.assign(state, saved);
-  renderFilters();
-  renderChart(getTrades());
+  T.renderFilters();
+  T.renderChart(T.getTrades());
 
   // Small cases straight on the functions
   const pm = [['Cash', 'USD'], ['Cash App', 'USD'], ['360 CUP de saldo móvil 📲', 'CUP'], ['Saldo móvil', 'CUP'],
@@ -153,7 +168,7 @@ async function extract() {
   for (const a of statuses) for (const b of statuses) for (const [ta, tb] of [[1, 1], [2, 1], [1, 2]]) {
     for (const [ia, ib] of [['a', 'b'], ['b', 'a']]) {
       versions.push({ a: [ta, a, ia], b: [tb, b, ib],
-        wins: newerVersion({ ts: ta, status: a, ev: { id: ia } }, { ts: tb, status: b, ev: { id: ib } }) });
+        wins: orders.newerVersion({ ts: ta, status: a, ev: { id: ia } }, { ts: tb, status: b, ev: { id: ib } }) });
     }
   }
   // Monday 5/1/1970 week anchor, month and year ends, leap day, and the configured zone's DST changes
@@ -161,30 +176,34 @@ async function extract() {
   const times = [0, 4 * 86400 - 1, 4 * 86400, 1790553599, 1790553600, 1790812799, 1790812800,
     1767225599, 1767225600, 1835438400, now];
   const periods = [];
-  for (const time of times) for (const tf of [3600, 14400, 86400, 604800, 2592000, 31536000]) {
-    const start = periodStart(time, tf);
-    periods.push({ time, tf, start, next: nextPeriod(start, tf) });
+  for (const t of times) for (const tf of time.TIMEFRAMES) {
+    const start = time.periodStart(t, tf);
+    periods.push({ time: t, tf, start, next: time.nextPeriod(start, tf) });
   }
-  // Every half hour around the 2026 DST changes of America/Havana (8/3 and 1/11, 05:00 UTC).
-  // KNOWN BUG, frozen as is: tzOffset parses date text in the browser's zone, so within ~5 h of a DST
-  // change of that zone it is off by one hour. The restructured code must return the correct
-  // offsets here (Intl formatToParts, see cases.json), not these
-  const offsets = [1772946000, 1793509200].flatMap(c => Array.from({ length: 9 }, (_, i) => c + (i - 4) * 1800))
-    .concat(now).map(ts => ({ ts, offset: tzOffset(ts) }));
   r.cases = {
-    pmKey: pm.map(([text, fiat]) => ({ text, fiat, method: pmKey(text, fiat) })),
+    pmKey: pm.map(([text, fiat]) => ({ text, fiat, method: pms.pmKey(text, pms.pmListFor(window.MOSTRO_PAYMENT_METHODS, fiat)) })),
     // The FAQ example: 3 orders at 785 that add up to 3000 and one at 750 of 5000
-    faqExample: weightedPrice([{ price: 785, size: 1000 }, { price: 785, size: 1000 }, { price: 785, size: 1000 },
+    faqExample: rate.weightedPrice([{ price: 785, size: 1000 }, { price: 785, size: 1000 }, { price: 785, size: 1000 },
       { price: 750, size: 5000 }]),
     versions, periods,
-    buggyOffsets: offsets,
   };
   return r;
 }
 
-const server = await serve(new URL('.', root).pathname.replace(/\/$/, ''), {
-  '/config.js': `window.TASAK_CONFIG = ${JSON.stringify(fixture('config.json'))};\n`,
-});
+// Paths where two JSON values differ (at most `max`)
+function differences(a, b, path = '', out = [], max = 20) {
+  if (out.length >= max) return out;
+  if (a && b && typeof a === 'object' && typeof b === 'object' && Array.isArray(a) === Array.isArray(b)) {
+    for (const k of new Set([...Object.keys(a), ...Object.keys(b)])) differences(a[k], b[k], `${path}.${k}`, out, max);
+  } else if (!Object.is(a, b) && JSON.stringify(a) !== JSON.stringify(b)) {
+    out.push(`${path || '.'}: expected ${JSON.stringify(b)?.slice(0, 80)}, got ${JSON.stringify(a)?.slice(0, 80)}`);
+  }
+  return out;
+}
+
+const web = fileURLToPath(new URL('web', root));
+const server = await serve(web, { '/config.js': `window.TASAK_CONFIG = ${JSON.stringify(fixture('config.json'))};\n` },
+  { '/shared/': fileURLToPath(new URL('shared', root)) });
 // Nothing leaves the machine: every host but the local server is unreachable
 const chrome = await openChrome(['--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1']);
 try {
@@ -193,7 +212,7 @@ try {
   await p.cmd('Emulation.setDeviceMetricsOverride', { width: 1400, height: 900, deviceScaleFactor: 1, mobile: false });
   await p.cmd('Page.addScriptToEvaluateOnNewDocument', { source: `(${simulation})(${JSON.stringify(FIX)});` });
   await p.goto(`${server.url}/index.html?lang=es`);
-  await p.waitFor('state.live === CONFIG.relays.length');
+  await p.waitFor('window.tasak && tasak.state.live === CONFIG.relays.length');
   const r = await p.evaluate(`(${extract})()`);
 
   const out = process.argv.indexOf('--screenshot');
@@ -202,17 +221,30 @@ try {
   const errors = p.errors.filter(e => !/ERR_NAME_NOT_RESOLVED|Failed to load resource/.test(e));
   if (errors.length) throw new Error('errors in the page:\n  ' + errors.join('\n  '));
 
-  const expected = {
-    description: 'Values computed by the site before restructuring (tools/reference.mjs) from shared/test/fixtures/',
+  const previous = existsSync(expectedFile) ? JSON.parse(readFileSync(expectedFile, 'utf8')) : null;
+  const actual = {
+    description: previous?.description
+      ?? 'Values computed by the site before restructuring (tools/reference.mjs) from shared/test/fixtures/',
     now: meta.now, browserTimeZone: meta.browserTimeZone, ...r,
+    cases: { ...r.cases, buggyOffsets: previous?.cases?.buggyOffsets ?? [] },
   };
-  writeFileSync(new URL('shared/test/expected.json', root), JSON.stringify(expected, null, 1) + '\n');
   const units = r.currencies[r.view.fiat]?.units;
   console.log(`view ${r.view.fiat}/${r.view.unit}: header «${r.header.sTasa}» (${r.header.sTasaSub})`);
   for (const [unit, u] of Object.entries(units || {})) {
     console.log(`  ${unit}: rate ${u.rate} from ${u.orders24h} orders in 24 h, ${u.trades.length} trades in total`);
   }
-  console.log(`${r.orders.length} orders, currencies ${Object.keys(r.currencies).join(', ')} -> shared/test/expected.json`);
+  if (write) {
+    writeFileSync(expectedFile, JSON.stringify(actual, null, 1) + '\n');
+    console.log(`${r.orders.length} orders, currencies ${Object.keys(r.currencies).join(', ')} -> shared/test/expected.json`);
+  } else {
+    const diff = previous ? differences(actual, previous) : ['no shared/test/expected.json (run with --write)'];
+    if (diff.length) {
+      console.error(`DIFFERENT from expected.json:\n  ${diff.join('\n  ')}`);
+      process.exitCode = 1;
+    } else {
+      console.log(`same as expected.json: ${r.orders.length} orders, currencies ${Object.keys(r.currencies).join(', ')}`);
+    }
+  }
 } finally {
   chrome.close();
   server.close();

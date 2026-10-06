@@ -20,7 +20,7 @@ if (!archive) {
 }
 mkdirSync(dir, { recursive: true });
 
-// --- Events: unique by id, only what index.html reads (orders and node metadata) ---
+// --- Events: unique by id, only what web/index.html reads (orders and node metadata) ---
 // (each archive line is {"relay", "recibido", "evento"}, the archiver's format)
 const KINDS = new Set([38383, 0, 10002, 38385]);
 const byId = new Map();
@@ -60,19 +60,19 @@ for (const line of readFileSync(new URL('.env.example', root), 'utf8').split(/\r
 const list = s => (s || '').split(/[\s,]+/).filter(Boolean);
 // The same keys build.mjs writes to config.js
 const config = {
-  nombreSitio: env.SITE_NAME || 'tasaK',
-  nombreTasa: env.RATE_NAME || 'Tasa K',
+  siteName: env.SITE_NAME || 'tasaK',
+  rateName: env.RATE_NAME || 'Tasa K',
   logo: env.LOGO || '',
-  logoClaro: env.LOGO_LIGHT || '',
-  tema: env.THEME || '',
-  idioma: env.LANGUAGE || '',
+  logoLight: env.LOGO_LIGHT || '',
+  theme: env.THEME || '',
+  language: env.LANGUAGE || '',
   mostros: list(env.MOSTRO_PUBKEYS),
   relays: list(env.RELAYS),
   fiat: (env.FIAT || '').toUpperCase(),
-  zonaHoraria: env.TIMEZONE || '',
-  comunidad: { nombre: env.COMMUNITY || '', url: env.COMMUNITY_URL || '' },
-  rrss: list(env.SOCIAL_LINKS),
-  metodosOcultos: env.HIDDEN_PAYMENT_METHODS == null ? ['Pruebas', 'Otros']
+  timeZone: env.TIMEZONE || '',
+  community: { name: env.COMMUNITY || '', url: env.COMMUNITY_URL || '' },
+  socialLinks: list(env.SOCIAL_LINKS),
+  hiddenPaymentMethods: env.HIDDEN_PAYMENT_METHODS == null ? ['Pruebas', 'Otros']
     : env.HIDDEN_PAYMENT_METHODS.split(',').map(s => s.trim()).filter(Boolean),
 };
 
@@ -84,7 +84,7 @@ write('config.json', config);
 write('meta.json', {
   now,
   // The visitor's browser time zone: the old tzOffset() depended on it, not only on CONFIG.tz
-  browserTimeZone: config.zonaHoraria || 'UTC',
+  browserTimeZone: config.timeZone || 'UTC',
   capturedAt: new Date().toISOString(),
   events: { file: archive.split('/').pop(), total: events.length, orders: orders.length },
   btcusd: { source: 'Coinbase BTC-USD candles granularity=3600 (close)', hours: Object.keys(btcusd).length },

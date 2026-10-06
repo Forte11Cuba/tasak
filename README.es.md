@@ -23,13 +23,17 @@ alguien dice que pagaría, no lo que realmente se pagó. tasaK parte de lo contr
 
 ## Configurar
 
-Requisitos: Node.js ≥ 18 (solo para generar `config.js`, sin dependencias) y cualquier servidor web estático.
+Requisitos: Node.js ≥ 18 (solo para generar `web/config.js`, sin dependencias) y cualquier servidor web estático.
 
 ```sh
-cp .env.example .env     # pon tu nodo, relays, moneda y comunidad (el ejemplo es Kmbalache)
-node build.mjs           # genera config.js
-python3 -m http.server   # o cualquier servidor estático; abre http://localhost:8000
+cp .env.example .env            # pon tu nodo, relays, moneda y comunidad (el ejemplo es Kmbalache)
+node build.mjs                  # genera web/config.js y copia shared/ en web/shared/
+python3 -m http.server -d web   # o cualquier servidor estático; abre http://localhost:8000
 ```
+
+La carpeta que se publica es `web/` (después de ejecutar `node build.mjs`): contiene todo lo que necesita el sitio.
+Necesita un servidor web, también para probarla en local: abierta como archivo (`file://`) los navegadores
+no cargan sus módulos ES y la página muestra un aviso en su lugar.
 
 Variables de `.env` (en inglés, para que sirvan a cualquier operador de nodo):
 
@@ -37,7 +41,7 @@ Variables de `.env` (en inglés, para que sirvan a cualquier operador de nodo):
 |---|---|
 | `SITE_NAME` | Nombre del sitio: logo, pestaña e icono (por defecto `tasaK`; si termina en mayúsculas, esa parte va resaltada) |
 | `RATE_NAME` | Nombre de la tasa en toda la página (por defecto `Tasa K`) |
-| `LOGO` | Logo del sitio: archivo junto a `index.html` (svg, png, jpg, webp) o enlace https. Vacío = el nombre en texto |
+| `LOGO` | Logo del sitio: archivo en `web/`, junto a `index.html` (svg, png, jpg, webp), o enlace https. Vacío = el nombre en texto |
 | `LOGO_LIGHT` | Logo para el tema claro (opcional; si falta, se usa `LOGO`) |
 | `THEME` | Tema por defecto, `light` o `dark` (vacío = el del sistema). Cada visitante puede cambiarlo con ☀ / ☾ |
 | `LANGUAGE` | Idioma por defecto, `es` o `en` (vacío = el del navegador). Cada visitante puede cambiarlo con ES · EN |
@@ -54,7 +58,7 @@ Los métodos de pago de cada moneda salen de la lista de la app de Mostro; lo qu
 agrupa como «Otros». En `HIDDEN_PAYMENT_METHODS` conviene añadir los que en tu mercado se negocian a
 otra tasa (en el ejemplo de Cuba, «Saldo móvil»).
 
-La información del nodo (nombre, descripción, web, comisión, montos, versión, nodo Lightning, relays) se lee de sus propios eventos Nostr (kind 0, 38385 y 10002). Está en su propia página, `nodo.html`, a la que se llega con el botón «Nodo Mostro» o haciendo clic en el nombre del nodo en la barra de moneda (conserva los parámetros de la URL). La comunidad y las redes solo se muestran con los nodos del `.env`.
+La información del nodo (nombre, descripción, web, comisión, montos, versión, nodo Lightning, relays) se lee de sus propios eventos Nostr (kind 0, 38385 y 10002). Está en su propia página, `node.html`, a la que se llega con el botón «Nodo Mostro» o haciendo clic en el nombre del nodo en la barra de moneda (conserva los parámetros de la URL). La comunidad y las redes solo se muestran con los nodos del `.env`.
 
 Cualquier visitante puede ver otro nodo sin desplegar nada, sobrescribiendo el `.env` desde la URL:
 
@@ -85,7 +89,7 @@ Los métodos de `HIDDEN_PAYMENT_METHODS` quedan fuera por defecto; se pueden act
 
 ## Funcionar aunque haya servicios bloqueados
 
-Pensada para países o redes donde algunos servicios están bloqueados. La página no depende de ningún CDN: las librerías están copiadas en `vendor/`
+Pensada para países o redes donde algunos servicios están bloqueados. La página no depende de ningún CDN: las librerías están copiadas en `web/vendor/`
 (lightweight-charts 5.2.1 y nostr-tools 2.25.2), unos 105 KB comprimidos.
 
 Servicios externos que usa y qué pasa si están bloqueados:
@@ -101,7 +105,7 @@ Servicios externos que usa y qué pasa si están bloqueados:
 Los relays guardan las órdenes unos 15 días y solo su última versión: cuando una orden se completa,
 desaparecen la versión `pending` (precio de mercado o fijo) y la `in-progress` (cuándo se tomó). Los
 `mostro-rates` del nodo (precio de BTC en cada moneda, de Yadio) caducan a los 10 minutos. Para tener el
-historial completo, `indexer/archivador.mjs` se suscribe a los relays del `.env` y guarda todo lo que
+historial completo, `indexer/archiver.mjs` se suscribe a los relays del `.env` y guarda todo lo que
 publica el nodo, verificado (firma y autor), en archivos diarios:
 
 - `indexer/data/eventos/AAAA-MM-DD.jsonl`: órdenes de todas las monedas (una línea por cada relay que la
@@ -114,10 +118,10 @@ Necesita Node.js ≥ 22 (WebSocket nativo), sin dependencias, y debe estar siemp
 mientras está apagado se pierde, salvo la última versión de cada orden. Ocupa alrededor de 1 MB al día.
 
 ```sh
-node indexer/archivador.mjs
+node indexer/archiver.mjs
 ```
 
-Para que arranque solo como servicio, ver `indexer/tasak-archivador.service`. Dos archivadores en
+Para que arranque solo como servicio, ver `indexer/tasak-archiver.service`. Dos archivadores en
 máquinas distintas se pueden unir después (los eventos se deduplican por id). Estos archivos
 alimentarán el futuro indexador.
 
@@ -125,7 +129,7 @@ El historial anterior al archivador lo puede recuperar el operador del nodo desd
 Mostro. Sobre una copia (`sqlite3 mostro.db ".backup mostro-copia.db"`):
 
 ```sh
-node indexer/exportar-mostro.mjs mostro-copia.db
+node indexer/export-mostro.mjs mostro-copia.db
 ```
 
 Necesita Node.js ≥ 22.13 y escribe las órdenes ejecutadas en `indexer/data/mostro-db/`. Solo exporta
@@ -137,24 +141,25 @@ como confirmada cuando su evento firmado de Nostr también está archivado.
 
 | Archivo | Qué es |
 |---|---|
-| `index.html` | la tasa: gráfica, order book y órdenes ejecutadas |
-| `nodo.html` | información del nodo Mostro |
-| `i18n.js` | idioma (español / inglés): diccionario y traducción de textos |
-| `comun.js`, `comun.css` | configuración, formato, colores y tarjeta del nodo, compartidos por las dos páginas |
-| `build.mjs` | lee `.env` y genera `config.js` |
-| `indexer/` | el archivador de eventos, su servicio de systemd y el exportador de la base de datos de Mostro |
-| `tools/` | comprobaciones de desarrollo en Chrome headless (Node, sin dependencias); `reference.mjs` guarda lo que calcula el sitio con datos fijos en `shared/test/expected.json` |
-| `shared/` | lógica pura de la tasa (módulos ES: métodos de pago, órdenes, zonas horarias y periodos, unidades, Tasa K y velas); el sitio aún no la usa |
+| `web/` | el sitio, la carpeta que se publica |
+| `web/index.html` | la tasa: gráfica, order book y órdenes ejecutadas |
+| `web/node.html` | información del nodo Mostro |
+| `web/i18n.js` | idioma (español / inglés): diccionario y traducción de textos |
+| `web/common.js`, `web/common.css` | configuración, formato, colores y tarjeta del nodo, compartidos por las dos páginas |
+| `web/vendor/` | librerías copiadas (sin depender de CDN) y la lista de métodos de pago por moneda de la app de Mostro (`mostro-payment-methods.js`) |
+| `shared/` | lógica pura de la tasa (módulos ES: métodos de pago, órdenes, zonas horarias y periodos, unidades, Tasa K y velas), que usa `web/index.html` (`build.mjs` la copia a `web/shared/`) |
 | `shared/test/` | pruebas de `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), datos reales fijos (`fixtures/`), los valores de referencia que el código debe reproducir (`expected.json`) y casos escritos a mano (`cases.json`) |
-| `vendor/` | librerías copiadas (sin depender de CDN) y la lista de métodos de pago por moneda de la app de Mostro (`mostro-payment-methods.js`) |
+| `build.mjs` | lee `.env`, genera `web/config.js` y copia `shared/` en `web/shared/` |
+| `indexer/` | el archivador de eventos, su servicio de systemd y el exportador de la base de datos de Mostro |
+| `tools/` | comprobaciones de desarrollo en Chrome headless (Node, sin dependencias); `node tools/reference.mjs` comprueba que `web/` calcula con datos fijos los valores de `shared/test/expected.json` |
 
 ## Idiomas
 
 La página está en español e inglés. El idioma se elige, por este orden: `?lang=` en la URL,
 el selector ES · EN (se recuerda en el navegador), `LANGUAGE` del `.env` y, si no, el idioma del navegador.
-Los textos originales están en español; las traducciones están en `i18n.js` (`EN`). Para añadir
+Los textos originales están en español; las traducciones están en `web/i18n.js` (`EN`). Para añadir
 otro idioma basta con otro diccionario igual.
 
 ## Licencia
 
-[MIT](LICENSE). El código de terceros en `vendor/` mantiene sus propias licencias (ver `vendor/README.md`).
+[MIT](LICENSE). El código de terceros en `web/vendor/` mantiene sus propias licencias (ver `web/vendor/README.md`).

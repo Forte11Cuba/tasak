@@ -1,9 +1,11 @@
-// Lee .env (o variables de entorno) y genera config.js para index.html.
-// Uso: node build.mjs
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+// Reads .env (or environment variables), generates web/config.js and copies shared/ into web/shared/,
+// so that web/ is the only folder to deploy.
+// Usage: node build.mjs
+import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync, rmSync, copyFileSync } from 'node:fs';
 
-const dir = new URL('.', import.meta.url);
-const envFile = new URL('.env', dir);
+const root = new URL('.', import.meta.url);
+const web = new URL('web/', root);
+const envFile = new URL('.env', root);
 
 const fileEnv = {};
 if (existsSync(envFile)) {
@@ -18,33 +20,31 @@ if (existsSync(envFile)) {
   console.warn('Warning: no .env file; using environment variables only (see .env.example).');
 }
 
-// Las variables de entorno del proceso tienen prioridad (útil en CI)
+// Process environment variables take precedence (useful in CI)
 const get = k => process.env[k] ?? fileEnv[k];
 const list = s => (s || '').split(/[\s,]+/).filter(Boolean);
 
-// Las variables del .env están en inglés para que sirvan a cualquier operador de nodo
 const config = {
-  nombreSitio: get('SITE_NAME') || 'tasaK',
-  nombreTasa: get('RATE_NAME') || 'Tasa K',
+  siteName: get('SITE_NAME') || 'tasaK',
+  rateName: get('RATE_NAME') || 'Tasa K',
   logo: get('LOGO') || '',
-  logoClaro: get('LOGO_LIGHT') || '',
-  // Tema por defecto (light | dark); vacío = el del sistema
-  tema: ['light', 'dark'].includes(get('THEME')) ? get('THEME') : '',
-  // Idioma por defecto (es | en); vacío = el del navegador
-  idioma: ['es', 'en'].includes(get('LANGUAGE')) ? get('LANGUAGE') : '',
+  logoLight: get('LOGO_LIGHT') || '',
+  // Default theme (light | dark); empty = the system's
+  theme: ['light', 'dark'].includes(get('THEME')) ? get('THEME') : '',
+  // Default language (es | en); empty = the browser's
+  language: ['es', 'en'].includes(get('LANGUAGE')) ? get('LANGUAGE') : '',
   mostros: list(get('MOSTRO_PUBKEYS')),
   relays: list(get('RELAYS')),
-  // Vacíos: la moneda más usada en el nodo y la zona horaria del navegador del visitante
+  // Empty: the most traded currency on the node and the visitor's browser time zone
   fiat: (get('FIAT') || '').toUpperCase(),
-  zonaHoraria: get('TIMEZONE') || '',
-  comunidad: { nombre: get('COMMUNITY') || '', url: get('COMMUNITY_URL') || '' },
-  rrss: list(get('SOCIAL_LINKS')),
-  // Separados solo por coma: los nombres pueden llevar espacios («Saldo móvil»)
-  metodosOcultos: get('HIDDEN_PAYMENT_METHODS') == null ? ['Pruebas', 'Otros']
+  timeZone: get('TIMEZONE') || '',
+  community: { name: get('COMMUNITY') || '', url: get('COMMUNITY_URL') || '' },
+  socialLinks: list(get('SOCIAL_LINKS')),
+  // Comma separated only: names may contain spaces («Saldo móvil»)
+  hiddenPaymentMethods: get('HIDDEN_PAYMENT_METHODS') == null ? ['Pruebas', 'Otros']
     : get('HIDDEN_PAYMENT_METHODS').split(',').map(s => s.trim()).filter(Boolean),
 };
 
-// Mensajes en inglés, como el .env
 const errors = [];
 if (!config.mostros.length) errors.push('MOSTRO_PUBKEYS is empty');
 for (const k of config.mostros) {
@@ -52,23 +52,23 @@ for (const k of config.mostros) {
 }
 if (!config.relays.length) errors.push('RELAYS is empty');
 for (const r of config.relays) {
-  // Solo cifrados (wss://); ws:// únicamente para un relay local de pruebas
+  // Encrypted only (wss://); ws:// just for a local test relay
   if (!/^wss:\/\/\S+$/i.test(r) && !/^ws:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/\S*)?$/i.test(r)) {
     errors.push(`invalid relay (must start with wss://): ${r}`);
   }
 }
-for (const u of [config.comunidad.url, ...config.rrss].filter(Boolean)) {
+for (const u of [config.community.url, ...config.socialLinks].filter(Boolean)) {
   if (!/^https:\/\/\S+$/i.test(u)) errors.push(`invalid link (must start with https://): ${u}`);
 }
-if (config.zonaHoraria) {
-  try { new Intl.DateTimeFormat('en', { timeZone: config.zonaHoraria }); }
-  catch { errors.push(`invalid TIMEZONE: ${config.zonaHoraria}`); }
+if (config.timeZone) {
+  try { new Intl.DateTimeFormat('en', { timeZone: config.timeZone }); }
+  catch { errors.push(`invalid TIMEZONE: ${config.timeZone}`); }
 }
-for (const [k, v] of [['LOGO', config.logo], ['LOGO_LIGHT', config.logoClaro]].filter(([, v]) => v)) {
+for (const [k, v] of [['LOGO', config.logo], ['LOGO_LIGHT', config.logoLight]].filter(([, v]) => v)) {
   if (!/^(https:\/\/\S+|[\w./-]+\.(svg|png|jpe?g|webp))$/i.test(v)) {
     errors.push(`invalid ${k} (.svg/.png/.jpg/.webp file or https link): ${v}`);
-  } else if (!v.startsWith('https://') && !existsSync(new URL(v, dir))) {
-    errors.push(`${k} file not found: ${v}`);
+  } else if (!v.startsWith('https://') && !existsSync(new URL(v, web))) {
+    errors.push(`${k} file not found in web/: ${v}`);
   }
 }
 if (errors.length) {
@@ -76,6 +76,18 @@ if (errors.length) {
   process.exit(1);
 }
 
-writeFileSync(new URL('config.js', dir),
-  `// Generado por build.mjs a partir de .env. No editar a mano.\nwindow.TASAK_CONFIG = ${JSON.stringify(config, null, 2)};\n`);
-console.log(`config.js generated: ${config.mostros.length} node(s), ${config.relays.length} relay(s), currency ${config.fiat || 'auto'}`);
+writeFileSync(new URL('config.js', web),
+  `// Generated by build.mjs from .env. Do not edit by hand.\nwindow.TASAK_CONFIG = ${JSON.stringify(config, null, 2)};\n`);
+
+// The pure logic of the rate (shared/*.js, without its tests), as ES modules for the pages
+const sharedSrc = new URL('shared/', root);
+const sharedDst = new URL('shared/', web);
+rmSync(sharedDst, { recursive: true, force: true });
+mkdirSync(sharedDst);
+const modules = readdirSync(sharedSrc).filter(f => f.endsWith('.js'));
+for (const f of modules) copyFileSync(new URL(f, sharedSrc), new URL(f, sharedDst));
+
+console.log(`web/config.js generated: ${config.mostros.length} node(s), ${config.relays.length} relay(s), `
+  + `currency ${config.fiat || 'auto'}; ${modules.length} modules copied to web/shared/`);
+// The pages use ES modules, which browsers don't load from file://: they need a web server
+console.log('To see it: python3 -m http.server 8765 -d web  ->  http://localhost:8765/');
