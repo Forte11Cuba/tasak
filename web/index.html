@@ -400,7 +400,7 @@
     <pre class="ev-json num" id="evJson"></pre>
     <div class="ev-actions">
       <button class="icon-btn" id="evCopy" data-i18n>Copiar JSON</button>
-      <a id="evLink" target="_blank" rel="noopener" hidden data-i18n>Ver en njump.me ↗</a>
+      <a id="evLink" target="_blank" rel="noopener" hidden data-i18n>Verificar en Nostr Inspect ↗</a>
     </div>
   </div>
 </dialog>
@@ -440,7 +440,7 @@
     </details>
     <details>
       <summary>¿Cómo compruebo una orden?</summary>
-      <p>Haz clic en una orden de la tabla «Órdenes ejecutadas», o en su punto de la gráfica en modo <strong>Orden</strong>. Se abre su evento Nostr firmado: el JSON completo, su id y si la firma se verificó. Puedes copiarlo o abrirlo en njump.me.</p>
+      <p>Haz clic en una orden de la tabla «Órdenes ejecutadas», o en su punto de la gráfica en modo <strong>Orden</strong>. Se abre su evento Nostr firmado: el JSON completo, su id y si la firma se verificó. Puedes copiarlo o verificarlo en Nostr Inspect, otra web que lo busca directamente en los relays.</p>
     </details>
     <details>
       <summary>¿Por qué solo hay unos 15 días de historial?</summary>
@@ -494,7 +494,7 @@
     </details>
     <details>
       <summary>How do I check an order?</summary>
-      <p>Click an order in the «Executed orders» table or the order book, or its point on the chart in <strong>Order</strong> mode. Its signed Nostr event opens: the full JSON, its id and whether the signature was verified. You can copy it or open it on njump.me.</p>
+      <p>Click an order in the «Executed orders» table or the order book, or its point on the chart in <strong>Order</strong> mode. Its signed Nostr event opens: the full JSON, its id and whether the signature was verified. You can copy it or verify it on Nostr Inspect, a separate site that fetches it straight from the relays.</p>
     </details>
     <details>
       <summary>Why is there only about 15 days of history?</summary>
@@ -1276,7 +1276,7 @@ function openEvent(o) {
   evDlg.showModal();
   const nip19 = window.NostrTools?.nip19;
   if (nip19) {
-    link.href = 'https://njump.me/' + nip19.neventEncode({ id: ev.id, author: ev.pubkey, kind: ev.kind, relays: CONFIG.relays.slice(0, 2) });
+    link.href = 'https://nostrinspect.com/e/' + nip19.neventEncode({ id: ev.id, author: ev.pubkey, kind: ev.kind, relays: CONFIG.relays.slice(0, 2) });
     link.hidden = false;
   }
 }
