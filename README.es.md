@@ -143,8 +143,9 @@ como confirmada cuando su evento firmado de Nostr también está archivado.
 | `comun.js`, `comun.css` | configuración, formato, colores y tarjeta del nodo, compartidos por las dos páginas |
 | `build.mjs` | lee `.env` y genera `config.js` |
 | `indexer/` | el archivador de eventos, su servicio de systemd y el exportador de la base de datos de Mostro |
-| `tools/` | comprobaciones de desarrollo en Chrome headless (Node, sin dependencias); `referencia.mjs` guarda lo que calcula el sitio con datos fijos en `shared/test/esperado.json` |
-| `shared/test/` | datos reales fijos (`fixtures/`) y los valores de referencia que el código debe reproducir |
+| `tools/` | comprobaciones de desarrollo en Chrome headless (Node, sin dependencias); `reference.mjs` guarda lo que calcula el sitio con datos fijos en `shared/test/expected.json` |
+| `shared/` | lógica pura de la tasa (módulos ES: métodos de pago, órdenes, zonas horarias y periodos, unidades, Tasa K y velas); el sitio aún no la usa |
+| `shared/test/` | pruebas de `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), datos reales fijos (`fixtures/`), los valores de referencia que el código debe reproducir (`expected.json`) y casos escritos a mano (`cases.json`) |
 | `vendor/` | librerías copiadas (sin depender de CDN) y la lista de métodos de pago por moneda de la app de Mostro (`mostro-payment-methods.js`) |
 
 ## Idiomas

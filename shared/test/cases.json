@@ -1,0 +1,75 @@
+{
+ "description": "Hand-written cases for shared/ (any implementation must pass them, together with expected.json). Offsets come from each zone's rules, not from running the code.",
+ "tzOffset": [
+  { "note": "America/Havana, 8/3/2026 05:00 UTC: UTC−5 → UTC−4", "tz": "America/Havana", "ts": 1772938800, "offset": -18000 },
+  { "tz": "America/Havana", "ts": 1772940600, "offset": -18000 },
+  { "tz": "America/Havana", "ts": 1772942400, "offset": -18000 },
+  { "tz": "America/Havana", "ts": 1772944200, "offset": -18000 },
+  { "tz": "America/Havana", "ts": 1772945999, "offset": -18000 },
+  { "tz": "America/Havana", "ts": 1772946000, "offset": -14400 },
+  { "tz": "America/Havana", "ts": 1772947800, "offset": -14400 },
+  { "tz": "America/Havana", "ts": 1772949600, "offset": -14400 },
+  { "tz": "America/Havana", "ts": 1772951400, "offset": -14400 },
+  { "tz": "America/Havana", "ts": 1772953200, "offset": -14400 },
+  { "note": "America/Havana, 1/11/2026 05:00 UTC: UTC−4 → UTC−5", "tz": "America/Havana", "ts": 1793502000, "offset": -14400 },
+  { "tz": "America/Havana", "ts": 1793503800, "offset": -14400 },
+  { "tz": "America/Havana", "ts": 1793505600, "offset": -14400 },
+  { "tz": "America/Havana", "ts": 1793507400, "offset": -14400 },
+  { "tz": "America/Havana", "ts": 1793509199, "offset": -14400 },
+  { "tz": "America/Havana", "ts": 1793509200, "offset": -18000 },
+  { "tz": "America/Havana", "ts": 1793511000, "offset": -18000 },
+  { "tz": "America/Havana", "ts": 1793512800, "offset": -18000 },
+  { "tz": "America/Havana", "ts": 1793514600, "offset": -18000 },
+  { "tz": "America/Havana", "ts": 1793516400, "offset": -18000 },
+  { "note": "fractional seconds, as Date.now() / 1000", "tz": "America/Havana", "ts": 1791194400.5, "offset": -14400 },
+  { "note": "Europe/Madrid, 29/3/2026 01:00 UTC: +1 → +2", "tz": "Europe/Madrid", "ts": 1774745999, "offset": 3600 },
+  { "tz": "Europe/Madrid", "ts": 1774746000, "offset": 7200 },
+  { "note": "Europe/Madrid, 25/10/2026 01:00 UTC: +2 → +1", "tz": "Europe/Madrid", "ts": 1792889999, "offset": 7200 },
+  { "tz": "Europe/Madrid", "ts": 1792890000, "offset": 3600 },
+  { "note": "America/St_Johns (half hour), 8/3/2026 05:30 UTC: −3:30 → −2:30", "tz": "America/St_Johns", "ts": 1772947799, "offset": -12600 },
+  { "tz": "America/St_Johns", "ts": 1772947800, "offset": -9000 },
+  { "note": "America/St_Johns, 1/11/2026 04:30 UTC: −2:30 → −3:30", "tz": "America/St_Johns", "ts": 1793507399, "offset": -9000 },
+  { "tz": "America/St_Johns", "ts": 1793507400, "offset": -12600 },
+  { "tz": "Asia/Kolkata", "ts": 1791194400, "offset": 19800 },
+  { "tz": "UTC", "ts": 1791194400, "offset": 0 }
+ ],
+ "emptyPeriods": [
+  { "note": "days", "tf": 86400, "starts": [0, 259200], "empty": [86400, 172800] },
+  { "note": "consecutive: none", "tf": 86400, "starts": [0, 86400], "empty": [] },
+  { "note": "weeks start on Monday (28/9 → 19/10/2026)", "tf": 604800, "starts": [1790553600, 1792368000], "empty": [1791158400, 1791763200] },
+  { "note": "calendar months (January → April 2026)", "tf": 2592000, "starts": [1767225600, 1775001600], "empty": [1769904000, 1772323200] },
+  { "note": "calendar years (2024 → 2026)", "tf": 31536000, "starts": [1704067200, 1767225600], "empty": [1735689600] }
+ ],
+ "tasaK": [
+  {
+   "note": "24 h border: (now − 24 h, now]; the order at exactly now − 24 h belongs to the previous window",
+   "now": 1000000,
+   "trades": [
+    { "id": "a", "ts": 827200, "price": 50, "size": 1 },
+    { "id": "b", "ts": 913600, "price": 100, "size": 1 },
+    { "id": "c", "ts": 913601, "price": 200, "size": 1 },
+    { "id": "d", "ts": 1000000, "price": 400, "size": 3 },
+    { "id": "e", "ts": 1000001, "price": 1000, "size": 1 }
+   ],
+   "expected": { "rate": 350, "previous": 100, "volume": 4, "count": 2, "ids": ["c", "d"] }
+  },
+  {
+   "note": "no orders in the window",
+   "now": 1000000,
+   "trades": [{ "id": "a", "ts": 900000, "price": 100, "size": 1 }],
+   "expected": { "rate": null, "previous": 100, "volume": 0, "count": 0, "ids": [] }
+  }
+ ],
+ "movingWeighted": [
+  {
+   "note": "24 h border: at an end of exactly order + 24 h that order no longer counts",
+   "tz": "UTC",
+   "trades": [
+    { "id": "a", "ts": 0, "price": 100, "size": 1 },
+    { "id": "b", "ts": 86400, "price": 300, "size": 1 }
+   ],
+   "ends": [-1, 0, 86399, 86400, 172800],
+   "expected": [null, { "avg": 100, "n": 1, "vol": 1 }, { "avg": 100, "n": 1, "vol": 1 }, { "avg": 300, "n": 1, "vol": 1 }, null]
+  }
+ ]
+}

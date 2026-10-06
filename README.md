@@ -148,8 +148,9 @@ signed Nostr event is also archived.
 | `comun.js`, `comun.css` | configuration, formatting, colours and node card, shared by both pages |
 | `build.mjs` | reads `.env` and generates `config.js` |
 | `indexer/` | the event archiver, its systemd service and the Mostro database exporter |
-| `tools/` | development checks in headless Chrome (Node, no dependencies); `referencia.mjs` freezes what the site computes from fixed data into `shared/test/esperado.json` |
-| `shared/test/` | fixed real data (`fixtures/`) and the reference values the code must reproduce |
+| `tools/` | development checks in headless Chrome (Node, no dependencies); `reference.mjs` freezes what the site computes from fixed data into `shared/test/expected.json` |
+| `shared/` | pure logic of the rate (ES modules: payment methods, orders, time zones and periods, units, Tasa K and candles); not used by the site yet |
+| `shared/test/` | tests of `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), fixed real data (`fixtures/`), the reference values the code must reproduce (`expected.json`) and hand-written cases (`cases.json`) |
 | `vendor/` | copied libraries (no CDN) and the Mostro app's payment methods per currency (`mostro-payment-methods.js`) |
 
 ## Languages

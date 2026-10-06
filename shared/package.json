@@ -1,0 +1,6 @@
+{
+  "name": "tasak-shared",
+  "private": true,
+  "type": "module",
+  "description": "Pure logic of the Tasa K, shared by the web and its tests (node --test shared/)"
+}
