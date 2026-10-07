@@ -440,7 +440,7 @@
     </details>
     <details>
       <summary>¿Cómo compruebo una orden?</summary>
-      <p>Haz clic en una orden de la tabla «Órdenes ejecutadas», o en su punto de la gráfica en modo <strong>Orden</strong>. Se abre su evento Nostr firmado: el JSON completo, su id y si la firma se verificó. Puedes copiarlo o verificarlo en Nostr Inspect, otra web que lo busca directamente en los relays.</p>
+      <p>Haz clic en una orden de la tabla «Órdenes ejecutadas», o en su punto de la gráfica en modo <strong>Orden</strong>. Se abre su evento Nostr firmado: el JSON completo, su id y si la firma se verificó. Puedes copiarlo o verificarlo en Nostr Inspect, otra web que lo busca directamente en los relays. En las órdenes abiertas, el enlace muestra siempre su versión actual.</p>
     </details>
     <details>
       <summary>¿Por qué solo hay unos 15 días de historial?</summary>
@@ -494,7 +494,7 @@
     </details>
     <details>
       <summary>How do I check an order?</summary>
-      <p>Click an order in the «Executed orders» table or the order book, or its point on the chart in <strong>Order</strong> mode. Its signed Nostr event opens: the full JSON, its id and whether the signature was verified. You can copy it or verify it on Nostr Inspect, a separate site that fetches it straight from the relays.</p>
+      <p>Click an order in the «Executed orders» table or the order book, or its point on the chart in <strong>Order</strong> mode. Its signed Nostr event opens: the full JSON, its id and whether the signature was verified. You can copy it or verify it on Nostr Inspect, a separate site that fetches it straight from the relays. For open orders, the link always shows their current version.</p>
     </details>
     <details>
       <summary>Why is there only about 15 days of history?</summary>
@@ -1250,6 +1250,7 @@ document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => {
 
 // Nostr event of an order
 const evDlg = document.getElementById('evDlg');
+const FINAL_STATUS = ['success', 'canceled', 'expired'];
 function openEvent(o) {
   const ev = o.ev;
   if (!ev) return;
@@ -1276,7 +1277,12 @@ function openEvent(o) {
   evDlg.showModal();
   const nip19 = window.NostrTools?.nip19;
   if (nip19) {
-    link.href = 'https://nostrinspect.com/e/' + nip19.neventEncode({ id: ev.id, author: ev.pubkey, kind: ev.kind, relays: CONFIG.relays.slice(0, 2) });
+    // A final state doesn't change: link the exact version, the one the rate used. An open order gets
+    // replaced and relays drop the old version: link its address, which always shows the latest one
+    const relays = CONFIG.relays.slice(0, 2);
+    link.href = FINAL_STATUS.includes(o.status)
+      ? 'https://nostrinspect.com/e/' + nip19.neventEncode({ id: ev.id, author: ev.pubkey, kind: ev.kind, relays })
+      : 'https://nostrinspect.com/a/' + nip19.naddrEncode({ kind: ev.kind, pubkey: ev.pubkey, identifier: ev.tags.find(t => t[0] === 'd')[1], relays });
     link.hidden = false;
   }
 }
