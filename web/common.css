@@ -76,7 +76,13 @@
 .node-sec { margin: 14px 0 0; color: var(--muted); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
 .node-kv { display: grid; grid-template-columns: max-content 1fr; gap: 5px 14px; margin: 6px 0 0; font-size: 13px; }
 .node-kv dt { color: var(--muted); }
-.node-kv dd { margin: 0; word-break: break-all; }
+/* Words wrap normally; only what doesn't fit on a line (keys, relay URLs) breaks anywhere */
+.node-kv dd { margin: 0; min-width: 0; overflow-wrap: anywhere; }
+/* Narrow screens: each label above its value, so long labels don't squeeze the values */
+@media (max-width: 520px) {
+  .node-kv { grid-template-columns: 1fr; gap: 0; }
+  .node-kv dd { margin-bottom: 8px; }
+}
 
 /* Long texts written in both languages: only the chosen one is shown (lang on <html>) */
 html:not([lang="es"]) [data-lang="es"], html:not([lang="en"]) [data-lang="en"] { display: none !important; }

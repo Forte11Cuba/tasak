@@ -183,6 +183,7 @@ const EN = {
   'Actividad': 'Activity',
   'Técnico': 'Technical',
   'Nodo Lightning': 'Lightning node',
+  'Clave pública': 'Pubkey',
   'Clave pública del nodo Lightning': 'Lightning node pubkey',
   'Relays del nodo': 'Node relays',
   'Información publicada': 'Information published',
