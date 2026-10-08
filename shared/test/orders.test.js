@@ -1,7 +1,7 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newerVersion, nextVersion, mostUsedFiat } from '../orders.js';
-import { expected, loadOrders, viewOf } from './data.js';
+import { newerVersion, currentOrder, mostUsedFiat } from '../orders.js';
+import { expected, cases, loadOrders, viewOf } from './data.js';
 
 test('chosen version and fields of every order', () => {
   const orders = loadOrders().sort((a, b) => a.key < b.key ? -1 : 1);
@@ -17,13 +17,17 @@ test('tie-break between versions of an order (expected.json)', () => {
   }
 });
 
-test('the pending version is kept as the origin of the order', () => {
-  const pending = { ts: 1, status: 'pending', amt: 0, premium: 3, ev: { id: 'a' } };
-  const taken = nextVersion(pending, { ts: 2, status: 'in-progress', amt: 5000, premium: 3, ev: { id: 'b' } });
-  assert.deepEqual(taken.origin, { fixed: false, premium: 3 });
-  const done = nextVersion(taken, { ts: 3, status: 'success', amt: 5000, premium: 3, ev: { id: 'c' } });
-  assert.deepEqual(done.origin, { fixed: false, premium: 3 });
-  assert.equal(nextVersion(done, pending), null);
+// Every order of the arrays, for the arrival orders of the versions
+const permutations = a => a.length < 2 ? [a] : a.flatMap((x, i) => permutations([...a.slice(0, i), ...a.slice(i + 1)]).map(p => [x, ...p]));
+
+test('current state of an order from its versions, in any arrival order (cases.json)', () => {
+  for (const { note, versions, expected: want } of cases.orderVersions) {
+    const parsed = versions.map(([ts, status, id, amt, premium]) => ({ ts, status, amt, premium, ev: { id } }));
+    for (const arrival of permutations(parsed)) {
+      const o = currentOrder(arrival);
+      assert.deepEqual({ id: o.ev.id, origin: o.origin, takenAt: o.takenAt }, want, `${note}: ${arrival.map(v => v.ev.id)}`);
+    }
+  }
 });
 
 test('currency chosen without FIAT: the one with most completed orders', () => {

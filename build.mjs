@@ -1,7 +1,10 @@
 // Reads .env (or environment variables), generates web/config.js and copies shared/ into web/shared/,
-// so that web/ is the only folder to deploy.
-// Usage: node build.mjs
-import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync, rmSync, copyFileSync } from 'node:fs';
+// so that web/ is the only folder to deploy. With --serve, it then serves web/ locally.
+// Usage: node build.mjs [--serve [--port 8765]]
+import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync, rmSync, copyFileSync, statSync } from 'node:fs';
+import { createServer } from 'node:http';
+import { extname, join, normalize, sep } from 'node:path';
+import { fileURLToPath } from 'node:url';
 
 const root = new URL('.', import.meta.url);
 const web = new URL('web/', root);
@@ -89,5 +92,50 @@ for (const f of modules) copyFileSync(new URL(f, sharedSrc), new URL(f, sharedDs
 
 console.log(`web/config.js generated: ${config.mostros.length} node(s), ${config.relays.length} relay(s), `
   + `currency ${config.fiat || 'auto'}; ${modules.length} modules copied to web/shared/`);
+
 // The pages use ES modules, which browsers don't load from file://: they need a web server
-console.log('To see it: python3 -m http.server 8765 -d web  ->  http://localhost:8765/');
+const args = process.argv.slice(2);
+const portArg = args.indexOf('--port');
+const port = portArg >= 0 ? Number(args[portArg + 1]) : 8765;
+if (!args.includes('--serve')) {
+  console.log('To see it: node build.mjs --serve  ->  http://localhost:8765/');
+} else if (!Number.isInteger(port) || port < 1 || port > 65535) {
+  console.error(`Invalid port: ${args[portArg + 1]}`);
+  process.exit(1);
+} else {
+  serve(port);
+}
+
+// Minimal static server for trying the site: only this machine (127.0.0.1), only files inside web/,
+// no cache so that every reload shows the latest files. To publish, use a real web server.
+function serve(port) {
+  const dir = fileURLToPath(web);
+  const TYPES = {
+    '.html': 'text/html; charset=utf-8', '.js': 'text/javascript; charset=utf-8', '.css': 'text/css; charset=utf-8',
+    '.json': 'application/json', '.svg': 'image/svg+xml', '.png': 'image/png', '.jpg': 'image/jpeg',
+    '.jpeg': 'image/jpeg', '.webp': 'image/webp', '.ico': 'image/x-icon', '.txt': 'text/plain; charset=utf-8',
+  };
+  const server = createServer((req, res) => {
+    if (req.method !== 'GET' && req.method !== 'HEAD') {
+      res.writeHead(405, { Allow: 'GET, HEAD' });
+      return res.end();
+    }
+    let path;
+    try { path = decodeURIComponent(new URL(req.url, 'http://localhost').pathname); } catch { path = null; }
+    let file = path && join(dir, normalize(path));
+    if (file && file.startsWith(dir) && existsSync(file) && statSync(file).isDirectory()) file = join(file, 'index.html');
+    if (!file || !(file + sep).startsWith(dir) || !existsSync(file) || !statSync(file).isFile()) {
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' });
+      return res.end('Not found');
+    }
+    res.writeHead(200, { 'Content-Type': TYPES[extname(file).toLowerCase()] || 'application/octet-stream', 'Cache-Control': 'no-store' });
+    res.end(req.method === 'HEAD' ? undefined : readFileSync(file));
+  });
+  server.on('error', e => {
+    console.error(e.code === 'EADDRINUSE' ? `Port ${port} is in use: try node build.mjs --serve --port ${port + 1}` : e.message);
+    process.exit(1);
+  });
+  server.listen(port, '127.0.0.1', () => {
+    console.log(`Serving web/ at http://localhost:${port}/ (Ctrl+C to stop; run it again after changing .env or shared/)`);
+  });
+}

@@ -38,11 +38,19 @@ const rank = s => RANK[s] ?? 1;
 export const newerVersion = (a, b) => a.ts !== b.ts ? a.ts > b.ts
   : rank(a.status) !== rank(b.status) ? rank(a.status) > rank(b.status) : a.ev.id > b.ev.id;
 
-// Version to keep when `o` arrives and `prev` was kept, or null if `prev` stays. The pending version
-// is the only one that says whether the order was at market or fixed price: it is kept in `origin`.
-export function nextVersion(prev, o) {
-  if (prev && !newerVersion(o, prev)) return null;
-  return { ...o, origin: prev?.status === 'pending' ? { fixed: prev.amt > 0, premium: prev.premium } : prev?.origin };
+// Current state of an order from every version seen, whatever order they arrived in: the newest
+// version, with `origin`, from the newest pending version before it (the only one that says whether
+// the order was at market or fixed price), and `takenAt`, the time of its first in-progress version
+// (null if not seen: it isn't always published).
+export function currentOrder(versions) {
+  let cur = null;
+  for (const v of versions) if (!cur || newerVersion(v, cur)) cur = v;
+  let pending = null, takenAt = null;
+  for (const v of versions) {
+    if (v !== cur && v.status === 'pending' && newerVersion(cur, v) && (!pending || newerVersion(v, pending))) pending = v;
+    if (v.status === 'in-progress' && (takenAt == null || v.ts < takenAt)) takenAt = v.ts;
+  }
+  return { ...cur, origin: pending ? { fixed: pending.amt > 0, premium: pending.premium } : null, takenAt };
 }
 
 // Orders with a status that pass the filters { fiat, nodes (Set), pmSel (Set) }
@@ -75,9 +83,11 @@ export function getBook(orders, filters, { now, market, toPrice }) {
     else continue;
     out.push({ ...o, fixed: o.amt > 0, price: toPrice(price), size: o.fa.at(-1) });
   }
+  // Same price: the newest first and then by event id, so it doesn't depend on the arrival order
+  const tie = (a, b) => b.ts - a.ts || (a.ev.id < b.ev.id ? -1 : a.ev.id > b.ev.id);
   return {
-    asks: out.filter(o => o.side === 'sell').sort((a, b) => a.price - b.price),
-    bids: out.filter(o => o.side === 'buy').sort((a, b) => b.price - a.price),
+    asks: out.filter(o => o.side === 'sell').sort((a, b) => a.price - b.price || tie(a, b)),
+    bids: out.filter(o => o.side === 'buy').sort((a, b) => b.price - a.price || tie(a, b)),
   };
 }
 

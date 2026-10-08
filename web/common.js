@@ -1,5 +1,9 @@
 // Shared by index.html and node.html: configuration, formatting and node information.
 
+// External images (the node's picture) that fail to load are removed. A listener instead of an inline
+// onerror=, which a Content Security Policy blocks; in the capture phase, because errors don't bubble
+document.addEventListener('error', e => { if (e.target.matches?.('img[data-hide-broken]')) e.target.remove(); }, true);
+
 // npub (bech32) -> hex, without dependencies.
 function toHex(key) {
   const s = String(key).trim().toLowerCase();
@@ -108,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const box = document.createElement('div');
   box.className = 'file-warning';
   box.textContent = t('Esta página no funciona abierta como archivo. Sírvela con un servidor web: en la carpeta del repositorio ejecuta «{cmd}» y abre {url}',
-    { cmd: 'python3 -m http.server 8765 -d web', url: 'http://localhost:8765/' });
+    { cmd: 'node build.mjs --serve', url: 'http://localhost:8765/' });
   document.body.prepend(box);
 });
 
@@ -174,7 +178,7 @@ function nodeCardHtml(pk, m = {}, activity = []) {
 
   return `<div class="node-card">
     <div class="node-top">
-      ${p.picture && /^https:\/\//.test(p.picture) ? `<img alt="" src="${esc(p.picture)}" onerror="this.remove()">` : ''}
+      ${p.picture && /^https:\/\//.test(p.picture) ? `<img alt="" src="${esc(p.picture)}" data-hide-broken>` : ''}
       <div>
         <h3>${esc(p.name || pk.slice(0, 8) + '…')}</h3>
         ${p.about ? `<p>${esc(p.about)}</p>` : ''}
@@ -189,7 +193,7 @@ function nodeCardHtml(pk, m = {}, activity = []) {
       info.min_order_amount && [t('Monto por orden'), `${fmtSats(info.min_order_amount)} – ${fmtSats(info.max_order_amount)}`],
       info.expiration_hours && [t('Una orden publicada dura'), `${esc(info.expiration_hours)} h`],
       info.expiration_seconds && [t('Tiempo para seguir una orden tomada'), fmtDur(Number(info.expiration_seconds))],
-      [t('Estado'), info.maintenance_mode === 'true' ? `<span style="color:var(--accent)">${t('⚠ en mantenimiento')}</span>` : `<span class="up">${t('● operativo')}</span>`],
+      [t('Estado'), info.maintenance_mode === 'true' ? `<span class="accent">${t('⚠ en mantenimiento')}</span>` : `<span class="up">${t('● operativo')}</span>`],
     ]) : `<p class="muted">${t('El nodo aún no ha enviado su información (evento kind 38385).')}</p>`}
 
     ${activity.length ? `<div class="node-sec">${t('Actividad')}</div>${kv(activity)}` : ''}
