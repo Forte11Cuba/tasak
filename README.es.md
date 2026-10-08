@@ -23,17 +23,22 @@ alguien dice que pagaría, no lo que realmente se pagó. tasaK parte de lo contr
 
 ## Configurar
 
-Requisitos: Node.js ≥ 18 (solo para generar `web/config.js`, sin dependencias) y cualquier servidor web estático.
+Requisitos: Node.js ≥ 18 (para generar `web/config.js` y probar el sitio en local, sin dependencias).
 
 ```sh
 cp .env.example .env            # pon tu nodo, relays, moneda y comunidad (el ejemplo es Kmbalache)
-node build.mjs                  # genera web/config.js y copia shared/ en web/shared/
-python3 -m http.server -d web   # o cualquier servidor estático; abre http://localhost:8000
+node build.mjs --serve          # genera web/config.js, copia shared/ en web/shared/ y sirve
+                                # web/ en http://localhost:8765/ (--port para cambiarlo)
 ```
 
 La carpeta que se publica es `web/` (después de ejecutar `node build.mjs`): contiene todo lo que necesita el sitio.
 Necesita un servidor web, también para probarla en local: abierta como archivo (`file://`) los navegadores
-no cargan sus módulos ES y la página muestra un aviso en su lugar.
+no cargan sus módulos ES y la página muestra un aviso en su lugar. `node build.mjs --serve` es solo para
+probarla en tu máquina (escucha en 127.0.0.1 y no usa caché); vuelve a ejecutarlo tras cambiar `.env` o
+`shared/`. Para publicarla, ejecuta `node build.mjs` y sirve `web/` con cualquier servidor web estático
+(nginx, Caddy…) o un alojamiento estático. En GitHub Pages, publica `web/` con un flujo de GitHub Actions
+que ejecute antes `node build.mjs`: Pages solo publica la raíz o `/docs` de una rama, y `web/config.js`
+no está en el repositorio.
 
 Variables de `.env` (en inglés, para que sirvan a cualquier operador de nodo):
 
@@ -151,7 +156,7 @@ como confirmada cuando su evento firmado de Nostr también está archivado.
 | `web/vendor/` | librerías copiadas (sin depender de CDN) y la lista de métodos de pago por moneda de la app de Mostro (`mostro-payment-methods.js`) |
 | `shared/` | lógica pura de la tasa (módulos ES: métodos de pago, órdenes, zonas horarias y periodos, unidades, Tasa K y velas), que usan las páginas (`build.mjs` la copia a `web/shared/`) |
 | `shared/test/` | pruebas de `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), datos reales fijos (`fixtures/`), los valores de referencia que el código debe reproducir (`expected.json`) y casos escritos a mano (`cases.json`) |
-| `build.mjs` | lee `.env`, genera `web/config.js` y copia `shared/` en `web/shared/` |
+| `build.mjs` | lee `.env`, genera `web/config.js` y copia `shared/` en `web/shared/`; con `--serve`, sirve `web/` en local |
 | `indexer/` | el archivador de eventos, su servicio de systemd y el exportador de la base de datos de Mostro |
 | `tools/` | comprobaciones de desarrollo en Chrome headless (Node, sin dependencias); `node tools/reference.mjs` comprueba que `web/` calcula con datos fijos los valores de `shared/test/expected.json` |
 

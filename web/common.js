@@ -112,7 +112,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const box = document.createElement('div');
   box.className = 'file-warning';
   box.textContent = t('Esta página no funciona abierta como archivo. Sírvela con un servidor web: en la carpeta del repositorio ejecuta «{cmd}» y abre {url}',
-    { cmd: 'python3 -m http.server 8765 -d web', url: 'http://localhost:8765/' });
+    { cmd: 'node build.mjs --serve', url: 'http://localhost:8765/' });
   document.body.prepend(box);
 });
 

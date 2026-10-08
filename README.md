@@ -23,17 +23,21 @@ pay, not what was actually paid. tasaK starts from the opposite:
 
 ## Setup
 
-Requirements: Node.js ≥ 18 (only to generate `web/config.js`, no dependencies) and any static web server.
+Requirements: Node.js ≥ 18 (to generate `web/config.js` and to try the site locally, no dependencies).
 
 ```sh
 cp .env.example .env            # set your node, relays, currency and community (the example is Kmbalache)
-node build.mjs                  # generates web/config.js and copies shared/ into web/shared/
-python3 -m http.server -d web   # or any static server; open http://localhost:8000
+node build.mjs --serve          # generates web/config.js, copies shared/ into web/shared/ and
+                                # serves web/ at http://localhost:8765/ (--port to change it)
 ```
 
 The folder to publish is `web/` (after running `node build.mjs`): everything the site needs is in it.
 It needs a web server, also to try it locally: opened as a file (`file://`) browsers don't load its
-ES modules and the page shows a warning instead.
+ES modules and the page shows a warning instead. `node build.mjs --serve` is only for trying it on your
+own machine (it listens on 127.0.0.1 and doesn't cache); run it again after changing `.env` or `shared/`.
+To publish, run `node build.mjs` and serve `web/` with any static web server (nginx, Caddy…) or static
+hosting. On GitHub Pages, publish `web/` with a GitHub Actions workflow that runs `node build.mjs` first:
+Pages can only publish the root or `/docs` of a branch, and `web/config.js` isn't in the repository.
 
 `.env` variables:
 
@@ -156,7 +160,7 @@ signed Nostr event is also archived.
 | `web/vendor/` | copied libraries (no CDN) and the Mostro app's payment methods per currency (`mostro-payment-methods.js`) |
 | `shared/` | pure logic of the rate (ES modules: payment methods, orders, time zones and periods, units, Tasa K and candles), used by the pages (`build.mjs` copies it to `web/shared/`) |
 | `shared/test/` | tests of `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), fixed real data (`fixtures/`), the reference values the code must reproduce (`expected.json`) and hand-written cases (`cases.json`) |
-| `build.mjs` | reads `.env`, generates `web/config.js` and copies `shared/` into `web/shared/` |
+| `build.mjs` | reads `.env`, generates `web/config.js` and copies `shared/` into `web/shared/`; with `--serve`, serves `web/` locally |
 | `indexer/` | the event archiver, its systemd service and the Mostro database exporter |
 | `tools/` | development checks in headless Chrome (Node, no dependencies); `node tools/reference.mjs` checks that `web/` computes the values in `shared/test/expected.json` from fixed data |
 
