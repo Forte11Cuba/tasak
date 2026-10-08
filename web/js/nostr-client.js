@@ -34,11 +34,10 @@ export function createRelayPool({ urls, authors, kinds, metaKinds, verify, has, 
     // On reconnect we only ask for what is new
     const since = pool.newest ? { since: pool.newest - 3600 } : {};
     let page = 0, count = 0, oldest = Infinity, prevOldest = Infinity;
-    let isLive = false, opened = false, startedAt = 0, changed = false;
+    let isLive = false, startedAt = 0, changed = false;
     const req = (id, extra) => ws.send(JSON.stringify(['REQ', id, { ...base, ...since, ...extra }]));
 
     ws.onopen = () => {
-      opened = true;
       startedAt = Math.floor(Date.now() / 1000);
       req('hist0', { limit: PAGE });
       // Profile, information and relays of the node
@@ -50,7 +49,8 @@ export function createRelayPool({ urls, authors, kinds, metaKinds, verify, has, 
       let d;
       try { d = JSON.parse(msg.data); } catch { return; }
       if (d[0] === 'EVENT') {
-        if (d[1].startsWith('hist')) { count++; oldest = Math.min(oldest, d[2]?.created_at ?? Infinity); }
+        // Only the page being asked counts for paging
+        if (d[1] === 'hist' + page) { count++; oldest = Math.min(oldest, d[2]?.created_at ?? Infinity); }
         if (accept(d[2]) && onEvent(d[2], isLive)) {
           if (isLive) onUpdate();
           else changed = true;
@@ -78,7 +78,9 @@ export function createRelayPool({ urls, authors, kinds, metaKinds, verify, has, 
     ws.onclose = () => {
       if (isLive) pool.live--;
       onStatus();
-      const next = opened ? 0 : attempt + 1;
+      // Back to the shortest wait only if it got to live; a relay that drops the connection before
+      // (at once, or while paging) is retried less and less often
+      const next = isLive ? 0 : attempt + 1;
       setTimeout(() => connect(url, next), Math.min(60000, 5000 * 2 ** next));
     };
     ws.onerror = () => ws.close();

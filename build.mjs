@@ -125,7 +125,7 @@ function serve(port) {
     let file = path && join(dir, normalize(path));
     if (file && file.startsWith(dir) && existsSync(file) && statSync(file).isDirectory()) file = join(file, 'index.html');
     if (!file || !(file + sep).startsWith(dir) || !existsSync(file) || !statSync(file).isFile()) {
-      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8' });
+      res.writeHead(404, { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-store' });
       return res.end('Not found');
     }
     res.writeHead(200, { 'Content-Type': TYPES[extname(file).toLowerCase()] || 'application/octet-stream', 'Cache-Control': 'no-store' });
