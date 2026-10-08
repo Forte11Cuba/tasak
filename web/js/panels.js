@@ -116,7 +116,7 @@ export function renderTrades(trades) {
       <td class="num">${fmtInt(o.size)}</td>
       <td class="num hide-sm">${fmtInt(o.amt)}</td>
       <td>${pmCell(o)}</td>
-    </tr>`).join('') || `<tr><td colspan="5" class="muted" style="text-align:center;padding:10px">${
+    </tr>`).join('') || `<tr class="none"><td colspan="5">${
       state.tf ? t('Sin órdenes completadas en {range}', { range: rangeName(state.tf) }) : t('Sin órdenes completadas')}</td></tr>`;
   for (const o of state.orders.values()) o.fresh = false;
 }
@@ -124,7 +124,7 @@ export function renderTrades(trades) {
 export function renderBook(tasa, { asks, bids }) {
   const max = Math.max(1, ...asks.map(o => o.size), ...bids.map(o => o.size));
   const row = (o, cls) => `
-    <tr class="${cls}" style="--d:${(o.size / max * 100).toFixed(1)}%" data-key="${esc(o.key)}" title="${t('Ver el evento Nostr de esta orden abierta')}">
+    <tr class="${cls}" data-d="${(o.size / max * 100).toFixed(1)}" data-key="${esc(o.key)}" title="${t('Ver el evento Nostr de esta orden abierta')}">
       <td class="num" title="${t(o.fixed ? 'Precio fijo' : 'Precio de mercado + prima')}">${fmtPrice(o.price)}${o.fixed ? ' 🔒' : ''}</td>
       <td class="num">${o.fa.length > 1 ? fmtInt(o.fa[0]) + '–' + fmtInt(o.fa[1]) : fmtInt(o.fa[0])}</td>
       <td class="num muted">${o.fixed ? '—' : (o.premium > 0 ? '+' : '') + o.premium + '%'}</td>
@@ -141,10 +141,14 @@ export function renderBook(tasa, { asks, bids }) {
   }
   if (tasa != null) mid += `${mid ? ' · ' : ''}${esc(CONFIG.rateName)} <strong class="num">${fmtPrice(tasa)}</strong>`;
 
-  document.getElementById('book').innerHTML =
+  const book = document.getElementById('book');
+  book.innerHTML =
     (asks.length ? asks.slice().reverse().map(o => row(o, 'ask')).join('') : none(t('Nadie vendiendo BTC ahora'))) +
     `<tr class="mid"><td colspan="4">${mid || '&nbsp;'}</td></tr>` +
     (bids.length ? bids.map(o => row(o, 'bid')).join('') : none(t('Nadie comprando BTC ahora')));
+  // Depth bar of each row (its size against the largest): set from JS, not with style="", which a
+  // Content Security Policy blocks
+  for (const tr of book.querySelectorAll('tr[data-d]')) tr.style.setProperty('--d', tr.dataset.d + '%');
 }
 
 export function renderFilters() {
@@ -192,7 +196,7 @@ export function updatePair() {
   const btn = document.getElementById('nodeBtn');
   const img = btn.querySelector('img');
   if (pic && /^https:\/\//.test(pic)) {
-    if (!img) btn.insertAdjacentHTML('afterbegin', `<img alt="" src="${esc(pic)}" onerror="this.remove()">`);
+    if (!img) btn.insertAdjacentHTML('afterbegin', `<img alt="" src="${esc(pic)}" data-hide-broken>`);
   } else img?.remove();
   document.getElementById('pair').textContent = nodes;
   document.querySelectorAll('[data-unit]').forEach(b => b.textContent = `${state.fiat || '…'}/${UNITS[b.dataset.unit]}`);

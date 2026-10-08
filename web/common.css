@@ -55,6 +55,7 @@
 .up { color: var(--up); }
 .down { color: var(--down); }
 .muted { color: var(--muted); }
+.accent { color: var(--accent); }
 .brand { font-weight: 800; font-size: 20px; letter-spacing: -0.5px; line-height: 1.2; }
 .brand span { color: var(--accent); }
 .brand-logo { display: block; height: 34px; width: auto; margin: -2px 0; }
