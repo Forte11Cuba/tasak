@@ -202,7 +202,7 @@ tr.new td { animation: flash 1.5s; }
 .book tr.mid strong { font-size: 16px; }
 .book .none td, .trades .none td { color: var(--muted); text-align: center; padding: 10px; }
 
-.head-btn { margin-left: 8px; font-size: 12px; padding: 5px 10px; }
+.head-btn { margin-left: 8px; font-size: 12px; padding: 5px 10px; white-space: nowrap; }
 .node-filter { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .info-nav { margin-left: 10px; display: flex; align-items: center; gap: 6px; }
 .info-nav .head-btn { margin-left: 0; }
@@ -241,4 +241,9 @@ dialog.faq::backdrop { background: var(--backdrop); }
   .status { margin-left: 0; }
   header { gap: 14px; }
   .hide-sm { display: none; }
+  /* Status on the left and the buttons on the right, more compact; if they still don't fit, the
+     buttons go together to the next line instead of breaking their text */
+  .head-end { width: 100%; padding-left: 0; flex-wrap: wrap; justify-content: space-between; row-gap: 8px; }
+  .info-nav { margin-left: auto; gap: 4px; }
+  .info-nav .head-btn { padding: 5px 8px; }
 }
