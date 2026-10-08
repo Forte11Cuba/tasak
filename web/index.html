@@ -51,7 +51,7 @@
       <button class="theme-btn" type="button"></button>
       <span class="lang-switch" aria-label="Idioma"></span>
       <a class="icon-btn head-btn" id="nodeBtn2" href="node.html" title="Información del nodo Mostro: comisión, condiciones, comunidad y redes" data-i18n-title data-i18n>ⓘ Nodo Mostro</a>
-      <button class="icon-btn head-btn" id="faqBtn" title="Preguntas frecuentes" data-i18n-title>? FAQ</button>
+      <button class="icon-btn head-btn" id="faqBtn" title="Preguntas frecuentes" data-i18n-title data-i18n>? Ayuda</button>
     </nav>
   </div>
 </header>
@@ -103,7 +103,7 @@
         <details class="menu" id="pmMenu">
           <summary id="pmSummary">Método de pago ▾</summary>
           <div class="pop">
-            <p data-lang="es">Órdenes que entran en la gráfica, la <span data-name="rate">Tasa K</span> y las tablas. Números: <strong>completadas · abiertas</strong> (las abiertas están en el order book).</p>
+            <p data-lang="es">Órdenes que entran en la gráfica, la <span data-name="rate">Tasa K</span> y las tablas. Números: <strong>completadas · abiertas</strong> (las abiertas están en el libro de órdenes).</p>
             <p data-lang="en">Orders included in the chart, the <span data-name="rate">Tasa K</span> and the tables. Numbers: <strong>completed · open</strong> (open ones are in the order book).</p>
             <div class="chips" id="pms"></div>
           </div>
@@ -117,7 +117,7 @@
   <div class="col right">
     <section class="panel">
       <div class="panel-head">
-        <h2>Order book</h2>
+        <h2 data-i18n>Libro de órdenes</h2>
         <span class="hint" data-i18n>intenciones abiertas</span>
       </div>
       <div class="scroll">
@@ -128,7 +128,7 @@
       </div>
     </section>
     <div class="splitter" id="rightSplit" role="separator" aria-orientation="horizontal" tabindex="0"
-         title="Arrastra para cambiar el tamaño del order book y las órdenes ejecutadas" data-i18n-title></div>
+         title="Arrastra para cambiar el tamaño del libro de órdenes y las órdenes ejecutadas" data-i18n-title></div>
     <section class="panel">
       <div class="panel-head">
         <h2 id="tradesTitle" data-i18n>Órdenes ejecutadas</h2>
@@ -203,7 +203,7 @@
       <p>Los relays borran las órdenes a los 15 días (y algunos antes). Por eso los periodos mensual y anual todavía muestran solo lo que queda en los relays.</p>
     </details>
     <details>
-      <summary>¿Qué es el order book?</summary>
+      <summary>¿Qué es el libro de órdenes?</summary>
       <p>Las órdenes abiertas que aún nadie ha tomado. Las de precio de mercado se calculan como <code>Yadio ÷ (1 − prima)</code>, que es como Mostro calcula los sats; las marcadas con 🔒 tienen precio fijo. Si alguien compra por encima de lo que otro vende, el libro aparece como «cruzado».</p>
     </details>
     <details>

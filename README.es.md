@@ -16,7 +16,7 @@ alguien dice que pagaría, no lo que realmente se pagó. tasaK parte de lo contr
   La página comprueba las firmas, y cualquier persona puede leer los mismos eventos de los relays y
   recalcular la misma tasa. Al hacer clic en una orden se ve su evento original.
 - **Precio, volumen y órdenes a la vista.** Además de la tasa se ven el volumen negociado, cada orden
-  ejecutada, el order book con las órdenes abiertas y la referencia del mercado para comparar.
+  ejecutada, el libro de órdenes con las órdenes abiertas y la referencia del mercado para comparar.
 - **Sin intermediario.** Los datos salen directamente de los relays; la página no depende de un servidor
   propio ni de una base de datos a la que haya que creer.
 - **De cualquier nodo.** Cualquier comunidad puede apuntarla a su propio nodo Mostro y su moneda.
@@ -102,7 +102,7 @@ Servicios externos que usa y qué pasa si están bloqueados:
 | Servicio | Para qué | Si está bloqueado |
 |---|---|---|
 | Relays Nostr | las órdenes | sin ellos no hay datos (basta con que responda uno) |
-| Yadio | BTC/USD actual, referencia de la moneda frente al USD, order book a precio de mercado | la moneda/USD no se puede calcular; moneda/BTC y moneda/sat siguen funcionando |
+| Yadio | BTC/USD actual, referencia de la moneda frente al USD, libro de órdenes a precio de mercado | la moneda/USD no se puede calcular; moneda/BTC y moneda/sat siguen funcionando |
 | Coinbase | BTC/USD histórico por hora, para la moneda/USD | se calcula con el BTC/USD actual de Yadio y se avisa de que es aproximado |
 
 ## Archivador
@@ -147,7 +147,7 @@ como confirmada cuando su evento firmado de Nostr también está archivado.
 | Archivo | Qué es |
 |---|---|
 | `web/` | el sitio, la carpeta que se publica |
-| `web/index.html` | la tasa: gráfica, order book y órdenes ejecutadas |
+| `web/index.html` | la tasa: gráfica, libro de órdenes y órdenes ejecutadas |
 | `web/node.html` | información del nodo Mostro |
 | `web/js/` | los módulos de las páginas: cliente de relays (`nostr-client.js`) y almacén de eventos (`event-store.js`), compartidos por las dos páginas, gráfica, paneles, precios y estado |
 | `web/css/` | estilos de cada página |

@@ -38,6 +38,7 @@ const EN = {
   'Información del nodo Mostro: comisión, condiciones, comunidad y redes': 'Mostro node information: fee, terms, community and social links',
   'ⓘ Nodo Mostro': 'ⓘ Mostro node',
   'Preguntas frecuentes': 'Frequently asked questions',
+  '? Ayuda': '? FAQ',
   'Idioma': 'Language',
   'Tema claro': 'Light theme',
   'Tema oscuro': 'Dark theme',
@@ -116,7 +117,9 @@ const EN = {
   'Prima': 'Premium',
   'Método': 'Method',
   'Hora': 'Time',
-  'Arrastra para cambiar el tamaño del order book y las órdenes ejecutadas': 'Drag to resize the order book and executed orders',
+  'Libro de órdenes': 'Order book',
+  'Diferencial': 'Spread',
+  'Arrastra para cambiar el tamaño del libro de órdenes y las órdenes ejecutadas': 'Drag to resize the order book and executed orders',
   'Órdenes ejecutadas': 'Executed orders',
   'atenuadas: más de 24h': 'dimmed: older than 24h',
   'la última hora': 'the last hour',
@@ -180,7 +183,7 @@ const EN = {
   'Actividad': 'Activity',
   'Técnico': 'Technical',
   'Nodo Lightning': 'Lightning node',
-  'Pubkey Lightning': 'Lightning pubkey',
+  'Clave pública del nodo Lightning': 'Lightning node pubkey',
   'Relays del nodo': 'Node relays',
   'Información publicada': 'Information published',
   'protocolo {v}': 'protocol {v}',
@@ -223,6 +226,7 @@ function setLang(l) {
 document.addEventListener('DOMContentLoaded', () => {
   applyI18n();
   for (const el of document.querySelectorAll('.lang-switch')) {
+    el.setAttribute('aria-label', t('Idioma'));
     el.innerHTML = LANGS.map(l =>
       `<button data-lang-btn="${l}" class="${l === LANG ? 'on' : ''}" title="${l === 'es' ? 'Español' : 'English'}">${l.toUpperCase()}</button>`).join('');
     el.onclick = e => {
