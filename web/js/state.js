@@ -1,16 +1,22 @@
 // State of the page and the configuration it starts from: .env (config.js) with the URL on top.
-import { hiddenSet } from '../shared/payment-methods.js';
+import { pmListFor, hiddenSet } from '../shared/payment-methods.js';
+import { createStore } from './event-store.js';
 
 // Methods that don't count by default (HIDDEN_PAYMENT_METHODS in .env)
 export const HIDDEN_PM = hiddenSet(CONFIG.hiddenPaymentMethods);
 
+// Payment methods: makers type them by hand; they are matched against the Mostro app's list for that
+// currency (vendor/mostro-payment-methods.js) and whatever doesn't match goes to «Otros»
+const PM_LISTS = window.MOSTRO_PAYMENT_METHODS || {};
+
+// Events of the node: every version of each order and the node's information
+export const store = createStore(fiat => pmListFor(PM_LISTS, fiat));
+
 export const state = {
-  orders: new Map(),   // pubkey:d -> newest version of the order
-  seen: new Set(),     // ids of events already processed (they arrive repeated from several relays)
-  nodeNames: new Map(),
-  nodeMeta: new Map(),   // pubkey -> { profile, info, relays } read from its Nostr events
-  newest: 0,
-  rejected: 0,
+  orders: store.orders,   // pubkey:d -> current state of the order
+  nodeNames: store.nodeNames,
+  nodeMeta: store.meta,   // pubkey -> { profile, info, relays } read from its Nostr events
+  // live (relays connected) and rejected (invalid signatures): from the relay pool, in index.js
   btcusd: new Map(),   // unix hour -> BTC/USD
   btcLoadedFrom: Infinity,
   btcRetryAt: 0,       // after a Coinbase failure, don't retry before this time (ms)
@@ -25,7 +31,6 @@ export const state = {
   tf: 0,               // chart period in seconds; 0 = one point per order
   pmSel: null,         // Set of active methods; null = defaults
   nodeSel: new Set(CONFIG.mostros),
-  live: 0,
   sigs: 'cargando',
 };
 

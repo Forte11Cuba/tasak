@@ -71,5 +71,42 @@
    "ends": [-1, 0, 86399, 86400, 172800],
    "expected": [null, { "avg": 100, "n": 1, "vol": 1 }, { "avg": 100, "n": 1, "vol": 1 }, { "avg": 300, "n": 1, "vol": 1 }, null]
   }
+ ],
+ "orderVersions": [
+  {
+   "note": "market order: pending, in-progress and success; versions are [ts, status, id, amt, premium]",
+   "versions": [[100, "pending", "a", 0, 3], [200, "in-progress", "b", 5000, 3], [300, "success", "c", 5000, 3]],
+   "expected": { "id": "c", "origin": { "fixed": false, "premium": 3 }, "takenAt": 200 }
+  },
+  {
+   "note": "fixed price taken with the invoice: no in-progress version is published",
+   "versions": [[100, "pending", "a", 6000, 0], [300, "success", "c", 6000, 0]],
+   "expected": { "id": "c", "origin": { "fixed": true, "premium": 0 }, "takenAt": null }
+  },
+  {
+   "note": "only the final version seen: the origin is unknown",
+   "versions": [[300, "success", "c", 5000, 2]],
+   "expected": { "id": "c", "origin": null, "takenAt": null }
+  },
+  {
+   "note": "pending republished with another premium: the origin is the newest pending version",
+   "versions": [[100, "pending", "a", 0, 2], [150, "pending", "b", 0, 5], [300, "success", "c", 5000, 5]],
+   "expected": { "id": "c", "origin": { "fixed": false, "premium": 5 }, "takenAt": null }
+  },
+  {
+   "note": "same created_at: the more advanced state wins and the pending one is its origin",
+   "versions": [[300, "pending", "a", 0, 1], [300, "success", "b", 5000, 1]],
+   "expected": { "id": "b", "origin": { "fixed": false, "premium": 1 }, "takenAt": null }
+  },
+  {
+   "note": "canceled while open",
+   "versions": [[100, "pending", "a", 0, 1], [200, "canceled", "b", 0, 1]],
+   "expected": { "id": "b", "origin": { "fixed": false, "premium": 1 }, "takenAt": null }
+  },
+  {
+   "note": "still open: the current version is the pending one, with no origin of its own",
+   "versions": [[100, "pending", "a", 0, 1]],
+   "expected": { "id": "a", "origin": null, "takenAt": null }
+  }
  ]
 }

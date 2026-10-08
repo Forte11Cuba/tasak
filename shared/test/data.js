@@ -1,7 +1,7 @@
 // Test data: the fixtures, the reference values of the site before restructuring (expected.json)
 // and the hand-written cases (cases.json), plus the site's state rebuilt with shared/.
 import { readFileSync } from 'node:fs';
-import { parseOrder, nextVersion, getTrades, getBook } from '../orders.js';
+import { parseOrder, currentOrder, getTrades, getBook } from '../orders.js';
 import { pmListFor, pmStats, hiddenSet, defaultPmSelection } from '../payment-methods.js';
 import { toUnit, hourlyClose } from '../units.js';
 
@@ -24,19 +24,19 @@ new Function('window', read('../../web/vendor/mostro-payment-methods.js'))(win);
 export const PM_LISTS = win.MOSTRO_PAYMENT_METHODS;
 export const pmList = fiat => pmListFor(PM_LISTS, fiat);
 
-// Orders as the site keeps them, in the same order: the fake relay serves the events newest first
+// Orders as the site keeps them: every version of each order, deduplicated by id, and its current state
 export function loadOrders() {
   const seen = new Set();
-  const orders = new Map();
-  for (const ev of [...events].sort((a, b) => b.created_at - a.created_at)) {
+  const versions = new Map();
+  for (const ev of events) {
     if (ev.kind !== 38383 || !nodes.has(ev.pubkey) || seen.has(ev.id)) continue;
     seen.add(ev.id);
     const o = parseOrder(ev, pmList);
     if (!o) continue;
-    const v = nextVersion(orders.get(o.key), o);
-    if (v) orders.set(o.key, v);
+    if (!versions.has(o.key)) versions.set(o.key, []);
+    versions.get(o.key).push(o);
   }
-  return [...orders.values()];
+  return [...versions.values()].map(currentOrder);
 }
 
 // What the site shows for a currency and unit with the default payment methods

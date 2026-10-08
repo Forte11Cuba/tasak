@@ -1,113 +1,35 @@
 // Page of the rate. The logic of the rate comes from shared/ (pure, tested with node --test); this
-// module holds the data (relays, signatures) and the render, and wires the page together.
-import { pmListFor } from '../shared/payment-methods.js';
-import { parseOrder, nextVersion, getTrades as tradesOf, getBook as bookOf } from '../shared/orders.js';
-import { state, saveView } from './state.js';
+// module connects the data (relays → event store) to the render and wires the page together.
+import { getTrades as tradesOf, getBook as bookOf } from '../shared/orders.js';
+import { state, store, saveView } from './state.js';
+import { createRelayPool } from './nostr-client.js';
 import { loadYadio, loadBtcHistory, btcSpot, yadioFiatPerUsd, unitPrice } from './prices.js';
 import { chartC, view, renderChart, setEmpty, applyChartTheme } from './chart.js';
 import { setStatus, renderStats, renderTrades, renderBook, renderFilters, updatePair } from './panels.js';
 import { openEvent } from './event-dialog.js';
 
-const MOSTROS = new Set(CONFIG.mostros);
-
-// ---------- Signature verification ----------
-// Without it, a relay could inject fake events with the node's pubkey.
-// nostr-tools comes in vendor/; if it still didn't load, we go on unverified and say so.
+// ---------- Data: the node's relays ----------
+// Signatures are verified with nostr-tools (vendor/); if it didn't load, we go on unverified and say so
 const verifyEvent = window.NostrTools?.verifyEvent ?? null;
 state.sigs = verifyEvent ? 'ok' : 'off';
 
-// ---------- Payment methods ----------
-// Makers type the method by hand; it is matched against the Mostro app's list for that currency
-// (vendor/mostro-payment-methods.js) and whatever doesn't match goes to «Otros»
-const PM_LISTS = window.MOSTRO_PAYMENT_METHODS || {};
-const pmList = fiat => pmListFor(PM_LISTS, fiat);
-
-// ---------- Nostr ----------
-// Returns true if the event changed the state
-function handleEvent(ev) {
-  if (!ev || state.seen.has(ev.id)) return false;
-  if (!MOSTROS.has(ev.pubkey) || (ev.kind !== 38383 && !META_KINDS.includes(ev.kind))) return false;
-  if (verifyEvent && !verifyEvent(ev)) { state.rejected++; return false; }
-  state.seen.add(ev.id);
-  if (ev.kind !== 38383) {
-    if (!applyMeta(state.nodeMeta, ev)) return false;
-    const name = state.nodeMeta.get(ev.pubkey).profile?.name;
-    if (name) state.nodeNames.set(ev.pubkey, name);
+const relays = createRelayPool({
+  urls: CONFIG.relays, authors: CONFIG.mostros, kinds: [38383], metaKinds: META_KINDS,
+  verify: verifyEvent, has: store.has,
+  onEvent(ev, live) {
+    if (!store.add(ev)) return false;
+    if (live && ev.tags.some(t => t[0] === 's' && t[1] === 'success')) markFresh(ev);
     return true;
-  }
-  state.newest = Math.max(state.newest, ev.created_at);
+  },
+  onUpdate: () => scheduleRender(),
+  onStatus: () => setStatus(),
+});
+Object.defineProperties(state, {
+  live: { get: () => relays.live, enumerable: true },
+  rejected: { get: () => relays.rejected, enumerable: true },
+});
 
-  const o = parseOrder(ev, pmList);
-  if (!o) return false;
-  if (o.nodeName) state.nodeNames.set(ev.pubkey, o.nodeName);
-  // The newest version wins; the pending one, if seen, is kept as its origin (market or fixed price)
-  const next = nextVersion(state.orders.get(o.key), o);
-  if (!next) return false;
-  state.orders.set(o.key, next);
-  return true;
-}
-
-// Relays limit the events per query: we page backwards with `until` until a page comes back
-// empty, and then open the live subscription.
-const PAGE = 300;
-
-function connect(url, attempt = 0) {
-  let ws;
-  try { ws = new WebSocket(url); } catch { return; }
-  const base = { kinds: [38383], authors: CONFIG.mostros };
-  // On reconnect we only ask for what is new
-  const since = state.newest ? { since: state.newest - 3600 } : {};
-  let page = 0, count = 0, oldest = Infinity, prevOldest = Infinity;
-  let isLive = false, opened = false, startedAt = 0, changed = false;
-  const req = (id, extra) => ws.send(JSON.stringify(['REQ', id, { ...base, ...since, ...extra }]));
-
-  ws.onopen = () => {
-    opened = true;
-    startedAt = Math.floor(Date.now() / 1000);
-    req('hist0', { limit: PAGE });
-    // Profile, information and relays of the node
-    ws.send(JSON.stringify(['REQ', 'meta', { kinds: META_KINDS, authors: CONFIG.mostros }]));
-  };
-  ws.onmessage = onMessage;
-
-  function onMessage(msg) {
-    let d;
-    try { d = JSON.parse(msg.data); } catch { return; }
-    if (d[0] === 'EVENT') {
-      if (d[1].startsWith('hist')) { count++; oldest = Math.min(oldest, d[2]?.created_at ?? Infinity); }
-      if (handleEvent(d[2])) {
-        if (isLive) { if (d[2].tags.some(t => t[0] === 's' && t[1] === 'success')) markFresh(d[2]); scheduleRender(); }
-        else changed = true;
-      }
-    } else if (d[0] === 'EOSE' && d[1] === 'meta') {
-      ws.send(JSON.stringify(['CLOSE', 'meta']));
-      if (isLive && changed) scheduleRender();
-    } else if (d[0] === 'EOSE' && d[1] === 'hist' + page) {
-      ws.send(JSON.stringify(['CLOSE', d[1]]));
-      if (count > 0 && oldest < prevOldest) {
-        prevOldest = oldest;
-        page++; count = 0;
-        req('hist' + page, { limit: PAGE, until: oldest - 1 });
-        return;
-      }
-      // Since we started asking for history, so nothing is lost if paging was slow
-      ws.send(JSON.stringify(['REQ', 'live', { ...base, since: startedAt - 60 }, { kinds: META_KINDS, authors: CONFIG.mostros, since: startedAt }]));
-      isLive = true;
-      state.live++;
-      setStatus();
-      if (changed) scheduleRender();
-    }
-  }
-
-  ws.onclose = () => {
-    if (isLive) state.live--;
-    setStatus();
-    const next = opened ? 0 : attempt + 1;
-    setTimeout(() => connect(url, next), Math.min(60000, 5000 * 2 ** next));
-  };
-  ws.onerror = () => ws.close();
-}
-
+// An order completed while the page is open: highlighted in the table
 function markFresh(ev) {
   const d = ev.tags.find(t => t[0] === 'd')?.[1];
   const o = state.orders.get(ev.pubkey + ':' + d);
@@ -282,7 +204,7 @@ document.addEventListener('keydown', e => {
 // The page's state and functions, for the checks in tools/ (headless Chrome) and for debugging
 // from the console: module variables are not global
 window.tasak = {
-  state, chartC, getTrades, getBook, renderFilters, renderChart, scheduleRender,
+  state, store, relays, chartC, getTrades, getBook, renderFilters, renderChart, scheduleRender,
   get view() { return view; }, get rendering() { return rendering; }, get renderQueued() { return renderQueued; },
 };
 
@@ -296,7 +218,7 @@ if (!CONFIG.mostros.length || !CONFIG.relays.length) {
 } else {
   setStatus();
   loadYadio().then(scheduleRender);
-  CONFIG.relays.forEach(url => connect(url));
+  relays.start();
   setInterval(loadYadio, 5 * 60 * 1000);
   setInterval(scheduleRender, 60 * 1000);   // expires book orders and moves the 24 h window
 }

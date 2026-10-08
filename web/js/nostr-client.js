@@ -1,0 +1,88 @@
+// Connection to the node's relays. Each relay is asked for the history, page by page backwards with
+// `until` (relays limit the events per query) until a page comes back empty, and then for what is
+// new, live; it reconnects with a growing wait. Only events of the node, of the kinds asked for and
+// with a valid signature are handed over.
+const PAGE = 300;
+
+// urls, authors: relays and node pubkeys; kinds: kinds paged through (orders); metaKinds: node
+// information, asked for in one query; verify(ev): signature check, or null if nostr-tools didn't
+// load; has(id): whether the event is already known (it isn't checked again); onEvent(ev, live):
+// returns true if the event changed something; onUpdate(): something changed (live, or at the end
+// of the history of a relay); onStatus(): a relay went live or was lost
+export function createRelayPool({ urls, authors, kinds, metaKinds, verify, has, onEvent, onUpdate, onStatus }) {
+  const authorSet = new Set(authors);
+  const pool = {
+    live: 0,       // relays with the history loaded and subscribed live
+    rejected: 0,   // events with an invalid signature
+    newest: 0,     // created_at of the newest event of `kinds` received
+    start: () => urls.forEach(url => connect(url)),
+  };
+
+  function accept(ev) {
+    if (!ev || has(ev.id)) return false;
+    if (!authorSet.has(ev.pubkey) || (!kinds.includes(ev.kind) && !metaKinds.includes(ev.kind))) return false;
+    // Without it, a relay could inject fake events with the node's pubkey
+    if (verify && !verify(ev)) { pool.rejected++; return false; }
+    if (kinds.includes(ev.kind)) pool.newest = Math.max(pool.newest, ev.created_at);
+    return true;
+  }
+
+  function connect(url, attempt = 0) {
+    let ws;
+    try { ws = new WebSocket(url); } catch { return; }
+    const base = { kinds, authors };
+    // On reconnect we only ask for what is new
+    const since = pool.newest ? { since: pool.newest - 3600 } : {};
+    let page = 0, count = 0, oldest = Infinity, prevOldest = Infinity;
+    let isLive = false, opened = false, startedAt = 0, changed = false;
+    const req = (id, extra) => ws.send(JSON.stringify(['REQ', id, { ...base, ...since, ...extra }]));
+
+    ws.onopen = () => {
+      opened = true;
+      startedAt = Math.floor(Date.now() / 1000);
+      req('hist0', { limit: PAGE });
+      // Profile, information and relays of the node
+      ws.send(JSON.stringify(['REQ', 'meta', { kinds: metaKinds, authors }]));
+    };
+    ws.onmessage = onMessage;
+
+    function onMessage(msg) {
+      let d;
+      try { d = JSON.parse(msg.data); } catch { return; }
+      if (d[0] === 'EVENT') {
+        if (d[1].startsWith('hist')) { count++; oldest = Math.min(oldest, d[2]?.created_at ?? Infinity); }
+        if (accept(d[2]) && onEvent(d[2], isLive)) {
+          if (isLive) onUpdate();
+          else changed = true;
+        }
+      } else if (d[0] === 'EOSE' && d[1] === 'meta') {
+        ws.send(JSON.stringify(['CLOSE', 'meta']));
+        if (isLive && changed) onUpdate();
+      } else if (d[0] === 'EOSE' && d[1] === 'hist' + page) {
+        ws.send(JSON.stringify(['CLOSE', d[1]]));
+        if (count > 0 && oldest < prevOldest) {
+          prevOldest = oldest;
+          page++; count = 0;
+          req('hist' + page, { limit: PAGE, until: oldest - 1 });
+          return;
+        }
+        // Since we started asking for history, so nothing is lost if paging was slow
+        ws.send(JSON.stringify(['REQ', 'live', { ...base, since: startedAt - 60 }, { kinds: metaKinds, authors, since: startedAt }]));
+        isLive = true;
+        pool.live++;
+        onStatus();
+        if (changed) onUpdate();
+      }
+    }
+
+    ws.onclose = () => {
+      if (isLive) pool.live--;
+      onStatus();
+      const next = opened ? 0 : attempt + 1;
+      setTimeout(() => connect(url, next), Math.min(60000, 5000 * 2 ** next));
+    };
+    ws.onerror = () => ws.close();
+  }
+
+  return pool;
+}

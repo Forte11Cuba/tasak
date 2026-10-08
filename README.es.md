@@ -144,10 +144,12 @@ como confirmada cuando su evento firmado de Nostr también está archivado.
 | `web/` | el sitio, la carpeta que se publica |
 | `web/index.html` | la tasa: gráfica, order book y órdenes ejecutadas |
 | `web/node.html` | información del nodo Mostro |
+| `web/js/` | los módulos de las páginas: cliente de relays (`nostr-client.js`) y almacén de eventos (`event-store.js`), compartidos por las dos páginas, gráfica, paneles, precios y estado |
+| `web/css/` | estilos de cada página |
 | `web/i18n.js` | idioma (español / inglés): diccionario y traducción de textos |
 | `web/common.js`, `web/common.css` | configuración, formato, colores y tarjeta del nodo, compartidos por las dos páginas |
 | `web/vendor/` | librerías copiadas (sin depender de CDN) y la lista de métodos de pago por moneda de la app de Mostro (`mostro-payment-methods.js`) |
-| `shared/` | lógica pura de la tasa (módulos ES: métodos de pago, órdenes, zonas horarias y periodos, unidades, Tasa K y velas), que usa `web/index.html` (`build.mjs` la copia a `web/shared/`) |
+| `shared/` | lógica pura de la tasa (módulos ES: métodos de pago, órdenes, zonas horarias y periodos, unidades, Tasa K y velas), que usan las páginas (`build.mjs` la copia a `web/shared/`) |
 | `shared/test/` | pruebas de `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), datos reales fijos (`fixtures/`), los valores de referencia que el código debe reproducir (`expected.json`) y casos escritos a mano (`cases.json`) |
 | `build.mjs` | lee `.env`, genera `web/config.js` y copia `shared/` en `web/shared/` |
 | `indexer/` | el archivador de eventos, su servicio de systemd y el exportador de la base de datos de Mostro |

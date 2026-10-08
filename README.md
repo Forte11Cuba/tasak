@@ -149,10 +149,12 @@ signed Nostr event is also archived.
 | `web/` | the site, the folder to publish |
 | `web/index.html` | the rate: chart, order book and executed orders |
 | `web/node.html` | Mostro node information |
+| `web/js/` | the pages' modules: relay client (`nostr-client.js`) and event store (`event-store.js`) shared by both pages, chart, panels, prices and state |
+| `web/css/` | styles of each page |
 | `web/i18n.js` | language (Spanish / English): dictionary and text translation |
 | `web/common.js`, `web/common.css` | configuration, formatting, colours and node card, shared by both pages |
 | `web/vendor/` | copied libraries (no CDN) and the Mostro app's payment methods per currency (`mostro-payment-methods.js`) |
-| `shared/` | pure logic of the rate (ES modules: payment methods, orders, time zones and periods, units, Tasa K and candles), used by `web/index.html` (`build.mjs` copies it to `web/shared/`) |
+| `shared/` | pure logic of the rate (ES modules: payment methods, orders, time zones and periods, units, Tasa K and candles), used by the pages (`build.mjs` copies it to `web/shared/`) |
 | `shared/test/` | tests of `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), fixed real data (`fixtures/`), the reference values the code must reproduce (`expected.json`) and hand-written cases (`cases.json`) |
 | `build.mjs` | reads `.env`, generates `web/config.js` and copies `shared/` into `web/shared/` |
 | `indexer/` | the event archiver, its systemd service and the Mostro database exporter |
