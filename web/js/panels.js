@@ -137,7 +137,7 @@ export function renderBook(tasa, { asks, bids }) {
     const spread = asks[0].price - bids[0].price;
     mid = spread < 0
       ? `${t('Libro cruzado')} <span class="muted">${t('(hay compradores por encima de vendedores)')}</span>`
-      : `Spread <strong class="num">${fmtPrice(spread)}</strong> <span class="muted num">(${(spread / asks[0].price * 100).toFixed(1)}%)</span>`;
+      : `${t('Diferencial')} <strong class="num">${fmtPrice(spread)}</strong> <span class="muted num">(${(spread / asks[0].price * 100).toFixed(1)}%)</span>`;
   }
   if (tasa != null) mid += `${mid ? ' · ' : ''}${esc(CONFIG.rateName)} <strong class="num">${fmtPrice(tasa)}</strong>`;
 

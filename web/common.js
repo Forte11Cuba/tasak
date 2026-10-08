@@ -203,7 +203,7 @@ function nodeCardHtml(pk, m = {}, activity = []) {
       ['Pubkey', `<span class="num">${esc(npub)}</span>`],
       info?.mostro_version && ['Mostro', `v${esc(info.mostro_version)}${info.protocol_version ? ` · ${t('protocolo {v}', { v: esc(info.protocol_version) })}` : ''}`],
       info?.lnd_node_alias && [t('Nodo Lightning'), `${esc(info.lnd_node_alias)}${info.lnd_version ? ` · LND ${esc(info.lnd_version.split(' ')[0])}` : ''}`],
-      info?.lnd_node_pubkey && [t('Pubkey Lightning'), `<span class="num">${esc(info.lnd_node_pubkey)}</span>`],
+      info?.lnd_node_pubkey && [t('Clave pública del nodo Lightning'), `<span class="num">${esc(info.lnd_node_pubkey)}</span>`],
       m.relays?.list.length && [t('Relays del nodo'), m.relays.list.map(esc).join('<br>')],
       info && [t('Información publicada'), esc(fmtTime(info.ts))],
     ])}
