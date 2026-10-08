@@ -106,9 +106,9 @@ External services it uses and what happens if they are blocked:
 
 | Service | Used for | If blocked |
 |---|---|---|
-| Nostr relays | the orders | no data without them (one responding is enough) |
-| Yadio | current BTC/USD, the currency's USD reference, market-price order book | currency/USD can't be calculated; currency/BTC and currency/sat keep working |
-| Coinbase | hourly historical BTC/USD, for currency/USD | it's calculated with Yadio's current BTC/USD and marked as approximate |
+| Nostr relays | the orders, and the current prices the node publishes (`mostro-rates`: BTC/USD, the currency's USD reference, market-price order book) | no data without them (one responding is enough) |
+| Yadio | only if the node doesn't publish valid `mostro-rates`: the same current prices | currency/USD can't be calculated; currency/BTC and currency/sat keep working |
+| Coinbase | hourly historical BTC/USD, for currency/USD | it's calculated with the current BTC/USD (the node's or Yadio's) and marked as approximate |
 
 ## Archiver
 
@@ -158,7 +158,7 @@ signed Nostr event is also archived.
 | `web/i18n.js` | language (Spanish / English): dictionary and text translation |
 | `web/common.js`, `web/common.css` | configuration, formatting, colours and node card, shared by both pages |
 | `web/vendor/` | copied libraries (no CDN) and the Mostro app's payment methods per currency (`mostro-payment-methods.js`) |
-| `shared/` | pure logic of the rate (ES modules: payment methods, orders, time zones and periods, units, Tasa K and candles), used by the pages (`build.mjs` copies it to `web/shared/`) |
+| `shared/` | pure logic of the rate (ES modules: payment methods, orders, the node's prices (`mostro-rates`), time zones and periods, units, Tasa K and candles), used by the pages (`build.mjs` copies it to `web/shared/`) |
 | `shared/test/` | tests of `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), fixed real data (`fixtures/`), the reference values the code must reproduce (`expected.json`) and hand-written cases (`cases.json`) |
 | `build.mjs` | reads `.env`, generates `web/config.js` and copies `shared/` into `web/shared/`; with `--serve`, serves `web/` locally |
 | `indexer/` | the event archiver, its systemd service and the Mostro database exporter |

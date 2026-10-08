@@ -108,5 +108,39 @@
    "versions": [[100, "pending", "a", 0, 1]],
    "expected": { "id": "a", "origin": null, "takenAt": null }
   }
- ]
+ ],
+ "mostroRates": {
+  "parse": [
+   {
+    "note": "as Mostro publishes it (content shortened)",
+    "event": { "kind": 30078, "pubkey": "n1", "id": "a", "created_at": 1000,
+     "tags": [["d", "mostro-rates"], ["published_at", "1000"], ["source", "yadio"], ["expiration", "1600"]],
+     "content": "{\"BTC\":{\"USD\":82858.34,\"CUP\":63800922.56,\"ves\":1000}}" },
+    "expected": { "node": "n1", "id": "a", "ts": 1000, "expiresAt": 1600, "source": "yadio",
+     "btc": { "USD": 82858.34, "CUP": 63800922.56, "VES": 1000 } },
+    "fiatPerUsd": { "USD": 1, "CUP": 770.0000091722814, "EUR": null }
+   },
+   {
+    "note": "no expiration tag: valid for 600 s; values that aren't positive numbers are left out",
+    "event": { "kind": 30078, "pubkey": "n1", "id": "b", "created_at": 1000, "tags": [["d", "mostro-rates"]],
+     "content": "{\"BTC\":{\"USD\":80000,\"CUP\":\"x\",\"ARS\":-1,\"EUR\":70000}}" },
+    "expected": { "node": "n1", "id": "b", "ts": 1000, "expiresAt": 1600, "source": null, "btc": { "USD": 80000, "EUR": 70000 } }
+   },
+   { "note": "another d tag", "event": { "kind": 30078, "pubkey": "n1", "id": "c", "created_at": 1000, "tags": [["d", "other"]], "content": "{\"BTC\":{\"USD\":1}}" }, "expected": null },
+   { "note": "content that isn't JSON", "event": { "kind": 30078, "pubkey": "n1", "id": "d", "created_at": 1000, "tags": [["d", "mostro-rates"]], "content": "{" }, "expected": null },
+   { "note": "without BTC/USD", "event": { "kind": 30078, "pubkey": "n1", "id": "e", "created_at": 1000, "tags": [["d", "mostro-rates"]], "content": "{\"BTC\":{\"CUP\":1}}" }, "expected": null }
+  ],
+  "current": [
+   {
+    "note": "the newest one published by then that hasn't expired; ties by id",
+    "rates": [
+     { "id": "a", "ts": 1000, "expiresAt": 1600 },
+     { "id": "b", "ts": 1300, "expiresAt": 1900 },
+     { "id": "c", "ts": 1300, "expiresAt": 1900 },
+     { "id": "d", "ts": 1500, "expiresAt": 1550 }
+    ],
+    "now": [[1200, "a"], [1400, "c"], [1600, "c"], [1900, null]]
+   }
+  ]
+ }
 }

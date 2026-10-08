@@ -7,7 +7,7 @@ const verifyEvent = window.NostrTools?.verifyEvent ?? null;
 // The payment methods aren't shown here: no list, so they aren't classified
 const store = createStore(() => []);
 const relays = createRelayPool({
-  urls: CONFIG.relays, authors: CONFIG.mostros, kinds: [38383], metaKinds: META_KINDS,
+  urls: CONFIG.relays, authors: CONFIG.mostros, kinds: [38383], metaFilters: [{ kinds: META_KINDS }],
   verify: verifyEvent, has: store.has, onEvent: ev => store.add(ev), onUpdate: render, onStatus: render,
 });
 
