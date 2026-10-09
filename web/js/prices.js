@@ -32,7 +32,9 @@ export async function ensurePrices() {
   yadioAt = Date.now();
   try {
     // With a time limit: a blocked service must not hold the page's render
-    state.yadio = await (await fetch('https://api.yadio.io/exrates/USD', { signal: AbortSignal.timeout(8000) })).json();
+    const res = await fetch('https://api.yadio.io/exrates/USD', { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    state.yadio = await res.json();
   } catch (e) { console.warn('Yadio', e); }
 }
 
