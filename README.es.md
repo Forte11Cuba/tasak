@@ -180,10 +180,10 @@ que publica el nodo, verificado (firma, autor y tipo), en una base de datos SQLi
 - `event_relays`: qué relays enviaron cada evento y cuándo, para comprobar qué relay tenía qué.
 - `yadio`: el BTC/USD de Yadio cada 5 minutos de las últimas 24 h, para rellenar los huecos cuando el
   archivo estuvo apagado.
-- `orders`: las órdenes completadas, derivadas de `events` cada minuto (las abiertas se leen en vivo de
-  los relays; las canceladas y caducadas nunca cuentan): cada una con su versión vigente, si fue a precio
-  de mercado o fijo, cuándo se tomó y su BTC/USD de ese momento con su origen, el `mostro-rates` del nodo
-  o, si no lo hay, Coinbase (velas de 1 minuto) o Yadio.
+- `orders`: las órdenes completadas, derivadas cada minuto de `events` y de `node_orders` (más abajo).
+  Las abiertas se leen en vivo de los relays, y las canceladas o caducadas nunca cuentan. Cada una tiene
+  su versión vigente, si fue a precio de mercado o fijo, cuándo se tomó y su BTC/USD de ese momento con
+  su origen: el `mostro-rates` del nodo o, si no lo hay, Coinbase (velas de 1 minuto) o Yadio.
 - `btc_prices`: los cierres de BTC/USD de 1 minuto de Coinbase, cada uno pedido una vez y guardado.
 
 Debe estar siempre encendido: lo que pase mientras está apagado se pierde, salvo la última versión de
@@ -203,13 +203,16 @@ El historial anterior al archivo lo puede recuperar el operador del nodo desde l
 Mostro. Sobre una copia (`sqlite3 mostro.db ".backup mostro-copia.db"`):
 
 ```sh
-node indexer/export-mostro.mjs mostro-copia.db
+tasak import-mostro mostro-copia.db       # añade la clave pública del nodo si el .env tiene varios
 ```
 
-Necesita Node.js ≥ 22.13 y escribe las órdenes ejecutadas en `indexer/data/mostro-db/`. Solo exporta
-datos públicos de la operación (moneda, montos, prima, métodos de pago, horas, precio de mercado o
-fijo), nunca claves, facturas ni la tabla de usuarios. Esas órdenes no van firmadas: una orden cuenta
-como confirmada cuando su evento firmado de Nostr también está archivado.
+Lee la copia en solo lectura e importa sus órdenes completadas (`success`) a la tabla `node_orders` del
+archivo. Solo datos públicos de la operación (moneda, montos, prima, métodos de pago, horas, precio de
+mercado o fijo), nunca claves, facturas ni la tabla de usuarios. Se unen a `orders`: una orden que
+también está archivada como evento firmado conserva los datos del evento y toma de la base de datos lo
+que los relays ya no tenían (cuándo se tomó, precio de mercado o fijo); las demás quedan marcadas como
+sin firma («datos del nodo»). La base de datos no guarda la hora de completada: en esas se usa la del
+bloqueo del escrow. Importar otra vez no cambia nada.
 
 ## Archivos
 
@@ -226,7 +229,6 @@ como confirmada cuando su evento firmado de Nostr también está archivado.
 | `shared/` | lógica pura de la tasa (módulos ES: métodos de pago, órdenes, precios del nodo (`mostro-rates`), zonas horarias y periodos, unidades, Tasa K y velas), que usan las páginas (`tasak` la copia a `web/shared/`) |
 | `shared/test/` | pruebas de `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), datos reales fijos (`fixtures/`), los valores de referencia que el código debe reproducir (`expected.json`) y casos escritos a mano (`cases.json`): los vectores que también pasa la versión en Rust de esta lógica (`server/src/logic/`) |
 | `server/` | el servidor de tasaK en Rust (`tasak`): lee el `.env`, genera `web/config.js`, sirve `web/` y archiva los eventos del nodo; su servicio de systemd es `server/tasak.service`. `src/logic/` es la lógica de `shared/` en Rust, comprobada con los mismos vectores (`server/tests/shared_vectors.rs`); `server/tests/config-cases.json` es el `web/config.js` que debe salir de cada `.env` (`cargo test`) |
-| `indexer/` | el exportador de la base de datos de Mostro (`export-mostro.mjs`; pasará a `tasak`) |
 | `tools/` | comprobaciones de desarrollo en Chrome headless (Node, sin dependencias); `node tools/reference.mjs` comprueba que `web/` calcula con datos fijos los valores de `shared/test/expected.json` |
 
 ## Idiomas
