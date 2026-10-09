@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseRates, currentRates, fiatPerUsd, marketPrice } from '../rates.js';
+import { parseRates, currentRates, referenceRates, fiatPerUsd, marketPrice } from '../rates.js';
 import { cases } from './data.js';
 
 test('mostro-rates events: parsing and currency per USD (cases.json)', () => {
@@ -14,6 +14,13 @@ test('mostro-rates events: parsing and currency per USD (cases.json)', () => {
 test('rates to use at each moment (cases.json)', () => {
   for (const { note, rates, now } of cases.mostroRates.current) {
     for (const [t, id] of now) assert.equal(currentRates(rates, t)?.id ?? null, id, `${note}: ${t}`);
+  }
+});
+
+test('reference rates with several nodes: those that trade the currency (cases.json)', () => {
+  const { note, rates, cases: list } = cases.mostroRates.reference;
+  for (const [fiat, trading, now, id] of list) {
+    assert.equal(referenceRates(rates, now, fiat, new Set(trading))?.id ?? null, id, `${note}: ${fiat} ${trading} ${now}`);
   }
 });
 

@@ -176,6 +176,23 @@
     "now": [[4599, "a"], [4600, null]]
    }
   ],
+  "reference": {
+   "note": "the header's reference with several nodes: the newest usable rates among the nodes that trade the currency (have orders in it) and publish it; otherwise any that publishes it; otherwise the newest of all. Cases are [currency, nodes trading it, now, chosen id]",
+   "rates": [
+    { "id": "es", "node": "n1", "ts": 1500, "expiresAt": 2100, "btc": { "USD": 100000, "COP": 400000000 } },
+    { "id": "co", "node": "n2", "ts": 1400, "expiresAt": 2000, "btc": { "USD": 100000, "COP": 398000000 } },
+    { "id": "usd", "node": "n3", "ts": 1600, "expiresAt": 2200, "btc": { "USD": 100000 } }
+   ],
+   "cases": [
+    ["COP", ["n2"], 2000, "co"],
+    ["COP", [], 2000, "es"],
+    ["COP", ["n3"], 2000, "es"],
+    ["ARS", ["n1"], 2000, "usd"],
+    ["USD", ["n1", "n2"], 2000, "es"],
+    ["COP", ["n2"], 3250, "es"],
+    ["COP", ["n2"], 999, null]
+   ]
+  },
   "market": [
    { "note": "the node's own rates while valid", "own": { "ts": 1000, "expiresAt": 1600, "source": "yadio", "btc": { "USD": 100000, "CUP": 80000000 } }, "fiat": "CUP", "now": 1200, "fallback": 70000000,
     "expected": { "fiatPerBtc": 80000000, "from": "node", "expired": false, "source": "yadio" } },

@@ -134,8 +134,10 @@ Desde Mostro 0.19 cada nodo elige sus fuentes de precio (Yadio, CoinGecko, Block
 fuentes del mercado local u otros nodos por Nostr), las combina y publica el resultado, firmado, en su evento
 `mostro-rates`, con las fuentes en la etiqueta `source`; con ese mismo valor calcula las órdenes a
 mercado. La cabecera dice «Referencia Yadio» si el nodo usa solo Yadio y «Referencia del nodo» si no, con
-las fuentes al pasar el ratón. En el libro de órdenes cada orden a mercado se calcula con los precios de
-su propio nodo, que este sigue usando hasta 30 minutos si no puede actualizarlos; sin ellos, el precio se
+las fuentes al pasar el ratón; con varios nodos, es la más reciente de los que tienen órdenes en la moneda
+elegida (todos publican todas las monedas, cada uno con su propia referencia). En el libro de órdenes cada
+orden a mercado se calcula con los precios de su propio nodo, que este sigue usando hasta 30 minutos si no
+puede actualizarlos; sin ellos, el precio se
 estima con la API de Yadio y lleva «≈», y si tampoco hay, la orden aparece sin precio («—»).
 
 Las compras y las ventas de BTC se cierran a precios distintos, porque cada lado pone su prima; la Tasa K

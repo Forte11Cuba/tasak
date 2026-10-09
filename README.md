@@ -136,7 +136,8 @@ Since Mostro 0.19 each node chooses its price sources (Yadio, CoinGecko, Blockch
 local-market sources or other nodes over Nostr), combines them and publishes the result, signed, in its
 `mostro-rates` event with the sources in the `source` tag; it prices market orders with that same value.
 The header says «Yadio reference» when the node uses Yadio alone and «Node reference» otherwise, with the
-sources on hover. In the order book each market order is priced with its own node's prices, which the node
+sources on hover; with several nodes, it is the newest reference among those that have orders in the
+chosen currency (every node publishes every currency, at its own reference). In the order book each market order is priced with its own node's prices, which the node
 keeps using for up to 30 minutes when it can't refresh them; without them, the price is estimated with
 Yadio's API and marked «≈», and with neither the order is shown without a price («—»).
 
