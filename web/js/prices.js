@@ -2,12 +2,12 @@
 // fallback, Yadio's API; the hourly BTC/USD history from Coinbase; and the conversion of each price to
 // the chosen unit.
 import { UNITS, toUnit, hourlyClose } from '../shared/units.js';
-import { currentRates, fiatPerUsd } from '../shared/rates.js';
+import { currentRates, fiatPerUsd, marketPrice } from '../shared/rates.js';
 import { state } from './state.js';
 
-// Newest valid mostro-rates of the selected nodes: the prices each node publishes, signed, every few
-// minutes, and uses for market orders. A visitor's clock may be behind the node's: «now» is never
-// earlier than the newest rates.
+// Newest mostro-rates of the selected nodes that the node still uses: the prices each node publishes,
+// signed, every few minutes, and uses for market orders (the same ones the order book uses). A
+// visitor's clock may be behind the node's: «now» is never earlier than the newest rates.
 export function nodeRates() {
   const list = [...state.nodeRates.values()].filter(r => state.nodeSel.has(r.node));
   return currentRates(list, Math.max(Date.now() / 1000, ...list.map(r => r.ts)));
@@ -22,12 +22,21 @@ export function currentPrices() {
   return null;
 }
 
-// Yadio's API, only as a fallback: when no selected node has valid mostro-rates once a relay has
-// answered (or after 15 s without any), at most every 5 minutes
+// Market price for the open orders of a node in the chosen currency: the node's own mostro-rates
+// (what it prices them with) or, as an estimate, Yadio's API; null without either
+export function marketFor(node) {
+  const own = state.nodeRates.get(node);
+  const y = state.yadio, perUsd = y?.USD?.[state.fiat] ?? (state.fiat === 'USD' ? 1 : null);
+  return marketPrice(own, state.fiat, Math.max(Date.now() / 1000, own?.ts ?? 0), perUsd && y?.BTC ? perUsd * y.BTC : null);
+}
+
+// Yadio's API, only as a fallback: when some selected node has no usable mostro-rates for the chosen
+// currency once a relay has answered (or after 15 s without any), at most every 5 minutes
 const pageStart = Date.now();
 let yadioAt = 0;
+const needsApi = () => !nodeRates() || [...state.nodeSel].some(n => marketFor(n)?.from !== 'node');
 export async function ensurePrices() {
-  if (nodeRates() || Date.now() - yadioAt < 5 * 60 * 1000) return;
+  if (!needsApi() || Date.now() - yadioAt < 5 * 60 * 1000) return;
   if (!state.live && Date.now() - pageStart < 15 * 1000) return;
   yadioAt = Date.now();
   try {

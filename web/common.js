@@ -43,8 +43,9 @@ const CONFIG = (() => {
     logoLight: base.logoLight || '',
     theme: base.theme || '',
     hiddenPaymentMethods: base.hiddenPaymentMethods || ['Pruebas', 'Otros'],
-    // Without a configured currency, the page picks the most traded one on the node
-    fiat: (qs.get('fiat') || base.fiat || '').toUpperCase(),
+    // Without a configured currency, the page picks the most traded one on the node; the .env one
+    // belongs to the .env nodes, so it doesn't apply if the URL changes the node
+    fiat: (qs.get('fiat') || (list('mostro').length ? '' : base.fiat) || '').toUpperCase(),
     tz: base.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
   };
 })();

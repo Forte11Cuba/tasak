@@ -71,6 +71,8 @@ Cualquier visitante puede ver otro nodo sin desplegar nada, sobrescribiendo el `
 index.html?mostro=npub1…,npub1…&relays=wss://relay.mostro.network,wss://nos.lol&fiat=VES&lang=en
 ```
 
+Si la URL cambia el nodo y no lleva `fiat`, la moneda del `.env` no se aplica: la página elige la más usada en ese nodo.
+
 ## Tasa K
 
 Precio ponderado por volumen de las órdenes completadas en las últimas 24 horas:
@@ -89,10 +91,20 @@ implícita: moneda pagada por cada BTC dividida por el BTC/USD. No es el precio 
 transferencias: si comprar o vender bitcoin con la moneda lleva un sobreprecio propio, también está en la
 Tasa K. Moneda/BTC y moneda/sat no pasan por el dólar.
 
-Casi todas las órdenes son a precio de mercado: el nodo fija los sats con la referencia de Yadio y la prima
-de la orden, así que su precio es aproximadamente `Yadio ÷ (1 − prima)`. Por eso la Tasa K sigue a la
-referencia de Yadio, y lo que se separa de ella («sobre Yadio» en la cabecera) son sobre todo las primas
-con las que se opera. Las órdenes a precio fijo no dependen de Yadio.
+Casi todas las órdenes son a precio de mercado: el nodo fija los sats con su precio de referencia y la
+prima de la orden, así que su precio es aproximadamente `referencia ÷ (1 − prima)`. Por eso la Tasa K
+sigue a esa referencia, y lo que se separa de ella («sobre Yadio» en la cabecera) son sobre todo las primas
+con las que se opera. Las órdenes a precio fijo no dependen de ella.
+
+### La referencia del nodo
+
+Desde Mostro 0.19 cada nodo elige sus fuentes de precio (Yadio, CoinGecko, Blockchain.com, currency-api,
+fuentes del mercado local u otros nodos por Nostr), las combina y publica el resultado, firmado, en su evento
+`mostro-rates`, con las fuentes en la etiqueta `source`; con ese mismo valor calcula las órdenes a
+mercado. La cabecera dice «Referencia Yadio» si el nodo usa solo Yadio y «Referencia del nodo» si no, con
+las fuentes al pasar el ratón. En el libro de órdenes cada orden a mercado se calcula con los precios de
+su propio nodo, que este sigue usando hasta 30 minutos si no puede actualizarlos; sin ellos, el precio se
+estima con la API de Yadio y lleva «≈», y si tampoco hay, la orden aparece sin precio («—»).
 
 Las compras y las ventas de BTC se cierran a precios distintos, porque cada lado pone su prima; la Tasa K
 las pondera todas juntas. Solo como información, sin cambiar la tasa, al pasar el ratón sobre la Tasa K y
@@ -121,14 +133,14 @@ Servicios externos que usa y qué pasa si están bloqueados:
 | Servicio | Para qué | Si está bloqueado |
 |---|---|---|
 | Relays Nostr | las órdenes, y los precios actuales que publica el nodo (`mostro-rates`: BTC/USD, referencia de la moneda frente al USD, libro de órdenes a precio de mercado) | sin ellos no hay datos (basta con que responda uno) |
-| Yadio | solo si el nodo no publica `mostro-rates` válidos: los mismos precios actuales | la moneda/USD no se puede calcular; moneda/BTC y moneda/sat siguen funcionando |
+| Yadio | solo si un nodo no publica `mostro-rates` válidos: una estimación de los precios actuales | la moneda/USD no se puede calcular; moneda/BTC y moneda/sat siguen funcionando |
 | Coinbase | BTC/USD histórico por hora, para la moneda/USD | se calcula con el BTC/USD actual (el del nodo o el de Yadio) y se avisa de que es aproximado |
 
 ## Archivador
 
 Los relays guardan las órdenes unos 15 días y solo su última versión: cuando una orden se completa,
 desaparecen la versión `pending` (precio de mercado o fijo) y la `in-progress` (cuándo se tomó). Los
-`mostro-rates` del nodo (precio de BTC en cada moneda, de Yadio) caducan a los 10 minutos. Para tener el
+`mostro-rates` del nodo (precio de BTC en cada moneda, de sus fuentes de precio) caducan a los 10 minutos. Para tener el
 historial completo, `indexer/archiver.mjs` se suscribe a los relays del `.env` y guarda todo lo que
 publica el nodo, verificado (firma y autor), en archivos diarios:
 

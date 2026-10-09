@@ -5,6 +5,12 @@
 // Validity when the event has no expiration tag: Mostro's default (2 × the 5 min interval)
 const DEFAULT_TTL = 600;
 
+// How long Mostro keeps using its last prices when it can't refresh them (max_price_staleness_seconds,
+// 30 min by default): the event expires sooner, but the node still prices market orders with them
+export const STALE_LIMIT = 1800;
+// Until when the node uses some rates: their expiration or STALE_LIMIT after publishing, the later
+export const usableUntil = r => Math.max(r.expiresAt, r.ts + STALE_LIMIT);
+
 // The rates of a mostro-rates event, or null if it isn't one or its content is not valid:
 // { node, id, ts, expiresAt, source, btc } with btc = currency -> currency per BTC
 export function parseRates(ev) {
@@ -31,10 +37,10 @@ export function parseRates(ev) {
 // Whether rates `a` replace `b` of the same node: the newest and, if tied, the greater id
 export const newerRates = (a, b) => a.ts !== b.ts ? a.ts > b.ts : a.id > b.id;
 
-// The rates to use at `now`: the newest published by then that haven't expired, or null
+// The rates to use at `now`: the newest published by then that the node still uses, or null
 export function currentRates(list, now) {
   let best = null;
-  for (const r of list) if (r.ts <= now && r.expiresAt > now && (!best || newerRates(r, best))) best = r;
+  for (const r of list) if (r.ts <= now && now < usableUntil(r) && (!best || newerRates(r, best))) best = r;
   return best;
 }
 
@@ -44,3 +50,18 @@ export function fiatPerUsd(rates, fiat) {
   const v = rates?.btc[fiat];
   return v ? v / rates.btc.USD : null;
 }
+
+// Market price for the orders of a node: its own newest rates `own` while the node still uses them
+// (usableUntil); otherwise `fallback`
+// (currency per BTC from Yadio's API, an estimate) or null.
+// Returns { fiatPerBtc, from: 'node' | 'api', expired, source } with `source` the node's providers.
+export function marketPrice(own, fiat, now, fallback) {
+  const v = own?.btc[fiat];
+  if (v && now < usableUntil(own)) {
+    return { fiatPerBtc: v, from: 'node', expired: now >= own.expiresAt, source: own.source };
+  }
+  return fallback ? { fiatPerBtc: fallback, from: 'api', expired: false, source: own?.source ?? null } : null;
+}
+
+// Whether a list of providers (the `source` tag, e.g. "coingecko,yadio") is Yadio alone
+export const isYadioOnly = source => source === 'yadio';

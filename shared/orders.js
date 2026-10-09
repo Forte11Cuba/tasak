@@ -70,24 +70,26 @@ export function getTrades(orders, filters, toPrice) {
     .sort((a, b) => a.ts - b.ts || (a.ev.id < b.ev.id ? -1 : a.ev.id > b.ev.id));
 }
 
-// Open orders not expired. Fixed price comes from the event; market price from `market` (currency
-// per BTC of the reference, or null) plus the premium. `toPrice(fiatPerBtc)` converts to the unit.
+// Open orders not expired. Fixed price comes from the event; market price from `market(node)` (the
+// node's market price, { fiatPerBtc, … } as given by marketPrice, or null) plus the premium. Without
+// it the order stays, with price null, after the priced ones. `toPrice(fiatPerBtc)` converts to the unit.
 export function getBook(orders, filters, { now, market, toPrice }) {
   const out = [];
   for (const o of selectOrders(orders, 'pending', filters)) {
     if (o.expiresAt && o.expiresAt < now) continue;
     if (!o.fa.length || !(o.fa.at(-1) > 0)) continue;
-    let price;
-    if (o.amt > 0) price = o.fa[0] / (o.amt / 1e8);
-    else if (market) price = market / (1 - o.premium / 100);
-    else continue;
-    out.push({ ...o, fixed: o.amt > 0, price: toPrice(price), size: o.fa.at(-1) });
+    const fixed = o.amt > 0;
+    const m = fixed ? null : market(o.node);
+    const price = fixed ? o.fa[0] / (o.amt / 1e8) : m ? m.fiatPerBtc / (1 - o.premium / 100) : null;
+    out.push({ ...o, fixed, market: m, price: price == null ? null : toPrice(price), size: o.fa.at(-1) });
   }
-  // Same price: the newest first and then by event id, so it doesn't depend on the arrival order
+  // Without price last; same price: the newest first and then by event id, so it doesn't depend on
+  // the arrival order
   const tie = (a, b) => b.ts - a.ts || (a.ev.id < b.ev.id ? -1 : a.ev.id > b.ev.id);
+  const by = dir => (a, b) => (a.price == null) - (b.price == null) || dir * (a.price - b.price) || tie(a, b);
   return {
-    asks: out.filter(o => o.side === 'sell').sort((a, b) => a.price - b.price || tie(a, b)),
-    bids: out.filter(o => o.side === 'buy').sort((a, b) => b.price - a.price || tie(a, b)),
+    asks: out.filter(o => o.side === 'sell').sort(by(1)),
+    bids: out.filter(o => o.side === 'buy').sort(by(-1)),
   };
 }
 
