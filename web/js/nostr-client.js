@@ -4,13 +4,18 @@
 // with a valid signature are handed over.
 const PAGE = 300;
 
-// urls, authors: relays and node pubkeys; kinds: kinds paged through (orders); metaKinds: node
-// information, asked for in one query; verify(ev): signature check, or null if nostr-tools didn't
+// urls, authors: relays and node pubkeys; kinds: kinds paged through (orders); metaFilters: other
+// events of the node asked for in one query, as filters without authors (e.g. { kinds: [0] } or
+// { kinds: [30078], '#d': ['mostro-rates'] }); verify(ev): signature check, or null if nostr-tools didn't
 // load; has(id): whether the event is already known (it isn't checked again); onEvent(ev, live):
 // returns true if the event changed something; onUpdate(): something changed (live, or at the end
 // of the history of a relay); onStatus(): a relay went live or was lost
-export function createRelayPool({ urls, authors, kinds, metaKinds, verify, has, onEvent, onUpdate, onStatus }) {
+export function createRelayPool({ urls, authors, kinds, metaFilters, verify, has, onEvent, onUpdate, onStatus }) {
   const authorSet = new Set(authors);
+  const metas = metaFilters.map(f => ({ ...f, authors }));
+  // Whether an event matches a filter: its kinds and its tag conditions ('#d': […])
+  const matches = (ev, f) => f.kinds.includes(ev.kind) && Object.keys(f).filter(k => k[0] === '#')
+    .every(k => ev.tags.some(t => t[0] === k.slice(1) && f[k].includes(t[1])));
   const pool = {
     live: 0,       // relays with the history loaded and subscribed live
     rejected: 0,   // events with an invalid signature
@@ -20,7 +25,7 @@ export function createRelayPool({ urls, authors, kinds, metaKinds, verify, has, 
 
   function accept(ev) {
     if (!ev || has(ev.id)) return false;
-    if (!authorSet.has(ev.pubkey) || (!kinds.includes(ev.kind) && !metaKinds.includes(ev.kind))) return false;
+    if (!authorSet.has(ev.pubkey) || (!kinds.includes(ev.kind) && !metas.some(f => matches(ev, f)))) return false;
     // Without it, a relay could inject fake events with the node's pubkey
     if (verify && !verify(ev)) { pool.rejected++; return false; }
     if (kinds.includes(ev.kind)) pool.newest = Math.max(pool.newest, ev.created_at);
@@ -40,8 +45,8 @@ export function createRelayPool({ urls, authors, kinds, metaKinds, verify, has, 
     ws.onopen = () => {
       startedAt = Math.floor(Date.now() / 1000);
       req('hist0', { limit: PAGE });
-      // Profile, information and relays of the node
-      ws.send(JSON.stringify(['REQ', 'meta', { kinds: metaKinds, authors }]));
+      // Profile, information and relays of the node, and the like
+      ws.send(JSON.stringify(['REQ', 'meta', ...metas]));
     };
     ws.onmessage = onMessage;
 
@@ -67,7 +72,7 @@ export function createRelayPool({ urls, authors, kinds, metaKinds, verify, has, 
           return;
         }
         // Since we started asking for history, so nothing is lost if paging was slow
-        ws.send(JSON.stringify(['REQ', 'live', { ...base, since: startedAt - 60 }, { kinds: metaKinds, authors, since: startedAt }]));
+        ws.send(JSON.stringify(['REQ', 'live', { ...base, since: startedAt - 60 }, ...metas.map(f => ({ ...f, since: startedAt }))]));
         isLive = true;
         pool.live++;
         onStatus();

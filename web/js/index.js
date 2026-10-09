@@ -3,7 +3,7 @@
 import { getTrades as tradesOf, getBook as bookOf } from '../shared/orders.js';
 import { state, store, saveView } from './state.js';
 import { createRelayPool } from './nostr-client.js';
-import { loadYadio, loadBtcHistory, btcSpot, yadioFiatPerUsd, unitPrice } from './prices.js';
+import { ensurePrices, loadBtcHistory, btcSpot, yadioFiatPerUsd, unitPrice } from './prices.js';
 import { chartC, view, renderChart, setEmpty, applyChartTheme } from './chart.js';
 import { setStatus, renderStats, renderTrades, renderBook, renderFilters, updatePair } from './panels.js';
 import { openEvent } from './event-dialog.js';
@@ -14,7 +14,9 @@ const verifyEvent = window.NostrTools?.verifyEvent ?? null;
 state.sigs = verifyEvent ? 'ok' : 'off';
 
 const relays = createRelayPool({
-  urls: CONFIG.relays, authors: CONFIG.mostros, kinds: [38383], metaKinds: META_KINDS,
+  urls: CONFIG.relays, authors: CONFIG.mostros, kinds: [38383],
+  // Node information and the prices it uses for market orders (mostro-rates)
+  metaFilters: [{ kinds: META_KINDS }, { kinds: [30078], '#d': ['mostro-rates'] }],
   verify: verifyEvent, has: store.has,
   onEvent(ev, live) {
     if (!store.add(ev)) return false;
@@ -63,6 +65,7 @@ function scheduleRender() {
       renderQueued = false;
       renderFilters();
       updatePair();
+      await ensurePrices();
       if (state.unit === 'usd') {
         const ts = [...state.orders.values()].filter(o => o.status === 'success').map(o => o.ts);
         if (ts.length) await loadBtcHistory(Math.min(...ts));
@@ -217,8 +220,10 @@ if (!CONFIG.mostros.length || !CONFIG.relays.length) {
   setEmpty(chartC, true, msg);
 } else {
   setStatus();
-  loadYadio().then(scheduleRender);
   relays.start();
-  setInterval(loadYadio, 5 * 60 * 1000);
-  setInterval(scheduleRender, 60 * 1000);   // expires book orders and moves the 24 h window
+  scheduleRender();
+  // If no relay answers, Yadio's API is asked after 15 s (see ensurePrices)
+  setTimeout(scheduleRender, 15 * 1000);
+  // Expires book orders and the node's prices, and moves the 24 h window
+  setInterval(scheduleRender, 60 * 1000);
 }

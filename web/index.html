@@ -30,7 +30,7 @@
     </span>
     <span class="sub num" id="sTasaSub">&nbsp;</span>
   </div>
-  <div class="stat" title="Tasa de referencia de Yadio, la que usa Mostro para las órdenes a precio de mercado" data-i18n-title>
+  <div class="stat" id="statYadio" title="Tasa de referencia de Yadio, la que usa Mostro para las órdenes a precio de mercado" data-i18n-title>
     <span class="label" data-i18n>Referencia Yadio</span>
     <span class="value num" id="sYadio">—</span>
     <span class="sub num" id="sYadioSub">&nbsp;</span>
@@ -213,6 +213,7 @@
     <details>
       <summary>¿Qué es «Ref. Yadio»?</summary>
       <p>La tasa de referencia de Yadio para la moneda, que es la que usa Mostro para las órdenes a precio de mercado. Sirve para comparar con la <span data-name="rate">Tasa K</span>.</p>
+      <p>No se consulta a Yadio: cada pocos minutos el nodo publica en Nostr, firmados, los precios que está usando (evento <code>mostro-rates</code>, kind 30078), y la página los lee por la misma conexión que las órdenes. Así la referencia y los precios de mercado del libro de órdenes son exactamente los del nodo y se pueden verificar. Si el nodo no los publica o han caducado, la página los pide a la API de Yadio; al pasar el ratón sobre la referencia se ve de dónde salen.</p>
     </details>
     <details>
       <summary>¿Puedo ver mi propio nodo Mostro?</summary>
@@ -267,6 +268,7 @@
     <details>
       <summary>What is «Yadio reference»?</summary>
       <p>Yadio's reference rate for the currency, which Mostro uses for market-price orders. It is there to compare with the <span data-name="rate">Tasa K</span>.</p>
+      <p>Yadio isn't queried: every few minutes the node publishes on Nostr, signed, the prices it is using (<code>mostro-rates</code> event, kind 30078), and the page reads them over the same connection as the orders. So the reference and the market prices in the order book are exactly the node's and can be verified. If the node doesn't publish them or they have expired, the page asks Yadio's API; hovering over the reference shows where they come from.</p>
     </details>
     <details>
       <summary>Can I see my own Mostro node?</summary>

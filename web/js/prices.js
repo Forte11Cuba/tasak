@@ -1,11 +1,40 @@
-// External prices: Yadio (current BTC/USD and currency per USD) and Coinbase (hourly BTC/USD), and
-// the conversion of each price to the chosen unit.
+// Prices: the current ones (BTC/USD and currency per USD) from the nodes' mostro-rates or, as a
+// fallback, Yadio's API; the hourly BTC/USD history from Coinbase; and the conversion of each price to
+// the chosen unit.
 import { UNITS, toUnit, hourlyClose } from '../shared/units.js';
+import { currentRates, fiatPerUsd } from '../shared/rates.js';
 import { state } from './state.js';
 
-export async function loadYadio() {
+// Newest valid mostro-rates of the selected nodes: the prices each node publishes, signed, every few
+// minutes, and uses for market orders. A visitor's clock may be behind the node's: «now» is never
+// earlier than the newest rates.
+export function nodeRates() {
+  const list = [...state.nodeRates.values()].filter(r => state.nodeSel.has(r.node));
+  return currentRates(list, Math.max(Date.now() / 1000, ...list.map(r => r.ts)));
+}
+
+// Current prices: { from: 'node' | 'api', rates?, btcUsd, fiatPerUsd(fiat) }, or null without either
+export function currentPrices() {
+  const r = nodeRates();
+  if (r) return { from: 'node', rates: r, btcUsd: r.btc.USD, fiatPerUsd: f => fiatPerUsd(r, f) };
+  const y = state.yadio;
+  if (y?.BTC) return { from: 'api', btcUsd: y.BTC, fiatPerUsd: f => y.USD?.[f] ?? (f === 'USD' ? 1 : null) };
+  return null;
+}
+
+// Yadio's API, only as a fallback: when no selected node has valid mostro-rates once a relay has
+// answered (or after 15 s without any), at most every 5 minutes
+const pageStart = Date.now();
+let yadioAt = 0;
+export async function ensurePrices() {
+  if (nodeRates() || Date.now() - yadioAt < 5 * 60 * 1000) return;
+  if (!state.live && Date.now() - pageStart < 15 * 1000) return;
+  yadioAt = Date.now();
   try {
-    state.yadio = await (await fetch('https://api.yadio.io/exrates/USD')).json();
+    // With a time limit: a blocked service must not hold the page's render
+    const res = await fetch('https://api.yadio.io/exrates/USD', { signal: AbortSignal.timeout(8000) });
+    if (!res.ok) throw new Error('HTTP ' + res.status);
+    state.yadio = await res.json();
   } catch (e) { console.warn('Yadio', e); }
 }
 
@@ -35,7 +64,7 @@ export async function loadBtcHistory(fromTs) {
   state.btcLoadedFrom = fromTs;
 }
 
-export const btcSpot = () => state.yadio?.BTC ?? null;
+export const btcSpot = () => currentPrices()?.btcUsd ?? null;
 // BTC/USD of a moment: the Coinbase hourly close; without it, the current price (approximate)
 export function btcAt(ts) {
   const p = hourlyClose(state.btcusd, ts);
@@ -43,7 +72,8 @@ export function btcAt(ts) {
   if (ts < Date.now() / 1000 - 3 * 3600) state.btcApprox = true;
   return btcSpot();
 }
-export const yadioFiatPerUsd = () => state.yadio?.USD?.[state.fiat] ?? (state.fiat === 'USD' ? 1 : null);
+// Yadio's reference for the chosen currency: currency per USD
+export const yadioFiatPerUsd = () => currentPrices()?.fiatPerUsd(state.fiat) ?? null;
 
 // Name of the chosen unit: CUP/USD, CUP/BTC or CUP/sat
 export const unitName = () => `${state.fiat}/${UNITS[state.unit]}`;

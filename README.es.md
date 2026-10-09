@@ -101,9 +101,9 @@ Servicios externos que usa y qué pasa si están bloqueados:
 
 | Servicio | Para qué | Si está bloqueado |
 |---|---|---|
-| Relays Nostr | las órdenes | sin ellos no hay datos (basta con que responda uno) |
-| Yadio | BTC/USD actual, referencia de la moneda frente al USD, libro de órdenes a precio de mercado | la moneda/USD no se puede calcular; moneda/BTC y moneda/sat siguen funcionando |
-| Coinbase | BTC/USD histórico por hora, para la moneda/USD | se calcula con el BTC/USD actual de Yadio y se avisa de que es aproximado |
+| Relays Nostr | las órdenes, y los precios actuales que publica el nodo (`mostro-rates`: BTC/USD, referencia de la moneda frente al USD, libro de órdenes a precio de mercado) | sin ellos no hay datos (basta con que responda uno) |
+| Yadio | solo si el nodo no publica `mostro-rates` válidos: los mismos precios actuales | la moneda/USD no se puede calcular; moneda/BTC y moneda/sat siguen funcionando |
+| Coinbase | BTC/USD histórico por hora, para la moneda/USD | se calcula con el BTC/USD actual (el del nodo o el de Yadio) y se avisa de que es aproximado |
 
 ## Archivador
 
@@ -154,7 +154,7 @@ como confirmada cuando su evento firmado de Nostr también está archivado.
 | `web/i18n.js` | idioma (español / inglés): diccionario y traducción de textos |
 | `web/common.js`, `web/common.css` | configuración, formato, colores y tarjeta del nodo, compartidos por las dos páginas |
 | `web/vendor/` | librerías copiadas (sin depender de CDN) y la lista de métodos de pago por moneda de la app de Mostro (`mostro-payment-methods.js`) |
-| `shared/` | lógica pura de la tasa (módulos ES: métodos de pago, órdenes, zonas horarias y periodos, unidades, Tasa K y velas), que usan las páginas (`build.mjs` la copia a `web/shared/`) |
+| `shared/` | lógica pura de la tasa (módulos ES: métodos de pago, órdenes, precios del nodo (`mostro-rates`), zonas horarias y periodos, unidades, Tasa K y velas), que usan las páginas (`build.mjs` la copia a `web/shared/`) |
 | `shared/test/` | pruebas de `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), datos reales fijos (`fixtures/`), los valores de referencia que el código debe reproducir (`expected.json`) y casos escritos a mano (`cases.json`) |
 | `build.mjs` | lee `.env`, genera `web/config.js` y copia `shared/` en `web/shared/`; con `--serve`, sirve `web/` en local |
 | `indexer/` | el archivador de eventos, su servicio de systemd y el exportador de la base de datos de Mostro |

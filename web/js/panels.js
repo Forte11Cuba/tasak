@@ -7,7 +7,7 @@ import { WEEK, MONTH, YEAR } from '../shared/time.js';
 import { WINDOW, tasaK } from '../shared/rate.js';
 import { state, HIDDEN_PM, nodeName } from './state.js';
 import { fmtPrice, fmtPct } from './format.js';
-import { btcSpot, yadioFiatPerUsd, unitName } from './prices.js';
+import { btcSpot, yadioFiatPerUsd, unitName, currentPrices } from './prices.js';
 
 export function setStatus(error) {
   const box = document.getElementById('statusBox');
@@ -75,7 +75,20 @@ export function renderStats(trades) {
   const diff = tasa != null && refVal ? (tasa / refVal - 1) * 100 : null;
   document.getElementById('sYadioSub').innerHTML = diff == null ? '&nbsp;'
     : `${esc(CONFIG.rateName)} <span class="${diff >= 0 ? 'up' : 'down'}">${fmtPct(diff, 1)}</span> ${t(diff >= 0 ? 'sobre Yadio' : 'bajo Yadio')}`;
+  document.getElementById('statYadio').title = [
+    t('Tasa de referencia de Yadio, la que usa Mostro para las órdenes a precio de mercado'), priceSource()].join('\n');
   return tasa;
+}
+
+// Where the current prices come from, for the tooltip of the reference
+function priceSource() {
+  const p = currentPrices();
+  if (!p) return t('Sin precio: el nodo no publica mostro-rates válidos y la API de Yadio no respondió');
+  if (p.from === 'api') return t('Consultada a la API de Yadio: el nodo no publica mostro-rates válidos');
+  const r = p.rates;
+  const min = Math.max(0, Math.round((Date.now() / 1000 - r.ts) / 60));
+  return t('Publicada por el nodo {node} hace {m} min en un evento firmado (mostro-rates)', { node: nodeName(r.node), m: min })
+    + (r.source && r.source !== 'yadio' ? ` · ${t('fuente: {s}', { s: r.source })}` : '');
 }
 
 function pmCell(o) {

@@ -16,12 +16,13 @@ export const state = {
   orders: store.orders,   // pubkey:d -> current state of the order
   nodeNames: store.nodeNames,
   nodeMeta: store.meta,   // pubkey -> { profile, info, relays } read from its Nostr events
+  nodeRates: store.rates,   // pubkey -> newest mostro-rates of the node
   // live (relays connected) and rejected (invalid signatures): from the relay pool, in index.js
   btcusd: new Map(),   // unix hour -> BTC/USD
   btcLoadedFrom: Infinity,
   btcRetryAt: 0,       // after a Coinbase failure, don't retry before this time (ms)
   btcApprox: false,
-  yadio: null,         // { BTC, USD: { CUP, ... } }
+  yadio: null,         // Yadio's API, only if no node publishes mostro-rates: { BTC, USD: { CUP, ... } }
   fiat: CONFIG.fiat,
   fiatAuto: !CONFIG.fiat,   // no FIAT in .env or URL: the most used currency on the node
   unit: 'usd',
