@@ -6,7 +6,7 @@ import { UNITS } from '../shared/units.js';
 import { WEEK, MONTH, YEAR } from '../shared/time.js';
 import { WINDOW, tasaK, rateBreakdown } from '../shared/rate.js';
 import { state, HIDDEN_PM, nodeName } from './state.js';
-import { fmtPrice, fmtPct } from './format.js';
+import { fmtPrice, fmtPct, fmtAgo } from './format.js';
 import { btcSpot, yadioFiatPerUsd, unitName, currentPrices } from './prices.js';
 import { isYadioOnly } from '../shared/rates.js';
 
@@ -21,7 +21,13 @@ export function setStatus(error) {
   const full = [live ? t('En vivo: {live} de {total} relays conectados', { live: state.live, total: CONFIG.relays.length }) : t('Conectando con los relays…')];
   if (state.sigs === 'ok') { short.push('<span class="ok">✓</span>'); full.push(t('Firmas de los eventos verificadas en este navegador')); }
   if (state.sigs === 'off') { short.push(`<span class="warn">${t('⚠ sin verificar')}</span>`); full.push(t('Firmas sin verificar: no cargó nostr-tools')); }
-  if (state.rejected) { short.push(`<span class="warn">${t('⚠ {n} rechazados', { n: state.rejected })}</span>`); full.push(t('{n} eventos rechazados por firma no válida', { n: state.rejected })); }
+  if (state.snapshotAt) {
+    const ago = fmtAgo(Date.now() / 1000 - state.snapshotAt);
+    short.push(`<span class="muted">· ${esc(ago)}</span>`);
+    full.push(t('Datos del servidor de hace {t}: órdenes completadas, precios y {rate} firmada; lo nuevo llega de los relays', { t: ago, rate: CONFIG.rateName }));
+  }
+  const rejected = state.rejected + state.snapshotRejected;
+  if (rejected) { short.push(`<span class="warn">${t('⚠ {n} rechazados', { n: rejected })}</span>`); full.push(t('{n} eventos rechazados por firma no válida', { n: rejected })); }
   if (state.btcApprox && state.unit === 'usd') { short.push(`<span class="warn">${t('⚠ USD aprox.')}</span>`); full.push(t('USD aproximado: sin precio histórico de Coinbase, se usa el BTC/USD actual de Yadio')); }
   document.getElementById('status').innerHTML = short.join(' ');
   box.title = full.join('\n');
@@ -31,7 +37,10 @@ export function setStatus(error) {
 // (`trades`), the volume and the last order, as the tables
 export function renderStats(official, trades) {
   const now = Date.now() / 1000;
-  const { rate: tasa, previous: prev, volume: vol, count } = tasaK(official, now);
+  const signed = signedRate(official, now);
+  const local = tasaK(official, now);
+  // The signed Tasa K when the server publishes it (checked against this browser's), else this one
+  const { rate: tasa, previous: prev, volume: vol, count } = signed || local;
 
   const unit = `<span class="unit">${esc(unitName())}</span>`;
   const sTasa = document.getElementById('sTasa');
@@ -46,9 +55,13 @@ export function renderStats(official, trades) {
     sTasa.classList.add(tasa > prevTasa ? 'tick-up' : 'tick-down');
   }
   state.tick = { key: viewKey, value: tasa };
-  document.getElementById('sTasaSub').textContent = count
-    ? `${nOrders(count)} · ${fmtInt(vol)} ${state.fiat}`
-    : t('sin órdenes en las últimas 24h');
+  const sub = document.getElementById('sTasaSub');
+  sub.textContent = signed?.emptySince
+    ? t('sin órdenes en 24 h · {rate} de hace {t}', { rate: CONFIG.rateName, t: fmtAgo(now - signed.to) })
+    : count ? `${nOrders(count)} · ${fmtInt(vol)} ${state.fiat}` : t('sin órdenes en las últimas 24h');
+  if (signed?.mismatch) {
+    sub.insertAdjacentHTML('beforeend', ` <span class="warn" title="${esc(t('La {rate} firmada por el servidor ({s}) no coincide con la calculada en este navegador con los mismos datos ({l})', { rate: CONFIG.rateName, s: fmtPrice(signed.rate), l: fmtPrice(signed.local) }))}">⚠</span>`);
+  }
   renderBreakdown(official, now);
   const lastT = trades.at(-1);
   document.getElementById('sLast').innerHTML = lastT ? fmtPrice(lastT.price) + unit : '—';
@@ -108,6 +121,27 @@ export function renderSelection(trades, official) {
     ? nOrders(count) + (diff == null ? '' : ' · ' + t('{p} frente a la {rate}', { p: fmtPct(diff, 1), rate: CONFIG.rateName }))
     : t('sin órdenes en las últimas 24h');
   box.title = t('Precio ponderado de las órdenes completadas en las últimas 24 horas con los métodos de pago y nodos que elegiste. La {rate} usa siempre los de por defecto.', { rate: CONFIG.rateName });
+}
+
+// The Tasa K signed by the server (snapshot), in the chosen currency and unit, while its event hasn't
+// expired: { rate, previous, volume, count, to, emptySince, local, mismatch }, or null. `local` is this
+// browser's for the same window (ending at the event's `to`); they mismatch if they differ by more than
+// one unit of the last published decimal
+function signedRate(official, now) {
+  const r = state.signedRate;
+  if (!r || r.fiat !== state.fiat || (r.expiration && now > r.expiration)) return null;
+  const inUnit = p => p?.btc == null ? null : state.unit === 'btc' ? p.btc : state.unit === 'sat' ? p.btc / 1e8 : p.usd ?? null;
+  const rate = inUnit(r.rate);
+  if (rate == null) return null;
+  const local = tasaK(official, r.to);
+  // Compared in currency/BTC for sat, whose value is currency/BTC ÷ 1e8
+  const scale = state.unit === 'sat' ? 1e8 : 1;
+  const mismatch = local.count > 0 && local.rate != null
+    && Math.abs(local.rate * scale - rate * scale) > 10 ** -r.decimals + 1e-9;
+  return {
+    rate, previous: inUnit(r.previous), volume: r.volume, count: r.count, to: r.to, emptySince: r.empty_since,
+    local: local.rate, mismatch,
+  };
 }
 
 // Buy and sell orders, market and fixed price, in the Tasa K's window: only as information, on hover
@@ -182,8 +216,8 @@ export function renderTrades(trades) {
     `<tr><th>${t('Hora')}</th><th>${t('Precio')}</th><th>${esc(state.fiat)}</th><th class="hide-sm">Sats</th><th>${t('Método')}</th></tr>`;
   const from = now - WINDOW;
   document.getElementById('trades').innerHTML = shown.slice().reverse().map(o => `
-    <tr class="${o.fresh ? 'new' : ''} ${state.tf || o.ts > from ? '' : 'out'}" data-key="${esc(o.key)}" title="${t('Ver el evento Nostr de esta orden')}">
-      <td class="num">${fmtTime(o.ts)}</td>
+    <tr class="${o.fresh ? 'new' : ''} ${state.tf || o.ts > from ? '' : 'out'}" data-key="${esc(o.key)}" title="${o.unsigned ? t('Orden de la base de datos del nodo, sin firma: ver detalles') : t('Ver el evento Nostr de esta orden')}">
+      <td class="num">${fmtTime(o.ts)}${o.unsigned ? ` <span class="unsigned" title="${t('Sin firma: de la base de datos del nodo')}">◌</span>` : ''}</td>
       <td class="num ${o.side === 'buy' ? 'up' : 'down'}" title="${esc(tradeTitle(o))}">${fmtPrice(o.price)}</td>
       <td class="num">${fmtInt(o.size)}</td>
       <td class="num hide-sm">${fmtInt(o.amt)}</td>

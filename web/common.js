@@ -47,6 +47,9 @@ const CONFIG = (() => {
     // belongs to the .env nodes, so it doesn't apply if the URL changes the node
     fiat: (qs.get('fiat') || (list('mostro').length ? '' : base.fiat) || '').toUpperCase(),
     tz: base.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    // The key that signs the site's Tasa K (hex): its rate is about the .env's nodes, so it doesn't
+    // apply if the URL changes the node
+    ratePubkey: !list('mostro').length && /^[0-9a-f]{64}$/.test(base.ratePubkey || '') ? base.ratePubkey : '',
   };
 })();
 

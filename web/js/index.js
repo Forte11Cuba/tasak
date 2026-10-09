@@ -8,6 +8,8 @@ import { ensurePrices, loadBtcHistory, marketFor, unitPrice } from './prices.js'
 import { chartC, view, renderChart, setEmpty, applyChartTheme } from './chart.js';
 import { setStatus, renderStats, renderSelection, renderTrades, renderBook, renderFilters, updatePair } from './panels.js';
 import { openEvent } from './event-dialog.js';
+import { fetchSnapshot, applySnapshot } from './snapshot.js';
+import { pmListFor } from '../shared/payment-methods.js';
 
 // ---------- Data: the node's relays ----------
 // Signatures are verified with nostr-tools (vendor/); if it didn't load, we go on unverified and say so
@@ -31,6 +33,30 @@ Object.defineProperties(state, {
   live: { get: () => relays.live, enumerable: true },
   rejected: { get: () => relays.rejected, enumerable: true },
 });
+
+// ---------- Data: the server's snapshot, if there is one ----------
+// Checked as the relays' events: the node's author, the kinds asked for, a valid signature. Not through
+// the relay pool, which would then ask the relays only for what is newer than the snapshot and miss
+// the open orders (the snapshot doesn't carry them)
+const isRates = ev => ev.kind === 30078 && ev.tags?.some(t => t[0] === 'd' && t[1] === 'mostro-rates');
+function acceptSnapshotEvent(ev) {
+  if (!ev || store.has(ev.id) || !CONFIG.mostros.includes(ev.pubkey)) return false;
+  if (ev.kind !== 38383 && !META_KINDS.includes(ev.kind) && !isRates(ev)) return false;
+  if (verifyEvent && !verifyEvent(ev)) { state.snapshotRejected++; return false; }
+  return true;
+}
+async function loadSnapshot() {
+  const snap = await fetchSnapshot();
+  if (!snap) return;
+  const got = applySnapshot(snap, {
+    accept: acceptSnapshotEvent, add: ev => store.add(ev), orders: store.orders,
+    pmList: fiat => pmListFor(window.MOSTRO_PAYMENT_METHODS || {}, fiat), ratePubkey: CONFIG.ratePubkey, verify: verifyEvent,
+  });
+  state.serverBtcUsd = got.btcUsd;
+  state.signedRate = got.rate;
+  state.snapshotAt = got.generated;
+  scheduleRender();
+}
 
 // An order completed while the page is open: highlighted in the table
 function markFresh(ev) {
@@ -77,7 +103,8 @@ function scheduleRender() {
       updatePair();
       await ensurePrices();
       if (state.unit === 'usd') {
-        const ts = [...state.orders.values()].filter(o => o.status === 'success').map(pricedAt);
+        // Coinbase only for the orders without the server's BTC/USD
+        const ts = [...state.orders.values()].filter(o => o.status === 'success' && !state.serverBtcUsd.has(o.key)).map(pricedAt);
         if (ts.length) await loadBtcHistory(Math.min(...ts));
       }
       const trades = getTrades();
@@ -238,6 +265,7 @@ if (!CONFIG.mostros.length || !CONFIG.relays.length) {
   setEmpty(chartC, true, msg);
 } else {
   setStatus();
+  loadSnapshot();
   relays.start();
   scheduleRender();
   // If no relay answers, Yadio's API is asked after 15 s (see ensurePrices)

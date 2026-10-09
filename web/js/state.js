@@ -33,6 +33,11 @@ export const state = {
   pmSel: null,         // Set of active methods; null = defaults
   nodeSel: new Set(CONFIG.mostros),
   sigs: 'cargando',
+  // From the server's snapshot (api/snapshot.json), if there is one
+  serverBtcUsd: new Map(),   // order key -> { usd, source, at }: the BTC/USD the server gave it
+  signedRate: null,          // the Tasa K signed with the key of config.js (ratePubkey)
+  snapshotAt: 0,             // when the server wrote the snapshot
+  snapshotRejected: 0,       // its events with an invalid signature
 };
 
 // Last chart view chosen (mode and timeframe)

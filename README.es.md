@@ -242,6 +242,12 @@ la publica:
 Si hay clave, su clave pública va en `config.js` (`ratePubkey`), para que el sitio compruebe quién firmó
 la tasa.
 
+El sitio servido por `tasak` carga primero el snapshot y pinta al instante; después los relays añaden lo
+nuevo. Verifica los eventos del snapshot como los de los relays (autor, tipo, firma), muestra la Tasa K
+firmada solo si la firmó `ratePubkey` (con un ⚠ si no coincide con la que calcula con los mismos datos),
+marca las órdenes sin firma (◌) y dice la antigüedad de los datos del servidor. Sin el servidor, o si
+falla, funciona como antes, solo con los relays.
+
 Sin órdenes en las últimas 24 horas se mantiene la última tasa, marcada con `empty_since`. Los valores se
 redondean a `RATE_DECIMALS` decimales, como `toFixed` de JavaScript.
 
@@ -271,7 +277,7 @@ se la devolvería a sí mismo a través de las primas.
 | `shared/` | lógica pura de la tasa (módulos ES: métodos de pago, órdenes, precios del nodo (`mostro-rates`), zonas horarias y periodos, unidades, Tasa K y velas), que usan las páginas (`tasak` la copia a `web/shared/`) |
 | `shared/test/` | pruebas de `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), datos reales fijos (`fixtures/`), los valores de referencia que el código debe reproducir (`expected.json`) y casos escritos a mano (`cases.json`): los vectores que también pasa la versión en Rust de esta lógica (`server/src/logic/`) |
 | `server/` | el servidor de tasaK en Rust (`tasak`): lee el `.env`, genera `web/config.js`, sirve `web/` y archiva los eventos del nodo; su servicio de systemd es `server/tasak.service`. `src/logic/` es la lógica de `shared/` en Rust, comprobada con los mismos vectores (`server/tests/shared_vectors.rs`); `server/tests/config-cases.json` es el `web/config.js` que debe salir de cada `.env` (`cargo test`) |
-| `tools/` | comprobaciones de desarrollo en Chrome headless (Node, sin dependencias); `node tools/reference.mjs` comprueba que `web/` calcula con datos fijos los valores de `shared/test/expected.json` |
+| `tools/` | comprobaciones de desarrollo en Chrome headless (Node, sin dependencias); `node tools/reference.mjs` comprueba que `web/` calcula con datos fijos los valores de `shared/test/expected.json`, sin el servidor; `node tools/snapshot.mjs`, con el snapshot de un servidor y una tasa firmada |
 
 ## Idiomas
 
