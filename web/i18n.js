@@ -192,7 +192,7 @@ const EN = {
   'Web del nodo': 'Node website',
   'Comunidad': 'Community',
   'Comunidad:': 'Community:',
-  'El nodo en Nostr': 'The node on Nostr',
+  'Eventos del nodo en Nostr': 'The node\'s events on Nostr',
   'Nostr de la comunidad': 'Community on Nostr',
   'Condiciones': 'Terms',
   'Comisión del nodo': 'Node fee',
