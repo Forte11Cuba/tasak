@@ -43,7 +43,8 @@ archivos al arrancar: vuelve a ejecutarlo tras cambiar `.env` o `shared/`. Dos f
 
 - **Con el servidor de tasaK:** deja `tasak` en marcha y pon delante un servidor web con HTTPS (nginx,
   Caddy…). Solo sirve archivos (GET y HEAD, nada que reciba datos) y escucha por defecto en
-  `127.0.0.1:8765` (`LISTEN`). Más adelante también archivará los eventos del nodo y publicará la Tasa K.
+  `127.0.0.1:8765` (`LISTEN`). También archiva los eventos del nodo (ver [Archivo](#archivo)); más
+  adelante publicará la Tasa K.
 - **Como sitio estático:** ejecuta `tasak build` y publica la carpeta `web/`, que contiene todo lo que
   necesita el sitio, con cualquier servidor web o alojamiento estático. En GitHub Pages, publica `web/`
   con un flujo de GitHub Actions que compile `tasak` y ejecute antes `tasak build`: Pages solo publica
@@ -66,7 +67,8 @@ Variables de `.env` (en inglés, para que sirvan a cualquier operador de nodo):
 | `HIDDEN_PAYMENT_METHODS` | Métodos de pago que no cuentan por defecto, separados por coma (por defecto `Pruebas,Otros`) |
 | `COMMUNITY`, `COMMUNITY_URL` | Comunidad que opera el nodo (opcional) |
 | `SOCIAL_LINKS` | Enlaces a sus redes, separados por coma (opcional; Telegram, X, YouTube, GitHub y Nostr se reconocen solos) |
-| `ARCHIVE_DIR` | Carpeta de los datos del archivador (opcional; por defecto `indexer/data/`, ver [Archivador](#archivador)) |
+| `ARCHIVE_DIR` | Carpeta de la base de datos del archivo (opcional; por defecto `data/`, relativa a la carpeta del repositorio; ver [Archivo](#archivo)) |
+| `ARCHIVE` | `false` sirve el sitio sin archivar (opcional; por defecto `true`) |
 | `LISTEN` | Dirección en la que escucha `tasak`, el servidor de tasaK (opcional; por defecto `127.0.0.1:8765`) |
 
 Los métodos de pago de cada moneda salen de la lista de la app de Mostro; lo que no está en ella se
@@ -146,32 +148,35 @@ Servicios externos que usa y qué pasa si están bloqueados:
 | Yadio | solo si un nodo no publica `mostro-rates` válidos: una estimación de los precios actuales | la moneda/USD no se puede calcular; moneda/BTC y moneda/sat siguen funcionando |
 | Coinbase | BTC/USD histórico por hora, para la moneda/USD | se calcula con el BTC/USD actual (el del nodo o el de Yadio) y se avisa de que es aproximado |
 
-## Archivador
+## Archivo
 
 Los relays guardan las órdenes unos 15 días y solo su última versión: cuando una orden se completa,
 desaparecen la versión `pending` (precio de mercado o fijo) y la `in-progress` (cuándo se tomó). Los
 `mostro-rates` del nodo (precio de BTC en cada moneda, de sus fuentes de precio) caducan a los 10 minutos. Para tener el
-historial completo, `indexer/archiver.mjs` se suscribe a los relays del `.env` y guarda todo lo que
-publica el nodo, verificado (firma y autor), en archivos diarios:
+historial completo, el servidor de tasaK (`tasak`) se suscribe a los relays del `.env` y guarda todo lo
+que publica el nodo, verificado (firma, autor y tipo), en una base de datos SQLite, `data/tasak.sqlite`
+(`ARCHIVE_DIR` para cambiar la carpeta):
 
-- `indexer/data/eventos/AAAA-MM-DD.jsonl`: órdenes de todas las monedas (una línea por cada relay que la
-  tenía, para comprobar qué relay tenía qué), cada `mostro-rates` una vez y los metadatos del nodo
-  cuando cambian.
-- `indexer/data/yadio/AAAA-MM-DD.jsonl`: el BTC/USD de Yadio cada 5 minutos de las últimas 24 h, para
-  rellenar los huecos cuando el archivador estuvo apagado.
+- `events`: cada evento firmado tal cual llegó: órdenes de todas las monedas y todas sus versiones, cada
+  `mostro-rates` y los metadatos del nodo cuando cambian. Cualquiera puede volver a verificarlos.
+- `event_relays`: qué relays enviaron cada evento y cuándo, para comprobar qué relay tenía qué.
+- `yadio`: el BTC/USD de Yadio cada 5 minutos de las últimas 24 h, para rellenar los huecos cuando el
+  archivo estuvo apagado.
 
-Necesita Node.js ≥ 22 (WebSocket nativo), sin dependencias, y debe estar siempre encendido: lo que pase
-mientras está apagado se pierde, salvo la última versión de cada orden. Ocupa alrededor de 1 MB al día.
+Debe estar siempre encendido: lo que pase mientras está apagado se pierde, salvo la última versión de
+cada orden. Cada relay tiene una suscripción en vivo y, cada 5 minutos, una puesta al día de su historial
+reciente que cubre las desconexiones. Ocupa alrededor de 1 MB al día. `ARCHIVE=false` sirve el sitio
+sin archivar.
+
+Para que arranque solo como servicio, ver `server/tasak.service`. Los archivos diarios del antiguo
+archivador en JavaScript (líneas `{"relay", "recibido", "evento"}`) se pueden importar; importarlos dos
+veces no cambia nada:
 
 ```sh
-node indexer/archiver.mjs
+tasak import-jsonl indexer/data/eventos/*.jsonl indexer/data/yadio/*.jsonl
 ```
 
-Para que arranque solo como servicio, ver `indexer/tasak-archiver.service`. Dos archivadores en
-máquinas distintas se pueden unir después (los eventos se deduplican por id). Estos archivos
-alimentarán el futuro indexador.
-
-El historial anterior al archivador lo puede recuperar el operador del nodo desde la base de datos de
+El historial anterior al archivo lo puede recuperar el operador del nodo desde la base de datos de
 Mostro. Sobre una copia (`sqlite3 mostro.db ".backup mostro-copia.db"`):
 
 ```sh
@@ -197,8 +202,8 @@ como confirmada cuando su evento firmado de Nostr también está archivado.
 | `web/vendor/` | librerías copiadas (sin depender de CDN) y la lista de métodos de pago por moneda de la app de Mostro (`mostro-payment-methods.js`) |
 | `shared/` | lógica pura de la tasa (módulos ES: métodos de pago, órdenes, precios del nodo (`mostro-rates`), zonas horarias y periodos, unidades, Tasa K y velas), que usan las páginas (`tasak` la copia a `web/shared/`) |
 | `shared/test/` | pruebas de `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), datos reales fijos (`fixtures/`), los valores de referencia que el código debe reproducir (`expected.json`) y casos escritos a mano (`cases.json`) |
-| `server/` | el servidor de tasaK en Rust (`tasak`): lee el `.env`, genera `web/config.js` y sirve `web/`; `server/tests/config-cases.json` es el `web/config.js` que debe salir de cada `.env` (`cargo test`) |
-| `indexer/` | el archivador de eventos, su servicio de systemd y el exportador de la base de datos de Mostro |
+| `server/` | el servidor de tasaK en Rust (`tasak`): lee el `.env`, genera `web/config.js`, sirve `web/` y archiva los eventos del nodo; su servicio de systemd es `server/tasak.service`; `server/tests/config-cases.json` es el `web/config.js` que debe salir de cada `.env` (`cargo test`) |
+| `indexer/` | el exportador de la base de datos de Mostro (`export-mostro.mjs`; pasará a `tasak`) |
 | `tools/` | comprobaciones de desarrollo en Chrome headless (Node, sin dependencias); `node tools/reference.mjs` comprueba que `web/` calcula con datos fijos los valores de `shared/test/expected.json` |
 
 ## Idiomas
