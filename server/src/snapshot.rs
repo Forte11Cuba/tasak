@@ -83,13 +83,15 @@ type Row = (
 
 pub async fn build(pool: &SqlitePool, rate: Option<Value>, generated: i64) -> Result<Snapshot, sqlx::Error> {
     let jsons: Vec<String> = sqlx::query_scalar(
-        // Every version of the signed completed orders, oldest first
+        // Every version of the signed completed orders; the newest mostro-rates of each node (one: ties by
+        // the greater id, as newerRates, so the site picks the same); the newest metadata of each node
         "SELECT e.json FROM events e JOIN orders o ON o.signed = 1 AND o.key = e.pubkey || ':' || e.d \
          WHERE e.kind = 38383 \
          UNION ALL \
-         SELECT json FROM events WHERE kind = 30078 AND d = 'mostro-rates' AND rowid IN \
-           (SELECT e2.rowid FROM events e2 WHERE e2.kind = 30078 AND e2.d = 'mostro-rates' AND e2.created_at = \
-             (SELECT max(created_at) FROM events e3 WHERE e3.kind = 30078 AND e3.d = 'mostro-rates' AND e3.pubkey = e2.pubkey)) \
+         SELECT json FROM events WHERE rowid IN \
+           (SELECT (SELECT e3.rowid FROM events e3 WHERE e3.kind = 30078 AND e3.d = 'mostro-rates' AND e3.pubkey = e2.pubkey \
+                    ORDER BY e3.created_at DESC, e3.id DESC LIMIT 1) \
+            FROM events e2 WHERE e2.kind = 30078 AND e2.d = 'mostro-rates' GROUP BY e2.pubkey) \
          UNION ALL \
          SELECT json FROM events WHERE rowid IN \
            (SELECT max(rowid) FROM events WHERE kind IN (0, 10002, 38385) GROUP BY kind, pubkey, d)",
@@ -166,13 +168,21 @@ mod tests {
         let profile = EventBuilder::new(Kind::Metadata, r#"{"name":"Nodo"}"#)
             .finalize(&node)
             .unwrap();
+        let same_second = rates(&node, "mostro-rates", 1100);
+        let tie = EventBuilder::new(Kind::from_u16(30078), r#"{"BTC":{"USD":1,"CUP":2}}"#)
+            .tags([Tag::identifier("mostro-rates")])
+            .custom_created_at(Timestamp::from_secs(1100))
+            .finalize(&node)
+            .unwrap();
         for ev in [
             version(&node, "a", "pending", 1000, "0", "3"),
             version(&node, "a", "success", 1200, "5000", "3"),
             // Not completed: none of its versions go
             version(&node, "b", "pending", 1300, "0", "1"),
             rates(&node, "mostro-rates", 900),
-            rates(&node, "mostro-rates", 1100),
+            same_second.clone(),
+            // Republished in the same second with other content: still one newest, the greater id
+            tie.clone(),
             profile.clone(),
         ] {
             store.store("wss://a", &ev, 1).await.unwrap();
@@ -218,6 +228,11 @@ mod tests {
             .map(|e| e["created_at"].as_i64().unwrap())
             .collect();
         assert_eq!(rates_ts, [1100]);
+        // Of the two of that second, the greater id
+        let newest = snap.events.iter().find(|e| e["kind"] == 30078).unwrap()["id"]
+            .as_str()
+            .unwrap();
+        assert_eq!(newest, same_second.id.to_hex().max(tie.id.to_hex()));
         // Every event is the signed one: it verifies
         for e in &snap.events {
             assert!(Event::from_json(e.to_string()).unwrap().verify().is_ok());
