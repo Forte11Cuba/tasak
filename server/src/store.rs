@@ -102,7 +102,9 @@ impl Store {
 
     /// Stores `ev` as sent by `relay` at `received` (unix seconds)
     pub async fn store(&self, relay: &str, ev: &Event, received: i64) -> Result<Stored, sqlx::Error> {
-        if !self.accepts(ev) || !ev.verify_id() {
+        // The signature too when the id is already stored: otherwise a relay could resend a stored event
+        // with a forged signature and be recorded as one that had it
+        if !self.accepts(ev) || !ev.verify_id() || !ev.verify_signature() {
             return Ok(Stored::Rejected);
         }
         let id = ev.id.to_hex();
@@ -114,15 +116,11 @@ impl Store {
         let meta = META
             .contains(&ev.kind.as_u16())
             .then(|| (meta_key(ev), fingerprint(ev)));
-        if known.is_none() {
-            if !ev.verify_signature() {
-                return Ok(Stored::Rejected);
-            }
-            if let Some((key, print)) = &meta
-                && last_meta.get(key) == Some(print)
-            {
-                return Ok(Stored::Unchanged);
-            }
+        if known.is_none()
+            && let Some((key, print)) = &meta
+            && last_meta.get(key) == Some(print)
+        {
+            return Ok(Stored::Unchanged);
         }
         let mut tx = self.pool.begin().await?;
         let stored = if known.is_some() {
@@ -313,8 +311,13 @@ pub mod tests {
         bad.sig = order(&other, "o3", "success", 1000).sig;
         assert_eq!(reject(bad).await, Stored::Rejected);
         assert_eq!(count(&store, "SELECT count(*) FROM events").await, 0);
-        assert_eq!(reject(good).await, Stored::New);
+        assert_eq!(reject(good.clone()).await, Stored::New);
         assert_eq!(reject(rates(&node, RATES_D, 1000)).await, Stored::New);
+        // A stored event resent with a forged signature: no relay is recorded for it
+        let mut resent = good.clone();
+        resent.sig = order(&other, "o3", "success", 1000).sig;
+        assert_eq!(store.store("wss://forger", &resent, 2).await.unwrap(), Stored::Rejected);
+        assert_eq!(store.last_received("wss://forger").await.unwrap(), None);
     }
 
     #[tokio::test]
