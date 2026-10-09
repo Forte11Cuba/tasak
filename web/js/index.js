@@ -215,7 +215,7 @@ updatePair();
 if (!CONFIG.mostros.length || !CONFIG.relays.length) {
   const msg = CONFIG.fromEnv
     ? t('Configuración sin nodos o sin relays válidos')
-    : t('Falta config.js: ejecuta "node build.mjs" o pasa ?mostro=…&relays=… en la URL');
+    : t('Falta config.js: ejecuta «tasak build» o pasa ?mostro=…&relays=… en la URL');
   setStatus(msg);
   setEmpty(chartC, true, msg);
 } else {

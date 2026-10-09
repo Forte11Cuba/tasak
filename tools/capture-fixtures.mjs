@@ -51,14 +51,14 @@ for (let start = Math.floor(from / 3600) * 3600 - 3600; start < now; start += st
 // --- Yadio: the same request the page makes ---
 const yadio = await (await fetch('https://api.yadio.io/exrates/USD')).json();
 
-// --- Configuration: .env.example (the working Kmbalache example), as build.mjs reads it ---
+// --- Configuration: .env.example (the working Kmbalache example), as the tasak server reads it ---
 const env = {};
 for (const line of readFileSync(new URL('.env.example', root), 'utf8').split(/\r?\n/)) {
   const m = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*?)\s*$/);
   if (m && !line.trim().startsWith('#')) env[m[1]] = m[2];
 }
 const list = s => (s || '').split(/[\s,]+/).filter(Boolean);
-// The same keys build.mjs writes to config.js
+// The same keys the tasak server writes to config.js
 const config = {
   siteName: env.SITE_NAME || 'tasaK',
   rateName: env.RATE_NAME || 'Tasa K',

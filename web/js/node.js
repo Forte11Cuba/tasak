@@ -42,7 +42,7 @@ function render() {
     queued = false;
     document.getElementById('nodes').innerHTML = CONFIG.mostros.length
       ? CONFIG.mostros.map(pk => nodeCardHtml(pk, store.meta.get(pk), activity(pk))).join('')
-      : `<p class="muted">${t('No hay nodos configurados: ejecuta «node build.mjs» o pasa ?mostro=… en la URL.')}</p>`;
+      : `<p class="muted">${t('No hay nodos configurados: ejecuta «tasak build» o pasa ?mostro=… en la URL.')}</p>`;
     const name = store.meta.get(CONFIG.mostros[0])?.profile?.name;
     if (name) document.title = `${name} · ${t('Nodo Mostro')} · ${CONFIG.siteName}`;
     document.getElementById('dot').classList.toggle('live', relays.live > 0);

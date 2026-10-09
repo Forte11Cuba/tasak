@@ -1,4 +1,5 @@
-//! Writes what build.mjs writes into web/: config.js and a copy of shared/*.js (without its tests)
+//! Writes into web/ what the site needs besides its own files: config.js and a copy of shared/*.js
+//! (without its tests)
 
 use crate::config::{Config, render_config};
 use std::fs;
