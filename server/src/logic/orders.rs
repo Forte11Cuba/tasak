@@ -167,6 +167,12 @@ pub fn fiat_per_btc(o: &Order) -> f64 {
     o.fa[0] / (o.amt / 1e8)
 }
 
+/// Moment whose BTC/USD converts an order to USD: when it was taken, which is when Mostro fixes its sats
+/// (its in-progress version); if that wasn't seen, when it was completed
+pub fn priced_at(o: &Order) -> i64 {
+    o.taken_at.unwrap_or(o.ts)
+}
+
 fn is_trade(o: &Order) -> bool {
     o.fa.len() == 1 && o.fa[0] > 0.0 && o.amt > 0.0
 }
@@ -190,9 +196,10 @@ pub struct Trade {
     pub origin: Option<Origin>,
 }
 
-/// Completed orders as trades, oldest first (ties by event id). `to_price(fiat_per_btc, ts)`
-/// converts to the chosen unit; trades it cannot convert (None) are left out
-pub fn get_trades(orders: &[Order], filters: &Filters, to_price: impl Fn(f64, i64) -> Option<f64>) -> Vec<Trade> {
+/// Completed orders as trades, oldest first (ties by event id). `to_price(fiat_per_btc, order)`
+/// converts to the chosen unit (in USD, with the BTC/USD of that order); trades it cannot convert
+/// (None) are left out
+pub fn get_trades(orders: &[Order], filters: &Filters, to_price: impl Fn(f64, &Order) -> Option<f64>) -> Vec<Trade> {
     let mut trades: Vec<Trade> = select_orders(orders, "success", filters)
         .filter(|o| is_trade(o))
         .filter_map(|o| {
@@ -200,7 +207,7 @@ pub fn get_trades(orders: &[Order], filters: &Filters, to_price: impl Fn(f64, i6
                 key: o.key.clone(),
                 id: o.id.clone(),
                 ts: o.ts,
-                price: to_price(fiat_per_btc(o), o.ts)?,
+                price: to_price(fiat_per_btc(o), o)?,
                 size: o.fa[0],
                 side: o.side.clone(),
                 premium: o.premium,

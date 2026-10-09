@@ -59,13 +59,18 @@ export const selectOrders = (orders, status, { fiat, nodes, pmSel }) => orders.f
 
 // Price of a completed order in currency per BTC, straight from the event
 export const fiatPerBtc = o => o.fa[0] / (o.amt / 1e8);
+
+// Moment whose BTC/USD converts an order to USD: when it was taken, which is when Mostro fixes its sats
+// (its in-progress version); if that wasn't seen, when it was completed
+export const pricedAt = o => o.takenAt ?? o.ts;
 const isTrade = o => o.fa.length === 1 && o.fa[0] > 0 && o.amt > 0;
 
-// Completed orders as trades, oldest first (ties by event id). `toPrice(fiatPerBtc, ts)` converts to
-// the chosen unit; trades it cannot convert (null) are left out.
+// Completed orders as trades, oldest first (ties by event id). `toPrice(fiatPerBtc, order)` converts
+// to the chosen unit (in USD, with the BTC/USD of that order); trades it cannot convert (null) are
+// left out.
 export function getTrades(orders, filters, toPrice) {
   return selectOrders(orders, 'success', filters).filter(isTrade)
-    .map(o => ({ ...o, size: o.fa[0], price: toPrice(fiatPerBtc(o), o.ts) }))
+    .map(o => ({ ...o, size: o.fa[0], price: toPrice(fiatPerBtc(o), o) }))
     .filter(o => o.price != null)
     .sort((a, b) => a.ts - b.ts || (a.ev.id < b.ev.id ? -1 : a.ev.id > b.ev.id));
 }

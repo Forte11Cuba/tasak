@@ -3,6 +3,7 @@
 // the chosen unit.
 import { UNITS, toUnit, hourlyClose } from '../shared/units.js';
 import { currentRates, fiatPerUsd, marketPrice } from '../shared/rates.js';
+import { pricedAt } from '../shared/orders.js';
 import { state } from './state.js';
 
 // Newest mostro-rates of the selected nodes that the node still uses: the prices each node publishes,
@@ -87,7 +88,8 @@ export const yadioFiatPerUsd = () => currentPrices()?.fiatPerUsd(state.fiat) ?? 
 // Name of the chosen unit: CUP/USD, CUP/BTC or CUP/sat
 export const unitName = () => `${state.fiat}/${UNITS[state.unit]}`;
 
-// Converts currency per BTC to the chosen unit; in USD with the BTC/USD of `ts` (or the current one)
-export const unitPrice = (fiatPerBtc, ts) => state.unit === 'usd'
-  ? toUnit(fiatPerBtc, 'usd', ts ? btcAt(ts) : btcSpot())
+// Converts currency per BTC to the chosen unit; in USD with the BTC/USD of the order (pricedAt: when
+// it was taken or, if unknown, completed) or, without an order, the current one
+export const unitPrice = (fiatPerBtc, order) => state.unit === 'usd'
+  ? toUnit(fiatPerBtc, 'usd', order ? btcAt(pricedAt(order)) : btcSpot())
   : toUnit(fiatPerBtc, state.unit);

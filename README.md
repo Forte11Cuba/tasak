@@ -169,7 +169,7 @@ External services it uses and what happens if they are blocked:
 |---|---|---|
 | Nostr relays | the orders, and the current prices the node publishes (`mostro-rates`: BTC/USD, the currency's USD reference, market-price order book) | no data without them (one responding is enough) |
 | Yadio | only if a node doesn't publish valid `mostro-rates`: an estimate of the current prices | currency/USD can't be calculated; currency/BTC and currency/sat keep working |
-| Coinbase | hourly historical BTC/USD, for currency/USD | it's calculated with the current BTC/USD (the node's or Yadio's) and marked as approximate |
+| Coinbase | hourly historical BTC/USD, for currency/USD (the hour each order was taken or, if unknown, completed) | it's calculated with the current BTC/USD (the node's or Yadio's) and marked as approximate |
 
 ## Archive
 

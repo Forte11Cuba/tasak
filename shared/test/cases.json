@@ -209,6 +209,16 @@
    "bids": [["b3", 200000000, "api"], ["b1", 200000000, "node"], ["b2", null, null]]
   }
  },
+ "usdPerOrder": {
+  "note": "each order to USD with the BTC/USD of the moment it was taken (its in-progress version, when Mostro fixes the sats) or, if that wasn't seen, completed; an order without BTC/USD for its moment is left out",
+  "orders": [
+   { "id": "a", "ts": 1000, "takenAt": 900, "fa": [1000], "amt": 100000 },
+   { "id": "b", "ts": 2000, "takenAt": null, "fa": [2000], "amt": 100000 },
+   { "id": "c", "ts": 3000, "takenAt": 2950, "fa": [500], "amt": 100000 }
+  ],
+  "btcUsd": { "900": 100000, "1000": 50000, "2000": 80000, "3000": 70000 },
+  "expected": [["a", 10], ["b", 25]]
+ },
  "parseOrder": [
   {
    "note": "every field: first tag of each name wins, f and s normalized, numbers as Number(), empty methods left out and repeated keys once, the node's name from the y tag",
