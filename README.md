@@ -28,11 +28,14 @@ Requirements: Rust (`cargo`), to build `tasak`, the program that reads `.env`, g
 
 ```sh
 cp .env.example .env            # set your node, relays, currency and community (the example is Kmbalache)
-cargo build --release --manifest-path server/Cargo.toml
-server/target/release/tasak         # from the repository folder (or --root DIR): generates and serves
-                                    # web/ at http://localhost:8765/ (LISTEN to change it)
-server/target/release/tasak build   # only generates web/config.js and web/shared/
+cargo install --path server --locked   # builds tasak and installs it in ~/.cargo/bin (on PATH with rustup)
+tasak                           # from the repository folder (or --root DIR): generates and serves
+                                # web/ at http://localhost:8765/ (LISTEN to change it)
+tasak build                     # only generates web/config.js and web/shared/
 ```
+
+Run `cargo install` again after updating the repository. Without installing it, `cargo build --release
+--manifest-path server/Cargo.toml` leaves the program in `server/target/release/tasak`.
 
 The site needs a web server, also to try it locally: opened as a file (`file://`) browsers don't load
 its ES modules and the page shows a warning instead. `tasak` generates the files when it starts: run it
