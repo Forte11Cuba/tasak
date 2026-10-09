@@ -4,7 +4,7 @@ import { isHidden, pmStats, defaultPmSelection } from '../shared/payment-methods
 import { mostUsedFiat } from '../shared/orders.js';
 import { UNITS } from '../shared/units.js';
 import { WEEK, MONTH, YEAR } from '../shared/time.js';
-import { WINDOW, tasaK, rateBreakdown } from '../shared/rate.js';
+import { WINDOW, tasaK, lastTasaK, rateBreakdown } from '../shared/rate.js';
 import { state, HIDDEN_PM, nodeName } from './state.js';
 import { fmtPrice, fmtPct, fmtAgo } from './format.js';
 import { btcSpot, yadioFiatPerUsd, unitName, currentPrices } from './prices.js';
@@ -38,9 +38,11 @@ export function setStatus(error) {
 export function renderStats(official, trades) {
   const now = Date.now() / 1000;
   const signed = signedRate(official, now);
-  const local = tasaK(official, now);
+  // Without orders in the last 24 h, the last one there was (as the server publishes it)
+  const local = lastTasaK(official, now);
   // The signed Tasa K when the server publishes it (checked against this browser's), else this one
-  const { rate: tasa, previous: prev, volume: vol, count } = signed || local;
+  const head = signed || local;
+  const { rate: tasa, previous: prev, volume: vol, count } = head;
 
   const unit = `<span class="unit">${esc(unitName())}</span>`;
   const sTasa = document.getElementById('sTasa');
@@ -56,8 +58,8 @@ export function renderStats(official, trades) {
   }
   state.tick = { key: viewKey, value: tasa };
   const sub = document.getElementById('sTasaSub');
-  sub.textContent = signed?.emptySince
-    ? t('sin órdenes en 24 h · {rate} de hace {t}', { rate: CONFIG.rateName, t: fmtAgo(now - signed.to) })
+  sub.textContent = head.emptySince
+    ? t('sin órdenes en 24 h · {rate} de hace {t}', { rate: CONFIG.rateName, t: fmtAgo(now - head.to) })
     : count ? `${nOrders(count)} · ${fmtInt(vol)} ${state.fiat}` : t('sin órdenes en las últimas 24h');
   if (signed?.mismatch) {
     sub.insertAdjacentHTML('beforeend', ` <span class="warn" title="${esc(t('La {rate} firmada por el servidor ({s}) no coincide con la calculada en este navegador con los mismos datos ({l})', { rate: CONFIG.rateName, s: fmtPrice(signed.rate), l: fmtPrice(signed.local) }))}">⚠</span>`);

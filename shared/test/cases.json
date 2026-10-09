@@ -60,6 +60,33 @@
    "expected": { "rate": null, "previous": 100, "volume": 0, "count": 0, "ids": [] }
   }
  ],
+ "lastTasaK": [
+  {
+   "note": "with orders in the last 24 h: the Tasa K of now",
+   "now": 1000000,
+   "trades": [
+    { "id": "a", "ts": 990000, "price": 100, "size": 1 },
+    { "id": "b", "ts": 999000, "price": 300, "size": 1 }
+   ],
+   "expected": { "rate": 200, "previous": null, "volume": 2, "count": 2, "ids": ["a", "b"], "to": 1000000, "emptySince": null }
+  },
+  {
+   "note": "without orders in the last 24 h: the window that ends at the last order, empty since 24 h after it",
+   "now": 1000000,
+   "trades": [
+    { "id": "a", "ts": 500000, "price": 100, "size": 3 },
+    { "id": "b", "ts": 520000, "price": 500, "size": 1 },
+    { "id": "c", "ts": 600000, "price": 900, "size": 1 }
+   ],
+   "expected": { "rate": 700, "previous": 100, "volume": 2, "count": 2, "ids": ["b", "c"], "to": 600000, "emptySince": 686400 }
+  },
+  {
+   "note": "no orders at all",
+   "now": 1000000,
+   "trades": [],
+   "expected": { "rate": null, "previous": null, "volume": 0, "count": 0, "ids": [], "to": 1000000, "emptySince": null }
+  }
+ ],
  "rateBreakdown": [
   {
    "note": "buy and sell in the 24 h window; market or fixed from the pending version (origin) or, without it, from a premium other than 0; premium weighted by volume over the market orders",

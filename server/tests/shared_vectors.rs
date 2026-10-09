@@ -16,7 +16,9 @@ use tasak::logic::orders::{
 use tasak::logic::payment_methods::{
     PmLists, default_pm_selection, hidden_set, norm_pm, order_matches_pm, pm_key, pm_list_for, pm_stats,
 };
-use tasak::logic::rate::{build_candles, chart_points, moving_weighted, rate_breakdown, tasa_k, weighted_price};
+use tasak::logic::rate::{
+    build_candles, chart_points, last_tasa_k, moving_weighted, rate_breakdown, tasa_k, weighted_price,
+};
 use tasak::logic::rates::{Market, Rates, current_rates, fiat_per_usd, market_price, parse_rates, reference_rates};
 use tasak::logic::time::{TIMEFRAMES, empty_periods, next_period, period_start, to_chart_time, tz_offset};
 use tasak::logic::units::{Unit, hourly_close, to_unit};
@@ -504,6 +506,17 @@ fn tasa_k_24h_border_and_empty_window() {
     for c in DATA.cases["tasaK"].as_array().unwrap() {
         check(
             json!(tasa_k(&case_trades(&c["trades"]), c["now"].as_f64().unwrap())),
+            &c["expected"],
+            c["note"].as_str().unwrap(),
+        );
+    }
+}
+
+#[test]
+fn last_tasa_k_with_an_empty_window() {
+    for c in DATA.cases["lastTasaK"].as_array().unwrap() {
+        check(
+            json!(last_tasa_k(&case_trades(&c["trades"]), c["now"].as_f64().unwrap())),
             &c["expected"],
             c["note"].as_str().unwrap(),
         );

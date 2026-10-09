@@ -13,7 +13,7 @@ use std::time::Duration;
 use tasak::logic::js::to_fixed;
 use tasak::logic::orders::{Filters, Order, Origin, get_trades, most_used_fiat};
 use tasak::logic::payment_methods::{default_pm_selection, hidden_set, pm_stats};
-use tasak::logic::rate::{TasaK, WINDOW, tasa_k};
+use tasak::logic::rate::{TasaK, WINDOW, last_tasa_k, tasa_k};
 
 /// Version of the rules the rate follows (which orders count): changes if they ever change
 pub const RULES: u32 = 1;
@@ -154,14 +154,11 @@ pub fn compute(rows: &[Row], rules: &Rules, now: i64) -> Option<Rate> {
     let by_key: HashMap<&str, &Row> = rows.iter().map(|r| (r.key.as_str(), r)).collect();
     let btc = get_trades(&orders, &filters, |p, _| Some(p));
     let usd = get_trades(&orders, &filters, |p, o| by_key[o.key.as_str()].btc_usd.map(|b| p / b));
-    let last = btc.last()?.ts;
-    // With orders in the last 24 h, the rate now; without them, the window of the last order
-    let (to, empty_since) = if (last as f64) > now as f64 - WINDOW {
-        (now, None)
-    } else {
-        (last, Some(last + WINDOW as i64))
-    };
-    let (k, k_usd) = (tasa_k(&btc, to as f64), tasa_k(&usd, to as f64));
+    // No completed order: no rate. With an empty window, the last one (`last_tasa_k`, as the site)
+    btc.last()?;
+    let last = last_tasa_k(&btc, now as f64);
+    let (to, empty_since) = (last.to as i64, last.empty_since.map(|e| e as i64));
+    let (k, k_usd) = (last.k, tasa_k(&usd, last.to));
     let round = |x: Option<f64>| x.and_then(|v| to_fixed(v, rules.decimals).parse().ok());
     let pair = |b: &TasaK, u: &TasaK, previous: bool| {
         if previous {

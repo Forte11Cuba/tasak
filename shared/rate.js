@@ -27,6 +27,16 @@ export function tasaK(trades, now) {
   };
 }
 
+// The Tasa K to show at `now`: that of the last 24 h or, without orders in them, the last one there was
+// (the window that ends at the last order), so the rate stays until there is a new order. Adds `to`,
+// the end of its window, and `emptySince`: when the 24 h became empty (null while they have orders)
+export function lastTasaK(trades, now) {
+  const k = tasaK(trades, now);
+  const last = trades.at(-1);
+  if (k.count || !last || last.ts > now) return { ...k, to: now, emptySince: null };
+  return { ...tasaK(trades, last.ts), to: last.ts, emptySince: last.ts + WINDOW };
+}
+
 // How an order was priced: 'market', 'fixed' or null if unknown. The pending version says it; without
 // it, a premium other than 0 means market price, because Mostro rejects a premium with fixed sats.
 export const priceKind = o => o.origin ? (o.origin.fixed ? 'fixed' : 'market') : o.premium ? 'market' : null;

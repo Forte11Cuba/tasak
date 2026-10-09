@@ -45,7 +45,9 @@ export function applySnapshot(snap, { accept, add, orders, pmList, ratePubkey, v
     orders.set(n.key, {
       key: n.key, node: n.node, nodeName: null, ts: n.ts, status: 'success', side: n.side, fiat: n.fiat,
       fa: [n.fa], amt: n.amt, premium: n.premium, expiresAt: 0, pm, pmKeys: keys.length ? keys : [NO_METHOD],
-      origin: n.origin ?? null, takenAt: n.takenAt ?? null, ev: null, id: n.id, unsigned: true,
+      // No event: `ev` only carries the id the node's database gives it (that of its success event),
+      // which the rate's ids and the ties between orders use, as the server's audit does
+      origin: n.origin ?? null, takenAt: n.takenAt ?? null, ev: { id: n.id || '' }, id: n.id, unsigned: true,
     });
   }
   const btcUsd = new Map(Object.entries(snap.btcUsd || {}).filter(([, v]) => v?.usd > 0));

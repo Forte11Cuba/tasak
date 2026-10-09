@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { weightedPrice, tasaK, rateBreakdown, buildCandles, chartPoints, movingWeighted } from '../rate.js';
+import { weightedPrice, tasaK, lastTasaK, rateBreakdown, buildCandles, chartPoints, movingWeighted } from '../rate.js';
 import { emptyPeriods, toChartTime, TIMEFRAMES } from '../time.js';
 import { expected, cases, now, tz, loadOrders, viewOf } from './data.js';
 
@@ -20,6 +20,13 @@ test('tasaK: 24 h border and empty window', () => {
   for (const { now, trades, expected, note } of cases.tasaK) {
     const ts = trades.map(({ id, ...t }) => ({ ...t, ev: { id } }));
     assert.deepEqual(tasaK(ts, now), expected, note);
+  }
+});
+
+test('lastTasaK: the rate of now or, with an empty window, the last one (cases.json)', () => {
+  for (const { now, trades, expected, note } of cases.lastTasaK) {
+    const ts = trades.map(({ id, ...t }) => ({ ...t, ev: { id } }));
+    assert.deepEqual(lastTasaK(ts, now), expected, note);
   }
 });
 

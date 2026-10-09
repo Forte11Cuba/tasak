@@ -102,6 +102,9 @@ Tasa K = Σ(price × amount) ÷ Σ amount
 Example (in CUP): 3 orders at 785 CUP/USD totalling 3,000 CUP and one at 750 for 5,000 CUP →
 (785×3000 + 750×5000) ÷ 8000 = **763.13**.
 
+If no order was completed in the last 24 hours, the last Tasa K there was stays (that of the 24 hours
+before the last order), and the header says how old it is.
+
 ### What it measures
 
 The price at which the currency is actually exchanged in bitcoin trades. In currency/USD it is an implied
