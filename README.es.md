@@ -99,6 +99,9 @@ Tasa K = Σ(precio × monto) ÷ Σ monto
 Ejemplo (en CUP): 3 órdenes a 785 CUP/USD que suman 3000 CUP y una a 750 de 5000 CUP →
 (785×3000 + 750×5000) ÷ 8000 = **763,13**.
 
+Si en las últimas 24 horas no se completó ninguna orden, se mantiene la última Tasa K que hubo (la de las
+24 horas anteriores a la última orden) y la cabecera dice de cuándo es.
+
 ### Qué mide
 
 El precio al que de verdad se cambia la moneda en operaciones con bitcoin. En moneda/USD es una tasa

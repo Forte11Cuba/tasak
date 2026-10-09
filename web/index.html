@@ -178,6 +178,7 @@
       <p>Es el precio ponderado por volumen de las órdenes <strong>completadas</strong> en las últimas 24 horas, no de anuncios publicados:</p>
       <p><code><span data-name="rate">Tasa K</span> = Σ(precio × monto) ÷ Σ monto</code></p>
       <p>Cada orden pesa según la moneda que movió. Ejemplo: 3 órdenes a 785 <span class="fiat-name">CUP</span>/USD que suman 3000 <span class="fiat-name">CUP</span> y una a 750 de 5000 <span class="fiat-name">CUP</span> dan (785×3000 + 750×5000) ÷ 8000 = <strong>763,13</strong>.</p>
+      <p>Si en las últimas 24 horas no se completó ninguna orden, se mantiene la última <span data-name="rate">Tasa K</span> que hubo (la de las 24 horas anteriores a la última orden) y la cabecera dice de cuándo es.</p>
     </details>
     <details>
       <summary>¿Qué mide la <span data-name="rate">Tasa K</span>?</summary>
@@ -250,6 +251,7 @@
       <p>It is the volume-weighted price of orders <strong>completed</strong> in the last 24 hours, not of published ads:</p>
       <p><code><span data-name="rate">Tasa K</span> = Σ(price × amount) ÷ Σ amount</code></p>
       <p>Each order weighs by the currency it moved. Example: 3 orders at 785 <span class="fiat-name">CUP</span>/USD totalling 3,000 <span class="fiat-name">CUP</span> and one at 750 for 5,000 <span class="fiat-name">CUP</span> give (785×3000 + 750×5000) ÷ 8000 = <strong>763.13</strong>.</p>
+      <p>If no order was completed in the last 24 hours, the last <span data-name="rate">Tasa K</span> there was stays (that of the 24 hours before the last order), and the header says how old it is.</p>
     </details>
     <details>
       <summary>What does the <span data-name="rate">Tasa K</span> measure?</summary>

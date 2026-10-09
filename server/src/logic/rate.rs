@@ -57,6 +57,37 @@ pub fn tasa_k(trades: &[Trade], now: f64) -> TasaK {
     }
 }
 
+/// The Tasa K to show at `now`, with the end of its window and when the 24 h became empty
+#[derive(Debug, Clone, PartialEq, Serialize)]
+#[serde(rename_all = "camelCase")]
+pub struct LastTasaK {
+    #[serde(flatten)]
+    pub k: TasaK,
+    pub to: f64,
+    pub empty_since: Option<f64>,
+}
+
+/// The Tasa K of the last 24 h or, without orders in them, the last one there was (the window that
+/// ends at the last order), so the rate stays until there is a new order
+pub fn last_tasa_k(trades: &[Trade], now: f64) -> LastTasaK {
+    let k = tasa_k(trades, now);
+    match trades.last() {
+        Some(last) if k.count == 0 && (last.ts as f64) <= now => {
+            let to = last.ts as f64;
+            LastTasaK {
+                k: tasa_k(trades, to),
+                to,
+                empty_since: Some(to + WINDOW),
+            }
+        }
+        _ => LastTasaK {
+            k,
+            to: now,
+            empty_since: None,
+        },
+    }
+}
+
 /// How an order was priced: "market", "fixed" or None if unknown. The pending version says it;
 /// without it, a premium other than 0 means market price (Mostro rejects a premium with fixed sats)
 pub fn price_kind(t: &Trade) -> Option<&'static str> {

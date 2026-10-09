@@ -57,11 +57,11 @@ const check = (ok, what, got) => {
   if (!ok) failed++;
 };
 
-async function page(snap) {
+async function page(snap, now = NOW) {
   const p = await chrome.newPage();
   await p.cmd('Emulation.setTimezoneOverride', { timezoneId: expected.browserTimeZone });
   await p.cmd('Emulation.setDeviceMetricsOverride', { width: 1400, height: 900, deviceScaleFactor: 1, mobile: false });
-  await p.cmd('Page.addScriptToEvaluateOnNewDocument', { source: `(${simulation})(${JSON.stringify({ ...FIX, snapshot: snap })});` });
+  await p.cmd('Page.addScriptToEvaluateOnNewDocument', { source: `(${simulation})(${JSON.stringify({ ...FIX, now, snapshot: snap })});` });
   await p.goto(`${server.url}/index.html?lang=es`);
   await p.waitFor('window.tasak && tasak.state.snapshotAt > 0 && tasak.state.orders.size > 0 && document.getElementById("sTasa").textContent !== "—"');
   await p.evaluate('tasak.rendering');
@@ -133,6 +133,22 @@ try {
   const price = await p.evaluate(`tasak.getTrades().find(o => o.key === ${JSON.stringify(trade.key)}).price`);
   check(Math.abs(price - trade.fa / (trade.amt / 1e8) / 50000) < 1e-9, 'an order\'s BTC/USD from the server is used', price);
   check(pageErrors(p).length === 0, 'no console errors', pageErrors(p));
+  p.close();
+
+  // 7. An unsigned order inside the last 24 h: it counts, and nothing breaks (it has no event)
+  const recent = { ...nodeOrder, key: `${config.mostros[0]}:unsigned-2`, id: 'ev-recent', ts: NOW - 3600, takenAt: NOW - 3700 };
+  p = await page(snapshot({ nodeOrders: [recent] }));
+  h = await header(p);
+  const n = Number(expected.header.sTasaSub.split(' ')[0]);
+  check(h.sub.startsWith(`${n + 1} órdenes`), 'an unsigned order of the last 24 h counts in the rate', h);
+  check(await p.evaluate(`tasak.getTrades().some(o => o.key === ${JSON.stringify(recent.key)})`), 'it is a trade like the others', null);
+  check(pageErrors(p).length === 0, 'no console errors', pageErrors(p));
+  p.close();
+
+  // 8. No signed rate and no orders in the last 24 h: the last rate there was, saying how old it is
+  p = await page(snapshot(), NOW + 3 * 86400);
+  h = await header(p);
+  check(h.tasa !== '—' && h.sub.startsWith('sin órdenes en 24 h · Tasa K de hace 3 días'), 'without a signed rate, an empty window keeps the last rate', h);
   p.close();
 } finally {
   chrome.close();

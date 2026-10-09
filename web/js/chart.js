@@ -139,7 +139,9 @@ const fmtChg = c => c == null ? '' : `<span class="${c >= 0 ? 'up' : 'down'}">${
 const kv = (k, v, cls = '') => `<span><span class="k">${k}</span><span class="${cls}">${v}</span></span>`;
 
 // Nostr event of an order, in the legend
-const evRow = o => o.ev ? `<div class="row">${kv(t('Evento'), esc(o.ev.id.slice(0, 8) + '…' + o.ev.id.slice(-8)))}<span class="muted">${t('clic para ver el evento firmado')}</span></div>` : '';
+const evRow = o => !o.ev ? '' : o.unsigned
+  ? `<div class="row"><span class="muted">${t('Sin firma: de la base de datos del nodo')}</span></div>`
+  : `<div class="row">${kv(t('Evento'), esc(o.ev.id.slice(0, 8) + '…' + o.ev.id.slice(-8)))}<span class="muted">${t('clic para ver el evento firmado')}</span></div>`;
 
 function renderLegend(time) {
   const el = document.getElementById('legend');
