@@ -5,6 +5,7 @@ const evDlg = document.getElementById('evDlg');
 const FINAL_STATUS = ['success', 'canceled', 'expired'];
 
 export function openEvent(o) {
+  if (o.unsigned) return openUnsigned(o);
   const ev = o.ev;
   if (!ev) return;
   const row = (k, v) => `<dt>${k}</dt><dd>${v}</dd>`;
@@ -39,6 +40,23 @@ export function openEvent(o) {
     link.hidden = false;
   }
 }
+// An order that is only in the node's database (the server's snapshot): no event to show or verify
+function openUnsigned(o) {
+  const row = (k, v) => `<dt>${k}</dt><dd>${v}</dd>`;
+  document.getElementById('evMeta').innerHTML =
+    row(t('Estado'), `${esc(t('completada'))} <span class="muted">(success)</span>`) +
+    row(t('Nodo'), esc(nodeName(o.node))) +
+    row(t('Fecha'), esc(fmtTime(o.ts))) +
+    row(t('Orden'), `${t(o.side === 'buy' ? 'compra de BTC' : 'venta de BTC')} · ${fmtInt(o.fa[0])} ${esc(o.fiat)} · ${fmtInt(o.amt)} sats`) +
+    row(t('Métodos de pago'), esc(o.pm.join(', ') || '—')) +
+    row(t('Id del evento'), `<span class="num">${esc(o.id || '—')}</span>`) +
+    row(t('Firma'), `<span class="warn">${t('sin firma: viene de la base de datos del nodo, porque su evento ya no está en los relays. Se confía en quien publica este sitio')}</span>`);
+  const { ev, unsigned, fresh, ...data } = o;
+  document.getElementById('evJson').textContent = JSON.stringify(data, null, 2);
+  document.getElementById('evLink').hidden = true;
+  evDlg.showModal();
+}
+
 document.getElementById('evClose').onclick = () => evDlg.close();
 evDlg.addEventListener('click', e => { if (e.target === evDlg) evDlg.close(); });
 document.getElementById('evCopy').onclick = async e => {

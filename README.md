@@ -241,6 +241,12 @@ and also the orders that only come from the node's database, marked as unsigned)
 When there is a key, its public key goes into `config.js` (`ratePubkey`), for the site to check who
 signed the rate.
 
+The site served by `tasak` loads the snapshot first and draws at once; the relays then add what's new.
+It verifies the snapshot's events as those of the relays (author, kind, signature), shows the signed Tasa
+K only if `ratePubkey` signed it (with a ⚠ if it doesn't match the one it computes with the same data),
+marks the unsigned orders (◌) and says how old the server's data is. Without the server, or if it fails,
+it works as before, with the relays alone.
+
 Without orders in the last 24 hours the last rate stays, marked with `empty_since`. Values are rounded to
 `RATE_DECIMALS` decimals, as JavaScript's `toFixed`.
 
@@ -270,7 +276,7 @@ itself through the premiums.
 | `shared/` | pure logic of the rate (ES modules: payment methods, orders, the node's prices (`mostro-rates`), time zones and periods, units, Tasa K and candles), used by the pages (`tasak` copies it to `web/shared/`) |
 | `shared/test/` | tests of `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), fixed real data (`fixtures/`), the reference values the code must reproduce (`expected.json`) and hand-written cases (`cases.json`): the vectors that the Rust version of this logic (`server/src/logic/`) passes too |
 | `server/` | the tasaK server in Rust (`tasak`): reads `.env`, generates `web/config.js`, serves `web/` and archives the node's events; its systemd service is `server/tasak.service`. `src/logic/` is the logic of `shared/` in Rust, checked with the same vectors (`server/tests/shared_vectors.rs`); `server/tests/config-cases.json` is the `web/config.js` each `.env` must give (`cargo test`) |
-| `tools/` | development checks in headless Chrome (Node, no dependencies); `node tools/reference.mjs` checks that `web/` computes the values in `shared/test/expected.json` from fixed data |
+| `tools/` | development checks in headless Chrome (Node, no dependencies); `node tools/reference.mjs` checks that `web/` computes the values in `shared/test/expected.json` from fixed data, without the server; `node tools/snapshot.mjs`, with a server's snapshot and a signed rate |
 
 ## Languages
 

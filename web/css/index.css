@@ -53,6 +53,9 @@ header {
 }
 .status .ok { color: var(--up); }
 .status .warn { color: var(--accent); }
+/* The signed Tasa K doesn't match this browser's; an order without signature (the node's database) */
+.stat .warn, .faq .warn { color: var(--accent); }
+.unsigned { color: var(--muted); cursor: help; }
 .status.error { color: var(--down); white-space: normal; max-width: 320px; }
 .dot { width: 8px; height: 8px; border-radius: 50%; background: var(--muted); flex: none; }
 .dot.live { background: var(--up); box-shadow: 0 0 6px var(--up); }

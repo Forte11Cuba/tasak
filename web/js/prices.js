@@ -91,8 +91,12 @@ export const yadioFiatPerUsd = () => currentPrices()?.fiatPerUsd(state.fiat) ?? 
 // Name of the chosen unit: CUP/USD, CUP/BTC or CUP/sat
 export const unitName = () => `${state.fiat}/${UNITS[state.unit]}`;
 
-// Converts currency per BTC to the chosen unit; in USD with the BTC/USD of the order (pricedAt: when
-// it was taken or, if unknown, completed) or, without an order, the current one
+// Converts currency per BTC to the chosen unit; in USD with the BTC/USD of the order (btcOf) or, without
+// an order, the current one
 export const unitPrice = (fiatPerBtc, order) => state.unit === 'usd'
-  ? toUnit(fiatPerBtc, 'usd', order ? btcAt(pricedAt(order)) : btcSpot())
+  ? toUnit(fiatPerBtc, 'usd', order ? btcOf(order) : btcSpot())
   : toUnit(fiatPerBtc, state.unit);
+
+// BTC/USD of an order: the one the server gave it (snapshot), so the page converts it exactly as the
+// published rate does; without it, Coinbase's hourly close at the moment it was taken
+const btcOf = order => state.serverBtcUsd.get(order.key)?.usd ?? btcAt(pricedAt(order));
