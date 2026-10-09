@@ -69,6 +69,9 @@ pub struct Config {
     pub community: Community,
     pub social_links: Vec<String>,
     pub hidden_payment_methods: Vec<String>,
+    /// The key that signs the published Tasa K (hex), from SIGNING_KEY_FILE: the site checks the rate's
+    /// author with it. Set by the server after reading the key; empty without one
+    pub rate_pubkey: String,
 }
 
 #[derive(Debug, Serialize)]
@@ -117,6 +120,7 @@ pub fn build_config(get: impl Fn(&str) -> Option<String>, web: &Path) -> (Config
                 .map(str::to_string)
                 .collect(),
         },
+        rate_pubkey: String::new(),
     };
 
     let mut errors = Vec::new();

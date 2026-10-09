@@ -11,6 +11,7 @@ mod publish;
 mod serve;
 mod signing;
 mod site;
+mod snapshot;
 mod store;
 
 use nostr_sdk::prelude::PublicKey;
@@ -92,11 +93,19 @@ fn main() -> ExitCode {
     }
     // A new signing key needs nothing else: not the .env, not the repository
     if let Command::Keygen(path) = &command {
-        let Some(path) = path else { return usage_error("keygen needs the file to create") };
+        let Some(path) = path else {
+            return usage_error("keygen needs the file to create");
+        };
         return match signing::keygen(path) {
             Ok(npub) => {
-                println!("Key written to {} (permissions 0600). Its public key:\n{npub}", path.display());
-                println!("Set SIGNING_KEY_FILE={} in .env, keep a backup and never share the file.", path.display());
+                println!(
+                    "Key written to {} (permissions 0600). Its public key:\n{npub}",
+                    path.display()
+                );
+                println!(
+                    "Set SIGNING_KEY_FILE={} in .env, keep a backup and never share the file.",
+                    path.display()
+                );
                 ExitCode::SUCCESS
             }
             Err(e) => {
@@ -140,7 +149,7 @@ fn main() -> ExitCode {
             .or_else(|| file_env.get(k).cloned())
     };
 
-    let (config, mut errors) = config::build_config(get, &root.join("web"));
+    let (mut config, mut errors) = config::build_config(get, &root.join("web"));
     let listen = get("LISTEN")
         .filter(|v| !v.is_empty())
         .unwrap_or_else(|| DEFAULT_LISTEN.to_string());
@@ -187,6 +196,24 @@ fn main() -> ExitCode {
         eprintln!("Configuration error:\n  {}", errors.join("\n  "));
         return ExitCode::FAILURE;
     }
+
+    // The key that signs the Tasa K: never inside web/ (served) nor the archive's folder. Its public key
+    // goes into config.js, for the site to check who signed the rate
+    let keys = match (&signing_key_file, &command) {
+        (Some(file), Command::Serve | Command::Build) => {
+            match signing::load(file, &[&root.join("web"), &archive_dir]) {
+                Ok(keys) => {
+                    config.rate_pubkey = keys.public_key().to_hex();
+                    Some(keys)
+                }
+                Err(e) => {
+                    error!("{e}");
+                    return ExitCode::FAILURE;
+                }
+            }
+        }
+        _ => None,
+    };
 
     if !matches!(command, Command::Import(_) | Command::ImportMostro(..)) {
         match site::write(&root, &config) {
@@ -331,24 +358,13 @@ fn main() -> ExitCode {
                                     return ExitCode::FAILURE;
                                 }
                             };
-                            // The key that signs the Tasa K: never inside web/ (served) nor the archive's folder
-                            let keys = match &signing_key_file {
-                                None => {
-                                    info!("no SIGNING_KEY_FILE: the Tasa K is computed (web/api/tasa.json) but not published on Nostr");
-                                    None
-                                }
-                                Some(file) => match signing::load(file, &[&root.join("web"), &archive_dir]) {
-                                    Ok(keys) => {
-                                        let npub = nostr_sdk::prelude::ToBech32::to_bech32(&keys.public_key()).unwrap_or_default();
-                                        info!("signing the Tasa K as {npub}");
-                                        Some(keys)
-                                    }
-                                    Err(e) => {
-                                        error!("{e}");
-                                        return ExitCode::FAILURE;
-                                    }
-                                },
-                            };
+                            match &keys {
+                                None => info!("no SIGNING_KEY_FILE: the Tasa K is computed (web/api/) but not published on Nostr"),
+                                Some(k) => info!(
+                                    "signing the Tasa K as {}",
+                                    nostr_sdk::prelude::ToBech32::to_bech32(&k.public_key()).unwrap_or_default()
+                                ),
+                            }
                             let rules = publish::Rules {
                                 nodes: nodes.iter().map(|n| n.to_hex()).collect(),
                                 fiat: config.fiat.clone(),
@@ -360,8 +376,8 @@ fn main() -> ExitCode {
                                 store.pool().clone(),
                                 rules,
                                 config.relays.clone(),
-                                keys,
-                                root.join("web/api/tasa.json"),
+                                keys.clone(),
+                                root.join("web/api"),
                             )));
                             tasks.push(tokio::spawn(archive::run(store, nodes, config.relays.clone())));
                         }
