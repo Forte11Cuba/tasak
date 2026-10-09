@@ -4,6 +4,7 @@
 mod archive;
 mod config;
 mod import;
+mod import_mostro;
 mod orders;
 mod prices;
 mod serve;
@@ -20,13 +21,16 @@ use std::sync::Arc;
 use tracing::{error, info, warn};
 
 const USAGE: &str = "\
-Usage: tasak [build | import-jsonl FILE...] [--root DIR]
+Usage: tasak [build | import-jsonl FILE... | import-mostro FILE [NODE]] [--root DIR]
 
   tasak                     generates web/config.js from .env, copies shared/ into web/shared/, serves
                             web/ and archives the nodes' events in ARCHIVE_DIR/tasak.sqlite
   tasak build               only generates web/config.js and web/shared/ (to publish web/ with any
                             static server)
   tasak import-jsonl FILE…  imports the daily .jsonl files of the old JavaScript archiver
+  tasak import-mostro FILE [NODE]
+                            imports the completed orders of a COPY of the node's Mostro database
+                            (sqlite3 mostro.db \".backup copy.db\"); NODE: its pubkey, if .env has several
   --root DIR                the repository folder, with .env, web/ and shared/ (default: the current one)
 
 It listens on LISTEN from .env (default 127.0.0.1:8765); ARCHIVE=false serves without archiving.
@@ -40,6 +44,7 @@ enum Command {
     Serve,
     Build,
     Import(Vec<PathBuf>),
+    ImportMostro(Option<PathBuf>, Option<String>),
 }
 
 fn main() -> ExitCode {
@@ -63,12 +68,18 @@ fn main() -> ExitCode {
             }
             ("build", Command::Serve) => command = Command::Build,
             ("import-jsonl", Command::Serve) => command = Command::Import(Vec::new()),
+            ("import-mostro", Command::Serve) => command = Command::ImportMostro(None, None),
+            (file, Command::ImportMostro(f @ None, _)) if !file.starts_with('-') => *f = Some(PathBuf::from(file)),
+            (node, Command::ImportMostro(Some(_), n @ None)) if !node.starts_with('-') => *n = Some(node.to_string()),
             (file, Command::Import(files)) if !file.starts_with('-') => files.push(PathBuf::from(file)),
             (other, _) => return usage_error(&format!("unknown argument: {other}")),
         }
     }
     if matches!(&command, Command::Import(files) if files.is_empty()) {
         return usage_error("import-jsonl needs at least one file");
+    }
+    if matches!(&command, Command::ImportMostro(None, _)) {
+        return usage_error("import-mostro needs the copy of the Mostro database");
     }
 
     let root = match root.map_or_else(env::current_dir, Ok).and_then(fs::canonicalize) {
@@ -142,7 +153,7 @@ fn main() -> ExitCode {
         return ExitCode::FAILURE;
     }
 
-    if !matches!(command, Command::Import(_)) {
+    if !matches!(command, Command::Import(_) | Command::ImportMostro(..)) {
         match site::write(&root, &config) {
             Ok(modules) => info!(
                 "web/config.js generated: {} node(s), {} relay(s), currency {}; {modules} modules copied to web/shared/",
@@ -200,6 +211,73 @@ fn main() -> ExitCode {
                 info!("archive: {}", path.display());
                 if failed { ExitCode::FAILURE } else { ExitCode::SUCCESS }
             }
+            Command::ImportMostro(file, node) => {
+                let file = file.expect("checked above");
+                // The database doesn't say whose it is: NODE, or the only node of .env
+                let node = match (node, nodes.as_slice()) {
+                    (Some(k), _) => match PublicKey::parse(&k) {
+                        Ok(pk) if nodes.contains(&pk) => pk,
+                        Ok(_) => {
+                            error!("{k} is not one of the nodes of MOSTRO_PUBKEYS");
+                            return ExitCode::FAILURE;
+                        }
+                        Err(e) => {
+                            error!("invalid node {k}: {e}");
+                            return ExitCode::FAILURE;
+                        }
+                    },
+                    (None, [only]) => *only,
+                    (None, _) => {
+                        error!("MOSTRO_PUBKEYS has several nodes: say whose database it is (tasak import-mostro FILE NODE)");
+                        return ExitCode::FAILURE;
+                    }
+                };
+                let (store, path) = match open_store().await {
+                    Ok(s) => s,
+                    Err(e) => {
+                        error!("{e}");
+                        return ExitCode::FAILURE;
+                    }
+                };
+                let imported = match import_mostro::import(store.pool(), &file, &node.to_hex(), archive::now()).await {
+                    Ok(i) => i,
+                    Err(e) => {
+                        error!("{e}");
+                        return ExitCode::FAILURE;
+                    }
+                };
+                info!("{}: {} completed orders imported into {}", file.display(), imported.success, path.display());
+                for (status, n) in &imported.other {
+                    info!("  {n} {status} not imported: only success counts");
+                }
+                if !imported.missing.is_empty() {
+                    info!("  columns this database lacks (read as empty): {}", imported.missing.join(", "));
+                }
+                // Into `orders` and priced, as the server would do in its next minute
+                let Some(lists) = read_lists(&root) else {
+                    error!("cannot read web/vendor/mostro-payment-methods.js");
+                    return ExitCode::FAILURE;
+                };
+                match orders::sync(store.pool(), &lists, orders::Cursor::default()).await {
+                    Ok((synced, _)) => info!("orders: {} completed orders", synced.completed),
+                    Err(e) => {
+                        error!("orders: {e}");
+                        return ExitCode::FAILURE;
+                    }
+                }
+                let priced = match prices::Coinbase::new() {
+                    Ok(c) => prices::price_orders(store.pool(), &c, &mut prices::Asked::new()).await,
+                    Err(e) => {
+                        error!("coinbase: {e}");
+                        return ExitCode::FAILURE;
+                    }
+                };
+                match priced {
+                    Ok(n) => info!("orders: {n} priced in USD"),
+                    Err(e) => error!("orders: cannot price: {e}"),
+                }
+                ExitCode::SUCCESS
+            }
             Command::Serve => {
                 let addr = addr.expect("checked above");
                 let mut tasks = Vec::new();
@@ -207,10 +285,7 @@ fn main() -> ExitCode {
                     match open_store().await {
                         Ok((store, path)) => {
                             info!("archiving in {}", path.display());
-                            let lists = fs::read_to_string(root.join("web/vendor/mostro-payment-methods.js"))
-                                .ok()
-                                .and_then(|s| tasak::logic::payment_methods::parse_vendor_script(&s));
-                            let Some(lists) = lists else {
+                            let Some(lists) = read_lists(&root) else {
                                 error!("cannot read web/vendor/mostro-payment-methods.js");
                                 return ExitCode::FAILURE;
                             };
@@ -247,6 +322,12 @@ fn main() -> ExitCode {
             Command::Build => unreachable!("returned above"),
         }
     })
+}
+
+/// The payment methods of the Mostro app per currency (web/vendor/)
+fn read_lists(root: &std::path::Path) -> Option<tasak::logic::payment_methods::PmLists> {
+    let script = fs::read_to_string(root.join("web/vendor/mostro-payment-methods.js")).ok()?;
+    tasak::logic::payment_methods::parse_vendor_script(&script)
 }
 
 fn usage_error(msg: &str) -> ExitCode {

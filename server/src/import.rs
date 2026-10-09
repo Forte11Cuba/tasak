@@ -1,5 +1,5 @@
 //! `tasak import-jsonl FILE…`: imports into the archive the daily files of the old JavaScript archiver
-//! (indexer/data/eventos/ and yadio/). Each event is checked like the ones from the relays (author,
+//! (indexer/data/eventos/ and yadio/, kept locally). Each event is checked like the ones from the relays (author,
 //! kind, id and signature) and keeps its relay and reception time; importing twice changes nothing.
 
 use crate::store::{Store, Stored};

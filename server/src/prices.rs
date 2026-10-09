@@ -304,7 +304,9 @@ mod tests {
         ] {
             store.store("wss://a", &ev, 1).await.unwrap();
         }
-        sync(store.pool(), &lists(), 0).await.unwrap();
+        sync(store.pool(), &lists(), crate::orders::Cursor::default())
+            .await
+            .unwrap();
         let fake = Fake {
             price: Some(90_000.0),
             asked: Mutex::new(vec![]),
@@ -357,7 +359,9 @@ mod tests {
             .store_yadio(t0 + 3600, "https://api.yadio.io/today/24/USD", &points)
             .await
             .unwrap();
-        sync(store.pool(), &lists(), 0).await.unwrap();
+        sync(store.pool(), &lists(), crate::orders::Cursor::default())
+            .await
+            .unwrap();
         let down = Fake {
             price: None,
             asked: Mutex::new(vec![]),
@@ -398,7 +402,9 @@ mod tests {
                 .await
                 .unwrap();
         }
-        sync(store.pool(), &lists(), 0).await.unwrap();
+        sync(store.pool(), &lists(), crate::orders::Cursor::default())
+            .await
+            .unwrap();
         let fake = Fake {
             price: Some(1.0),
             asked: Mutex::new(vec![]),

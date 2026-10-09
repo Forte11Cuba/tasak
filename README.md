@@ -184,10 +184,10 @@ publishes, verified (signature, author and kind), in a SQLite database, `data/ta
   `mostro-rates`, and the node's metadata when it changes. Anyone can verify them again.
 - `event_relays`: which relays sent each event and when, to check which relay had what.
 - `yadio`: Yadio's BTC/USD every 5 minutes for the last 24 h, to fill the gaps when the archive was off.
-- `orders`: the completed orders, derived from `events` every minute (open ones are read live from the
-  relays; canceled and expired ones never count): each with its current version, whether it was at
-  market or fixed price, when it was taken, and its BTC/USD at that moment with where it came from, the
-  node's `mostro-rates` or, without it, Coinbase (1-minute candles) or Yadio.
+- `orders`: the completed orders, derived every minute from `events` and from `node_orders` (see below).
+  Open ones are read live from the relays, and canceled or expired ones never count. Each has its current
+  version, whether it was at market or fixed price, when it was taken, and its BTC/USD at that moment
+  with where it came from: the node's `mostro-rates` or, without it, Coinbase (1-minute candles) or Yadio.
 - `btc_prices`: Coinbase's 1-minute BTC/USD closes, each asked for once and kept.
 
 It must run all the time: whatever happens while it is off is lost, except the latest version of each
@@ -206,13 +206,15 @@ The history from before the archive can be recovered by the node's operator from
 database. On a copy (`sqlite3 mostro.db ".backup mostro-copy.db"`), run:
 
 ```sh
-node indexer/export-mostro.mjs mostro-copy.db
+tasak import-mostro mostro-copy.db        # add the node's pubkey if .env has several nodes
 ```
 
-It needs Node.js ≥ 22.13 and writes the executed orders to `indexer/data/mostro-db/`. It exports only
-public trade data (currency, amounts, premium, payment methods, times, market or fixed price), never
-keys, invoices or the users table. Those orders are unsigned: an order counts as confirmed when its
-signed Nostr event is also archived.
+It reads the copy read-only and imports its completed orders (`success`) into the archive's
+`node_orders` table. Only public trade data (currency, amounts, premium, payment methods, times, market
+or fixed price), never keys, invoices or the users table. They join `orders`: an order that is also
+archived as a signed event keeps the event's data and takes from the database what the relays no longer
+had (when it was taken, market or fixed price); the others are marked as unsigned («node data»). The
+database has no completion time: for those, the escrow lock is used. Importing again changes nothing.
 
 ## Files
 
@@ -229,7 +231,6 @@ signed Nostr event is also archived.
 | `shared/` | pure logic of the rate (ES modules: payment methods, orders, the node's prices (`mostro-rates`), time zones and periods, units, Tasa K and candles), used by the pages (`tasak` copies it to `web/shared/`) |
 | `shared/test/` | tests of `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), fixed real data (`fixtures/`), the reference values the code must reproduce (`expected.json`) and hand-written cases (`cases.json`): the vectors that the Rust version of this logic (`server/src/logic/`) passes too |
 | `server/` | the tasaK server in Rust (`tasak`): reads `.env`, generates `web/config.js`, serves `web/` and archives the node's events; its systemd service is `server/tasak.service`. `src/logic/` is the logic of `shared/` in Rust, checked with the same vectors (`server/tests/shared_vectors.rs`); `server/tests/config-cases.json` is the `web/config.js` each `.env` must give (`cargo test`) |
-| `indexer/` | the Mostro database exporter (`export-mostro.mjs`; it will move to `tasak`) |
 | `tools/` | development checks in headless Chrome (Node, no dependencies); `node tools/reference.mjs` checks that `web/` computes the values in `shared/test/expected.json` from fixed data |
 
 ## Languages
