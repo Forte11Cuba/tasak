@@ -1,7 +1,7 @@
 // Test data: the fixtures, the reference values of the site before restructuring (expected.json)
 // and the hand-written cases (cases.json), plus the site's state rebuilt with shared/.
 import { readFileSync } from 'node:fs';
-import { parseOrder, currentOrder, getTrades, getBook } from '../orders.js';
+import { parseOrder, currentOrder, getTrades, getBook, pricedAt } from '../orders.js';
 import { pmListFor, pmStats, hiddenSet, defaultPmSelection } from '../payment-methods.js';
 import { toUnit, hourlyClose } from '../units.js';
 
@@ -44,7 +44,8 @@ export function viewOf(orders, fiat, unit) {
   const keys = pmStats(orders, { fiat, nodes, now }).map(s => s.key);
   const pmSel = defaultPmSelection(keys, hiddenSet(config.hiddenPaymentMethods));
   const filters = { fiat, nodes, pmSel };
-  // BTC/USD: the hourly Coinbase close; without it, Yadio's current price (approximate)
+  // BTC/USD of the moment each order was taken (or completed): the hourly Coinbase close; without it,
+  // Yadio's current price (approximate)
   let approx = false;
   const btcAt = ts => {
     const close = hourlyClose(btcusd, ts);
@@ -52,7 +53,7 @@ export function viewOf(orders, fiat, unit) {
     if (ts < now - 3 * 3600) approx = true;
     return yadio.BTC;
   };
-  const trades = getTrades(orders, filters, (fiatPerBtc, ts) => toUnit(fiatPerBtc, unit, btcAt(ts)));
+  const trades = getTrades(orders, filters, (fiatPerBtc, o) => toUnit(fiatPerBtc, unit, btcAt(pricedAt(o))));
   const ref = yadio.USD?.[fiat] ?? (fiat === 'USD' ? 1 : null);
   const book = getBook(orders, filters, {
     now, market: () => ref && yadio.BTC ? { fiatPerBtc: ref * yadio.BTC, from: 'api' } : null, toPrice: p => toUnit(p, unit, yadio.BTC),

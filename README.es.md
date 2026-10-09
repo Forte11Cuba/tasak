@@ -164,7 +164,7 @@ Servicios externos que usa y qué pasa si están bloqueados:
 |---|---|---|
 | Relays Nostr | las órdenes, y los precios actuales que publica el nodo (`mostro-rates`: BTC/USD, referencia de la moneda frente al USD, libro de órdenes a precio de mercado) | sin ellos no hay datos (basta con que responda uno) |
 | Yadio | solo si un nodo no publica `mostro-rates` válidos: una estimación de los precios actuales | la moneda/USD no se puede calcular; moneda/BTC y moneda/sat siguen funcionando |
-| Coinbase | BTC/USD histórico por hora, para la moneda/USD | se calcula con el BTC/USD actual (el del nodo o el de Yadio) y se avisa de que es aproximado |
+| Coinbase | BTC/USD histórico por hora, para la moneda/USD (la hora en que se tomó cada orden o, si no se sabe, en que se completó) | se calcula con el BTC/USD actual (el del nodo o el de Yadio) y se avisa de que es aproximado |
 
 ## Archivo
 

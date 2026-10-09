@@ -11,6 +11,7 @@ use std::sync::LazyLock;
 use tasak::logic::RawEvent;
 use tasak::logic::orders::{
     Book, Filters, Order, Trade, current_order, get_book, get_trades, most_used_fiat, newer_version, parse_order,
+    priced_at,
 };
 use tasak::logic::payment_methods::{
     PmLists, default_pm_selection, hidden_set, norm_pm, order_matches_pm, pm_key, pm_list_for, pm_stats,
@@ -131,7 +132,8 @@ fn view_of(orders: &[Order], fiat: &str, unit: Unit) -> View {
         nodes: d.nodes.clone(),
         pm_sel: default_pm_selection(&keys, &hidden_set(&d.hidden)),
     };
-    // BTC/USD: the hourly Coinbase close; without it, Yadio's current price (approximate)
+    // BTC/USD of the moment each order was taken (or completed): the hourly Coinbase close; without
+    // it, Yadio's current price (approximate)
     let approx = Cell::new(false);
     let btc_at = |ts: i64| {
         hourly_close(&d.btcusd, ts).or_else(|| {
@@ -141,7 +143,7 @@ fn view_of(orders: &[Order], fiat: &str, unit: Unit) -> View {
             Some(d.yadio_btc)
         })
     };
-    let trades = get_trades(orders, &filters, |p, ts| to_unit(p, unit, btc_at(ts)));
+    let trades = get_trades(orders, &filters, |p, o| to_unit(p, unit, btc_at(priced_at(o))));
     let reference = d.yadio_usd.get(fiat).copied().or((fiat == "USD").then_some(1.0));
     let market = |_: &str| {
         reference.map(|r| Market {
@@ -288,6 +290,38 @@ fn current_state_of_an_order_in_any_arrival_order() {
             );
         }
     }
+}
+
+#[test]
+fn usd_at_the_moment_each_order_was_taken() {
+    let c = &DATA.cases["usdPerOrder"];
+    let btc_usd: HashMap<String, f64> = serde_json::from_value(c["btcUsd"].clone()).unwrap();
+    let orders: Vec<Order> = c["orders"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .map(|o| Order {
+            ts: o["ts"].as_i64().unwrap(),
+            taken_at: o["takenAt"].as_i64(),
+            fa: serde_json::from_value(o["fa"].clone()).unwrap(),
+            amt: o["amt"].as_f64().unwrap(),
+            node: "n1".into(),
+            status: "success".into(),
+            fiat: "CUP".into(),
+            pm_keys: vec!["X".into()],
+            ..blank_order(o["id"].as_str().unwrap())
+        })
+        .collect();
+    let filters = Filters {
+        fiat: "CUP".into(),
+        nodes: HashSet::from(["n1".to_string()]),
+        pm_sel: HashSet::from(["X".to_string()]),
+    };
+    let trades = get_trades(&orders, &filters, |p, o| {
+        btc_usd.get(&priced_at(o).to_string()).map(|b| p / b)
+    });
+    let rows: Vec<Value> = trades.iter().map(|t| json!([t.key, t.price])).collect();
+    check(Value::Array(rows), &c["expected"], c["note"].as_str().unwrap());
 }
 
 #[test]

@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { parseOrder, newerVersion, currentOrder, mostUsedFiat, getBook } from '../orders.js';
+import { parseOrder, newerVersion, currentOrder, mostUsedFiat, getBook, getTrades, pricedAt } from '../orders.js';
 import { expected, cases, pmList, loadOrders, viewOf } from './data.js';
 
 test('chosen version and fields of every order', () => {
@@ -37,6 +37,16 @@ test('current state of an order from its versions, in any arrival order (cases.j
       assert.deepEqual({ id: o.ev.id, origin: o.origin, takenAt: o.takenAt }, want, `${note}: ${arrival.map(v => v.ev.id)}`);
     }
   }
+});
+
+test('USD at the moment each order was taken, or completed (cases.json)', () => {
+  const { note, orders, btcUsd, expected: want } = cases.usdPerOrder;
+  const os = orders.map(({ id, ...o }) => ({ ...o, key: id, ev: { id }, node: 'n1', status: 'success', fiat: 'CUP', pmKeys: ['X'] }));
+  const trades = getTrades(os, { fiat: 'CUP', nodes: new Set(['n1']), pmSel: new Set(['X']) }, (p, o) => {
+    const b = btcUsd[pricedAt(o)];
+    return b ? p / b : null;
+  });
+  assert.deepEqual(trades.map(t => [t.key, t.price]), want, note);
 });
 
 test('currency chosen without FIAT: the one with most completed orders', () => {

@@ -1,6 +1,6 @@
 // Page of the rate. The logic of the rate comes from shared/ (pure, tested with node --test); this
 // module connects the data (relays → event store) to the render and wires the page together.
-import { getTrades as tradesOf, getBook as bookOf } from '../shared/orders.js';
+import { getTrades as tradesOf, getBook as bookOf, pricedAt } from '../shared/orders.js';
 import { pmStats, defaultPmSelection } from '../shared/payment-methods.js';
 import { state, store, saveView, HIDDEN_PM } from './state.js';
 import { createRelayPool } from './nostr-client.js';
@@ -77,7 +77,7 @@ function scheduleRender() {
       updatePair();
       await ensurePrices();
       if (state.unit === 'usd') {
-        const ts = [...state.orders.values()].filter(o => o.status === 'success').map(o => o.ts);
+        const ts = [...state.orders.values()].filter(o => o.status === 'success').map(pricedAt);
         if (ts.length) await loadBtcHistory(Math.min(...ts));
       }
       const trades = getTrades();
