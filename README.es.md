@@ -70,6 +70,8 @@ Variables de `.env` (en inglés, para que sirvan a cualquier operador de nodo):
 | `ARCHIVE_DIR` | Carpeta de la base de datos del archivo (opcional; por defecto `data/`, relativa a la carpeta del repositorio; ver [Archivo](#archivo)) |
 | `ARCHIVE` | `false` sirve el sitio sin archivar (opcional; por defecto `true`) |
 | `LISTEN` | Dirección en la que escucha `tasak`, el servidor de tasaK (opcional; por defecto `127.0.0.1:8765`) |
+| `SIGNING_KEY_FILE` | Archivo con la clave que firma la Tasa K publicada (opcional; ver [Tasa publicada](#tasa-publicada)) |
+| `RATE_DECIMALS` | Decimales de la tasa publicada, de 0 a 8 (opcional; por defecto `2`) |
 
 Los métodos de pago de cada moneda salen de la lista de la app de Mostro; lo que no está en ella se
 agrupa como «Otros». En `HIDDEN_PAYMENT_METHODS` conviene añadir los que en tu mercado se negocian a
@@ -213,6 +215,35 @@ también está archivada como evento firmado conserva los datos del evento y tom
 que los relays ya no tenían (cuándo se tomó, precio de mercado o fijo); las demás quedan marcadas como
 sin firma («datos del nodo»). La base de datos no guarda la hora de completada: en esas se usa la del
 bloqueo del escrow. Importar otra vez no cambia nada.
+
+## Tasa publicada
+
+Con el archivo encendido, cada 5 minutos el servidor calcula la Tasa K oficial desde su tabla `orders`,
+con las mismas reglas que la cabecera (los nodos y la moneda del `.env`, los métodos de pago que no
+oculta, y también las órdenes que solo vienen de la base de datos del nodo, marcadas como sin firma), y
+la publica:
+
+- **`/api/tasa.json`**: la tasa en moneda/BTC, moneda/USD y moneda/sat, las 24 h anteriores, su volumen
+  y sus órdenes, su ventana, cuándo se actualizó y el id del evento firmado. Para bots, hojas de cálculo
+  y aplicaciones que no hablan Nostr.
+- **Un evento Nostr firmado**, si hay `SIGNING_KEY_FILE`: kind 30078 con `d = tasak`, contenido
+  `{"BTC": {"CUP": …}, "tasak": {…}}`. La parte `tasak` lleva todo lo necesario para recalcularla sin
+  relays ni Coinbase: cada orden de la ventana con sus montos, su momento y su BTC/USD (y su origen), si
+  está firmada, la versión de las reglas y los decimales. Caduca a los 10 minutos.
+
+Sin órdenes en las últimas 24 horas se mantiene la última tasa, marcada con `empty_since`. Los valores se
+redondean a `RATE_DECIMALS` decimales, como `toFixed` de JavaScript.
+
+La clave debe ser solo para esto (ni la del nodo Mostro ni una personal) y estar fuera del repositorio:
+`tasak` rechaza una clave dentro de `web/` o de la carpeta del archivo, o que puedan leer otros usuarios.
+
+```sh
+tasak keygen ~/.config/tasak/nsec    # muestra su npub; después SIGNING_KEY_FILE=~/.config/tasak/nsec
+```
+
+La Tasa K dice a qué precio se está cambiando la moneda; no está pensada como fuente de precio de mercado
+para Mostro (por eso `d = tasak` y no `mostro-rates`): un nodo que pusiera precio a sus órdenes con ella
+se la devolvería a sí mismo a través de las primas.
 
 ## Archivos
 

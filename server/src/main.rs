@@ -7,7 +7,9 @@ mod import;
 mod import_mostro;
 mod orders;
 mod prices;
+mod publish;
 mod serve;
+mod signing;
 mod site;
 mod store;
 
@@ -21,7 +23,7 @@ use std::sync::Arc;
 use tracing::{error, info, warn};
 
 const USAGE: &str = "\
-Usage: tasak [build | import-jsonl FILE... | import-mostro FILE [NODE]] [--root DIR]
+Usage: tasak [build | import-jsonl FILE... | import-mostro FILE [NODE] | keygen FILE] [--root DIR]
 
   tasak                     generates web/config.js from .env, copies shared/ into web/shared/, serves
                             web/ and archives the nodes' events in ARCHIVE_DIR/tasak.sqlite
@@ -31,6 +33,8 @@ Usage: tasak [build | import-jsonl FILE... | import-mostro FILE [NODE]] [--root 
   tasak import-mostro FILE [NODE]
                             imports the completed orders of a COPY of the node's Mostro database
                             (sqlite3 mostro.db \".backup copy.db\"); NODE: its pubkey, if .env has several
+  tasak keygen FILE         creates a key to sign the Tasa K (permissions 0600; outside the repository)
+                            and shows its npub; set SIGNING_KEY_FILE to it
   --root DIR                the repository folder, with .env, web/ and shared/ (default: the current one)
 
 It listens on LISTEN from .env (default 127.0.0.1:8765); ARCHIVE=false serves without archiving.
@@ -39,12 +43,15 @@ Environment variables take precedence over .env.";
 const DEFAULT_LISTEN: &str = "127.0.0.1:8765";
 /// Relative to the repository folder
 const DEFAULT_ARCHIVE_DIR: &str = "data";
+/// Decimals of the published rate, as mostro-rates
+const DEFAULT_DECIMALS: usize = 2;
 
 enum Command {
     Serve,
     Build,
     Import(Vec<PathBuf>),
     ImportMostro(Option<PathBuf>, Option<String>),
+    Keygen(Option<PathBuf>),
 }
 
 fn main() -> ExitCode {
@@ -69,6 +76,8 @@ fn main() -> ExitCode {
             ("build", Command::Serve) => command = Command::Build,
             ("import-jsonl", Command::Serve) => command = Command::Import(Vec::new()),
             ("import-mostro", Command::Serve) => command = Command::ImportMostro(None, None),
+            ("keygen", Command::Serve) => command = Command::Keygen(None),
+            (file, Command::Keygen(f @ None)) if !file.starts_with('-') => *f = Some(PathBuf::from(file)),
             (file, Command::ImportMostro(f @ None, _)) if !file.starts_with('-') => *f = Some(PathBuf::from(file)),
             (node, Command::ImportMostro(Some(_), n @ None)) if !node.starts_with('-') => *n = Some(node.to_string()),
             (file, Command::Import(files)) if !file.starts_with('-') => files.push(PathBuf::from(file)),
@@ -80,6 +89,21 @@ fn main() -> ExitCode {
     }
     if matches!(&command, Command::ImportMostro(None, _)) {
         return usage_error("import-mostro needs the copy of the Mostro database");
+    }
+    // A new signing key needs nothing else: not the .env, not the repository
+    if let Command::Keygen(path) = &command {
+        let Some(path) = path else { return usage_error("keygen needs the file to create") };
+        return match signing::keygen(path) {
+            Ok(npub) => {
+                println!("Key written to {} (permissions 0600). Its public key:\n{npub}", path.display());
+                println!("Set SIGNING_KEY_FILE={} in .env, keep a backup and never share the file.", path.display());
+                ExitCode::SUCCESS
+            }
+            Err(e) => {
+                error!("{e}");
+                ExitCode::FAILURE
+            }
+        };
     }
 
     let root = match root.map_or_else(env::current_dir, Ok).and_then(fs::canonicalize) {
@@ -139,6 +163,17 @@ fn main() -> ExitCode {
             .filter(|v| !v.is_empty())
             .unwrap_or_else(|| DEFAULT_ARCHIVE_DIR.to_string()),
     );
+    let decimals = match get("RATE_DECIMALS").filter(|v| !v.is_empty()) {
+        None => DEFAULT_DECIMALS,
+        Some(v) => match v.parse::<usize>() {
+            Ok(d) if d <= 8 => d,
+            _ => {
+                errors.push(format!("invalid RATE_DECIMALS (0 to 8): {v}"));
+                DEFAULT_DECIMALS
+            }
+        },
+    };
+    let signing_key_file = get("SIGNING_KEY_FILE").filter(|v| !v.is_empty()).map(|v| root.join(v));
     // config.rs checked their form; the archive needs them decoded (hex or npub, with its checksum)
     let mut nodes: Vec<PublicKey> = Vec::new();
     for k in &config.mostros {
@@ -296,7 +331,38 @@ fn main() -> ExitCode {
                                     return ExitCode::FAILURE;
                                 }
                             };
+                            // The key that signs the Tasa K: never inside web/ (served) nor the archive's folder
+                            let keys = match &signing_key_file {
+                                None => {
+                                    info!("no SIGNING_KEY_FILE: the Tasa K is computed (web/api/tasa.json) but not published on Nostr");
+                                    None
+                                }
+                                Some(file) => match signing::load(file, &[&root.join("web"), &archive_dir]) {
+                                    Ok(keys) => {
+                                        let npub = nostr_sdk::prelude::ToBech32::to_bech32(&keys.public_key()).unwrap_or_default();
+                                        info!("signing the Tasa K as {npub}");
+                                        Some(keys)
+                                    }
+                                    Err(e) => {
+                                        error!("{e}");
+                                        return ExitCode::FAILURE;
+                                    }
+                                },
+                            };
+                            let rules = publish::Rules {
+                                nodes: nodes.iter().map(|n| n.to_hex()).collect(),
+                                fiat: config.fiat.clone(),
+                                hidden: config.hidden_payment_methods.clone(),
+                                decimals,
+                            };
                             tasks.push(tokio::spawn(orders::run(store.pool().clone(), lists, coinbase)));
+                            tasks.push(tokio::spawn(publish::run(
+                                store.pool().clone(),
+                                rules,
+                                config.relays.clone(),
+                                keys,
+                                root.join("web/api/tasa.json"),
+                            )));
                             tasks.push(tokio::spawn(archive::run(store, nodes, config.relays.clone())));
                         }
                         Err(e) => {
@@ -306,6 +372,9 @@ fn main() -> ExitCode {
                     }
                 } else {
                     info!("ARCHIVE=false: not archiving");
+                    if signing_key_file.is_some() {
+                        warn!("SIGNING_KEY_FILE is set but ARCHIVE=false: the Tasa K is computed from the archive, so it isn't published");
+                    }
                 }
                 let served = serve::serve(root.join("web"), addr).await;
                 for task in tasks {
@@ -319,7 +388,7 @@ fn main() -> ExitCode {
                     }
                 }
             }
-            Command::Build => unreachable!("returned above"),
+            Command::Build | Command::Keygen(_) => unreachable!("returned above"),
         }
     })
 }
