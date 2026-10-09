@@ -17,7 +17,7 @@ use tasak::logic::payment_methods::{
     PmLists, default_pm_selection, hidden_set, norm_pm, order_matches_pm, pm_key, pm_list_for, pm_stats,
 };
 use tasak::logic::rate::{build_candles, chart_points, moving_weighted, rate_breakdown, tasa_k, weighted_price};
-use tasak::logic::rates::{Market, Rates, current_rates, fiat_per_usd, market_price, parse_rates};
+use tasak::logic::rates::{Market, Rates, current_rates, fiat_per_usd, market_price, parse_rates, reference_rates};
 use tasak::logic::time::{TIMEFRAMES, empty_periods, next_period, period_start, to_chart_time, tz_offset};
 use tasak::logic::units::{Unit, hourly_close, to_unit};
 
@@ -448,6 +448,18 @@ fn rates_to_use_at_each_moment() {
             let got = current_rates(&rates, at[0].as_f64().unwrap()).map(|r| r.id.as_str());
             assert_eq!(got, at[1].as_str(), "{}: {}", c["note"], at[0]);
         }
+    }
+}
+
+#[test]
+fn reference_rates_with_several_nodes() {
+    let c = &DATA.cases["mostroRates"]["reference"];
+    let rates: Vec<Rates> = serde_json::from_value(c["rates"].clone()).unwrap();
+    for case in c["cases"].as_array().unwrap() {
+        let trading: HashSet<String> = serde_json::from_value(case[1].clone()).unwrap();
+        let got = reference_rates(&rates, case[2].as_f64().unwrap(), case[0].as_str().unwrap(), &trading)
+            .map(|r| r.id.as_str());
+        assert_eq!(got, case[3].as_str(), "{}: {case}", c["note"]);
     }
 }
 

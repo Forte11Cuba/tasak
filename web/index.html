@@ -235,7 +235,7 @@
     <details>
       <summary>¿Qué es la «Referencia Yadio»?</summary>
       <p>La tasa de referencia de Yadio para la moneda, que es la que usa Mostro para las órdenes a precio de mercado. Sirve para comparar con la <span data-name="rate">Tasa K</span>.</p>
-      <p>Cada nodo elige de dónde saca sus precios: Yadio, o varias fuentes combinadas (CoinGecko, Blockchain.com, fuentes del mercado local…). Si el nodo usa algo más que Yadio, la cabecera dice «Referencia del nodo» y, al pasar el ratón, se ven sus fuentes.</p>
+      <p>Cada nodo elige de dónde saca sus precios: Yadio, o varias fuentes combinadas (CoinGecko, Blockchain.com, fuentes del mercado local…). Si el nodo usa algo más que Yadio, la cabecera dice «Referencia del nodo» y, al pasar el ratón, se ven sus fuentes. Con varios nodos, es la del más reciente de los que tienen órdenes en esa moneda: todos publican todas las monedas, cada uno con su propia referencia.</p>
       <p>No se consulta a Yadio: cada pocos minutos el nodo publica en Nostr, firmados, los precios que está usando (evento <code>mostro-rates</code>, kind 30078), y la página los lee por la misma conexión que las órdenes. Así la referencia y los precios de mercado del libro de órdenes son exactamente los del nodo y se pueden verificar. El nodo los sigue usando hasta 30 minutos aunque no pueda actualizarlos, y la página también. Si el nodo no los publica, la página los pide a la API de Yadio; al pasar el ratón sobre la referencia se ve de dónde salen.</p>
     </details>
     <details>
@@ -307,7 +307,7 @@
     <details>
       <summary>What is the «Yadio reference»?</summary>
       <p>Yadio's reference rate for the currency, which Mostro uses for market-price orders. It is there to compare with the <span data-name="rate">Tasa K</span>.</p>
-      <p>Each node chooses where its prices come from: Yadio, or several sources combined (CoinGecko, Blockchain.com, local-market sources…). If the node uses more than Yadio, the header says «Node reference» and, when hovering, shows its sources.</p>
+      <p>Each node chooses where its prices come from: Yadio, or several sources combined (CoinGecko, Blockchain.com, local-market sources…). If the node uses more than Yadio, the header says «Node reference» and, when hovering, shows its sources. With several nodes, it is the newest of those that have orders in that currency: every node publishes every currency, each at its own reference.</p>
       <p>Yadio isn't queried: every few minutes the node publishes on Nostr, signed, the prices it is using (<code>mostro-rates</code> event, kind 30078), and the page reads them over the same connection as the orders. So the reference and the market prices in the order book are exactly the node's and can be verified. The node keeps using them for up to 30 minutes when it can't update them, and so does the page. If the node doesn't publish them, the page asks Yadio's API; hovering over the reference shows where they come from.</p>
     </details>
     <details>

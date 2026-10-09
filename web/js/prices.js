@@ -2,16 +2,19 @@
 // fallback, Yadio's API; the hourly BTC/USD history from Coinbase; and the conversion of each price to
 // the chosen unit.
 import { UNITS, toUnit, hourlyClose } from '../shared/units.js';
-import { currentRates, fiatPerUsd, marketPrice } from '../shared/rates.js';
+import { referenceRates, fiatPerUsd, marketPrice } from '../shared/rates.js';
 import { pricedAt } from '../shared/orders.js';
 import { state } from './state.js';
 
 // Newest mostro-rates of the selected nodes that the node still uses: the prices each node publishes,
-// signed, every few minutes, and uses for market orders (the same ones the order book uses). A
-// visitor's clock may be behind the node's: «now» is never earlier than the newest rates.
+// signed, every few minutes, and uses for market orders (the same ones the order book uses). With
+// several nodes, those of the nodes that trade the chosen currency (referenceRates). A visitor's clock
+// may be behind the node's: «now» is never earlier than the newest rates.
 export function nodeRates() {
   const list = [...state.nodeRates.values()].filter(r => state.nodeSel.has(r.node));
-  return currentRates(list, Math.max(Date.now() / 1000, ...list.map(r => r.ts)));
+  const trading = new Set();
+  for (const o of state.orders.values()) if (o.fiat === state.fiat && state.nodeSel.has(o.node)) trading.add(o.node);
+  return referenceRates(list, Math.max(Date.now() / 1000, ...list.map(r => r.ts)), state.fiat, trading);
 }
 
 // Current prices: { from: 'node' | 'api', rates?, btcUsd, fiatPerUsd(fiat) }, or null without either

@@ -44,6 +44,17 @@ export function currentRates(list, now) {
   return best;
 }
 
+// The rates for the reference of a currency with several nodes: the newest usable ones among the nodes
+// that trade it (`trading`, a Set: those with orders in it) and publish it; otherwise among any node that
+// publishes it; otherwise the newest of all (they still give BTC/USD). Every node publishes every
+// currency, so the newest overall could be a node that doesn't trade this one, at its own reference
+export function referenceRates(list, now, fiat, trading) {
+  const publishes = r => fiat === 'USD' || r.btc?.[fiat] != null;
+  return currentRates(list.filter(r => trading.has(r.node) && publishes(r)), now)
+    ?? currentRates(list.filter(publishes), now)
+    ?? currentRates(list, now);
+}
+
 // Currency per USD from some rates (USD itself is 1), or null if they don't have that currency
 export function fiatPerUsd(rates, fiat) {
   if (fiat === 'USD') return 1;

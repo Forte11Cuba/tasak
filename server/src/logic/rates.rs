@@ -6,7 +6,7 @@ use super::RawEvent;
 use super::js;
 use serde::{Deserialize, Serialize};
 use std::cmp::Ordering;
-use std::collections::BTreeMap;
+use std::collections::{BTreeMap, HashSet};
 
 /// Validity when the event has no expiration tag: Mostro's default (2 × the 5 min interval)
 const DEFAULT_TTL: f64 = 600.0;
@@ -85,7 +85,7 @@ pub fn newer_rates(a: &Rates, b: &Rates) -> bool {
 }
 
 /// The rates to use at `now`: the newest published by then that the node still uses, or None
-pub fn current_rates(list: &[Rates], now: f64) -> Option<&Rates> {
+pub fn current_rates<'a>(list: impl IntoIterator<Item = &'a Rates>, now: f64) -> Option<&'a Rates> {
     let mut best: Option<&Rates> = None;
     for r in list {
         if (r.ts as f64) <= now && now < usable_until(r) && best.is_none_or(|b| newer_rates(r, b)) {
@@ -93,6 +93,17 @@ pub fn current_rates(list: &[Rates], now: f64) -> Option<&Rates> {
         }
     }
     best
+}
+
+/// The rates for the reference of a currency with several nodes: the newest usable ones among the
+/// nodes that trade it (`trading`: those with orders in it) and publish it; otherwise among any node that
+/// publishes it; otherwise the newest of all (they still give BTC/USD). Every node publishes every
+/// currency, so the newest overall could be a node that doesn't trade this one, at its own reference
+pub fn reference_rates<'a>(list: &'a [Rates], now: f64, fiat: &str, trading: &HashSet<String>) -> Option<&'a Rates> {
+    let publishes = |r: &Rates| fiat == "USD" || r.btc.contains_key(fiat);
+    current_rates(list.iter().filter(|r| trading.contains(&r.node) && publishes(r)), now)
+        .or_else(|| current_rates(list.iter().filter(|r| publishes(r)), now))
+        .or_else(|| current_rates(list, now))
 }
 
 /// Currency per USD from some rates (USD itself is 1), or None if they don't have that currency
