@@ -208,5 +208,26 @@
    "asks": [["s1", 100000000, "node"], ["s4", 150000000, null], ["s2", 200000000, "api"], ["s3", null, null]],
    "bids": [["b3", 200000000, "api"], ["b1", 200000000, "node"], ["b2", null, null]]
   }
- }
+ },
+ "parseOrder": [
+  {
+   "note": "every field: first tag of each name wins, f and s normalized, numbers as Number(), empty methods left out and repeated keys once, the node's name from the y tag",
+   "event": { "id": "e1", "pubkey": "n1", "created_at": 1000, "kind": 38383, "content": "",
+    "tags": [["d", "o1"], ["d", "other"], ["k", "Sell"], ["f", "cup"], ["s", "SUCCESS"], ["amt", " 12345 "], ["fa", "1000", "2000"],
+     ["premium", "-2.5"], ["expires_at", "1e3"], ["pm", "Transfermovil", "", "transfermóvil 🇨🇺", "+53 5555 5555"], ["y", "mostro", "Nodo"]] },
+   "expected": { "key": "n1:o1", "node": "n1", "nodeName": "Nodo", "id": "e1", "ts": 1000, "status": "success", "side": "sell",
+    "fiat": "CUP", "fa": [1000, 2000], "amt": 12345, "premium": -2.5, "expiresAt": 1000,
+    "pm": ["Transfermovil", "transfermóvil 🇨🇺", "+53 5555 5555"], "pmKeys": ["Transfermovil", "Otros"] }
+  },
+  {
+   "note": "missing or empty values: amt, premium and expires_at are 0, no k is side \"\", no pm is «Sin método», a y tag without name is no name",
+   "event": { "id": "e2", "pubkey": "n1", "created_at": 1000, "kind": 38383, "content": "",
+    "tags": [["d", "o2"], ["f", "VES"], ["s", "pending"], ["amt", ""], ["fa", "10"], ["y", "mostro"]] },
+   "expected": { "key": "n1:o2", "node": "n1", "nodeName": null, "id": "e2", "ts": 1000, "status": "pending", "side": "",
+    "fiat": "VES", "fa": [10], "amt": 0, "premium": 0, "expiresAt": 0, "pm": [], "pmKeys": ["Sin método"] }
+  },
+  { "note": "without f", "event": { "id": "e3", "pubkey": "n1", "created_at": 1, "kind": 38383, "content": "", "tags": [["d", "o3"], ["s", "pending"]] }, "expected": null },
+  { "note": "f without value", "event": { "id": "e4", "pubkey": "n1", "created_at": 1, "kind": 38383, "content": "", "tags": [["d", "o4"], ["s", "pending"], ["f"]] }, "expected": null },
+  { "note": "empty d", "event": { "id": "e5", "pubkey": "n1", "created_at": 1, "kind": 38383, "content": "", "tags": [["d", ""], ["s", "pending"], ["f", "CUP"]] }, "expected": null }
+ ]
 }
