@@ -180,6 +180,11 @@ que publica el nodo, verificado (firma, autor y tipo), en una base de datos SQLi
 - `event_relays`: qué relays enviaron cada evento y cuándo, para comprobar qué relay tenía qué.
 - `yadio`: el BTC/USD de Yadio cada 5 minutos de las últimas 24 h, para rellenar los huecos cuando el
   archivo estuvo apagado.
+- `orders`: las órdenes completadas, derivadas de `events` cada minuto (las abiertas se leen en vivo de
+  los relays; las canceladas y caducadas nunca cuentan): cada una con su versión vigente, si fue a precio
+  de mercado o fijo, cuándo se tomó y su BTC/USD de ese momento con su origen, el `mostro-rates` del nodo
+  o, si no lo hay, Coinbase (velas de 1 minuto) o Yadio.
+- `btc_prices`: los cierres de BTC/USD de 1 minuto de Coinbase, cada uno pedido una vez y guardado.
 
 Debe estar siempre encendido: lo que pase mientras está apagado se pierde, salvo la última versión de
 cada orden. Cada relay tiene una suscripción en vivo y, cada 5 minutos, una puesta al día de su historial

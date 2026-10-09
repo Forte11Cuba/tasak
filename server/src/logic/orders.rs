@@ -173,7 +173,8 @@ pub fn priced_at(o: &Order) -> i64 {
     o.taken_at.unwrap_or(o.ts)
 }
 
-fn is_trade(o: &Order) -> bool {
+/// Whether a completed order is a trade the rate can use: one amount in currency and sats above zero
+pub fn is_trade(o: &Order) -> bool {
     o.fa.len() == 1 && o.fa[0] > 0.0 && o.amt > 0.0
 }
 

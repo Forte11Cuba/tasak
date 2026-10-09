@@ -47,9 +47,7 @@ static DATA: LazyLock<Data> = LazyLock::new(|| {
     let expected = read_json("shared/test/expected.json");
     let config = read_json("shared/test/fixtures/config.json");
     let yadio = read_json("shared/test/fixtures/yadio.json");
-    // A classic script that sets window.MOSTRO_PAYMENT_METHODS = {...}: the object is JSON
     let script = std::fs::read_to_string(path("web/vendor/mostro-payment-methods.js")).unwrap();
-    let object = &script[script.find('{').unwrap()..=script.rfind('}').unwrap()];
     Data {
         now: expected["now"].as_f64().unwrap(),
         expected,
@@ -66,7 +64,7 @@ static DATA: LazyLock<Data> = LazyLock::new(|| {
             .collect(),
         yadio_btc: yadio["BTC"].as_f64().unwrap(),
         yadio_usd: serde_json::from_value(yadio["USD"].clone()).unwrap(),
-        lists: serde_json::from_str(object).unwrap(),
+        lists: tasak::logic::payment_methods::parse_vendor_script(&script).unwrap(),
     }
 });
 

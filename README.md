@@ -184,6 +184,11 @@ publishes, verified (signature, author and kind), in a SQLite database, `data/ta
   `mostro-rates`, and the node's metadata when it changes. Anyone can verify them again.
 - `event_relays`: which relays sent each event and when, to check which relay had what.
 - `yadio`: Yadio's BTC/USD every 5 minutes for the last 24 h, to fill the gaps when the archive was off.
+- `orders`: the completed orders, derived from `events` every minute (open ones are read live from the
+  relays; canceled and expired ones never count): each with its current version, whether it was at
+  market or fixed price, when it was taken, and its BTC/USD at that moment with where it came from, the
+  node's `mostro-rates` or, without it, Coinbase (1-minute candles) or Yadio.
+- `btc_prices`: Coinbase's 1-minute BTC/USD closes, each asked for once and kept.
 
 It must run all the time: whatever happens while it is off is lost, except the latest version of each
 order. Each relay has a live subscription and, every 5 minutes, a catch-up of its recent history that
