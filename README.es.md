@@ -201,8 +201,8 @@ como confirmada cuando su evento firmado de Nostr también está archivado.
 | `web/common.js`, `web/common.css` | configuración, formato, colores y tarjeta del nodo, compartidos por las dos páginas |
 | `web/vendor/` | librerías copiadas (sin depender de CDN) y la lista de métodos de pago por moneda de la app de Mostro (`mostro-payment-methods.js`) |
 | `shared/` | lógica pura de la tasa (módulos ES: métodos de pago, órdenes, precios del nodo (`mostro-rates`), zonas horarias y periodos, unidades, Tasa K y velas), que usan las páginas (`tasak` la copia a `web/shared/`) |
-| `shared/test/` | pruebas de `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), datos reales fijos (`fixtures/`), los valores de referencia que el código debe reproducir (`expected.json`) y casos escritos a mano (`cases.json`) |
-| `server/` | el servidor de tasaK en Rust (`tasak`): lee el `.env`, genera `web/config.js`, sirve `web/` y archiva los eventos del nodo; su servicio de systemd es `server/tasak.service`; `server/tests/config-cases.json` es el `web/config.js` que debe salir de cada `.env` (`cargo test`) |
+| `shared/test/` | pruebas de `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), datos reales fijos (`fixtures/`), los valores de referencia que el código debe reproducir (`expected.json`) y casos escritos a mano (`cases.json`): los vectores que también pasa la versión en Rust de esta lógica (`server/src/logic/`) |
+| `server/` | el servidor de tasaK en Rust (`tasak`): lee el `.env`, genera `web/config.js`, sirve `web/` y archiva los eventos del nodo; su servicio de systemd es `server/tasak.service`. `src/logic/` es la lógica de `shared/` en Rust, comprobada con los mismos vectores (`server/tests/shared_vectors.rs`); `server/tests/config-cases.json` es el `web/config.js` que debe salir de cada `.env` (`cargo test`) |
 | `indexer/` | el exportador de la base de datos de Mostro (`export-mostro.mjs`; pasará a `tasak`) |
 | `tools/` | comprobaciones de desarrollo en Chrome headless (Node, sin dependencias); `node tools/reference.mjs` comprueba que `web/` calcula con datos fijos los valores de `shared/test/expected.json` |
 

@@ -5,16 +5,7 @@
 use serde::Serialize;
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
-
-/// JavaScript's `\s` and `String.prototype.trim()`: its WhiteSpace and LineTerminator characters.
-/// Not `char::is_whitespace`, which includes U+0085 and leaves out U+FEFF.
-fn is_js_space(c: char) -> bool {
-    matches!(
-        c,
-        '\t' | '\n' | '\u{0B}' | '\u{0C}' | '\r' | ' ' | '\u{A0}' | '\u{1680}' | '\u{2000}'
-            ..='\u{200A}' | '\u{2028}' | '\u{2029}' | '\u{202F}' | '\u{205F}' | '\u{3000}' | '\u{FEFF}'
-    )
-}
+use tasak::logic::js::is_js_space;
 
 /// What JavaScript's `.` doesn't match
 fn is_line_terminator(c: char) -> bool {

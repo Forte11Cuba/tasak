@@ -2,12 +2,12 @@
 // Pure: no network, DOM or global state. Signatures are verified before, in the data layer.
 import { pmKey, orderMatchesPm, NO_METHOD } from './payment-methods.js';
 
-// Order of an event, or null if it lacks d, s or f. `pmListFor(fiat)` gives the methods of a currency.
-// `nodeName` is the node's name from the `y` tag, if any.
+// Order of an event, or null if it lacks d, s or f, or their value is empty. `pmListFor(fiat)` gives
+// the methods of a currency. `nodeName` is the node's name from the `y` tag, if any.
 export function parseOrder(ev, pmListFor) {
   const t = Object.create(null);
   for (const tag of ev.tags) if (!(tag[0] in t)) t[tag[0]] = tag.slice(1);
-  if (!t.d || !t.s || !t.f) return null;
+  if (!t.d?.[0] || !t.s?.[0] || !t.f?.[0]) return null;
   const fiat = t.f[0].toUpperCase();
   const pm = (t.pm || []).filter(Boolean);
   const pmKeys = [...new Set(pm.map(raw => pmKey(raw, pmListFor(fiat))))];

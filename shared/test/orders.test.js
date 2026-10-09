@@ -1,13 +1,22 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newerVersion, currentOrder, mostUsedFiat, getBook } from '../orders.js';
-import { expected, cases, loadOrders, viewOf } from './data.js';
+import { parseOrder, newerVersion, currentOrder, mostUsedFiat, getBook } from '../orders.js';
+import { expected, cases, pmList, loadOrders, viewOf } from './data.js';
 
 test('chosen version and fields of every order', () => {
   const orders = loadOrders().sort((a, b) => a.key < b.key ? -1 : 1);
   const fields = ({ key, ev, ts, status, side, fiat, fa, amt, premium, expiresAt, pm, pmKeys, origin }) =>
     ({ key, id: ev.id, ts, status, side, fiat, fa, amt, premium, expiresAt, pm, pmKeys, origin: origin ?? null });
   assert.deepEqual(orders.map(fields), expected.orders);
+});
+
+test('parsing an order event (cases.json)', () => {
+  const fields = ({ key, node, nodeName, ev, ts, status, side, fiat, fa, amt, premium, expiresAt, pm, pmKeys }) =>
+    ({ key, node, nodeName, id: ev.id, ts, status, side, fiat, fa, amt, premium, expiresAt, pm, pmKeys });
+  for (const { note, event, expected: want } of cases.parseOrder) {
+    const o = parseOrder(event, pmList);
+    assert.deepEqual(o && fields(o), want, note);
+  }
 });
 
 test('tie-break between versions of an order (expected.json)', () => {
