@@ -70,6 +70,8 @@ again after changing `.env` or `shared/`. Two ways to publish it:
 | `ARCHIVE_DIR` | Folder of the archive's database (optional; default `data/`, relative to the repository folder; see [Archive](#archive)) |
 | `ARCHIVE` | `false` serves the site without archiving (optional; default `true`) |
 | `LISTEN` | Address the tasaK server (`tasak`) listens on (optional; default `127.0.0.1:8765`) |
+| `SIGNING_KEY_FILE` | File with the key that signs the published Tasa K (optional; see [Published rate](#published-rate)) |
+| `RATE_DECIMALS` | Decimals of the published rate, 0 to 8 (optional; default `2`) |
 
 Each currency's payment methods come from the Mostro app's list; anything not on it is grouped as
 «Otros» (other). In `HIDDEN_PAYMENT_METHODS` add the ones that trade at a different rate in your market
@@ -215,6 +217,34 @@ or fixed price), never keys, invoices or the users table. They join `orders`: an
 archived as a signed event keeps the event's data and takes from the database what the relays no longer
 had (when it was taken, market or fixed price); the others are marked as unsigned («node data»). The
 database has no completion time: for those, the escrow lock is used. Importing again changes nothing.
+
+## Published rate
+
+With the archive on, every 5 minutes the server computes the official Tasa K from its `orders` table,
+with the same rules as the header (the `.env`'s nodes and currency, the payment methods it doesn't hide,
+and also the orders that only come from the node's database, marked as unsigned), and publishes it:
+
+- **`/api/tasa.json`**: the rate in currency/BTC, currency/USD and currency/sat, the previous 24 h, its
+  volume and orders, its window, when it was updated and the id of the signed event. For bots,
+  spreadsheets and apps that don't speak Nostr.
+- **A signed Nostr event**, if `SIGNING_KEY_FILE` is set: kind 30078 with `d = tasak`, content
+  `{"BTC": {"CUP": …}, "tasak": {…}}`. The `tasak` part has everything needed to recompute it without
+  relays or Coinbase: each order of the window with its amounts, moment and BTC/USD (and its source),
+  whether it is signed, the rules' version and the decimals. It expires after 10 minutes.
+
+Without orders in the last 24 hours the last rate stays, marked with `empty_since`. Values are rounded to
+`RATE_DECIMALS` decimals, as JavaScript's `toFixed`.
+
+The key must be dedicated to this (not the Mostro node's, not a personal one) and live outside the
+repository: `tasak` refuses a key inside `web/` or the archive's folder, or one other users can read.
+
+```sh
+tasak keygen ~/.config/tasak/nsec    # shows its npub; then SIGNING_KEY_FILE=~/.config/tasak/nsec
+```
+
+The Tasa K says at what price currency is being traded; it is not meant as a market price source for
+Mostro (hence `d = tasak`, not `mostro-rates`): a node pricing its orders with it would feed it back to
+itself through the premiums.
 
 ## Files
 
