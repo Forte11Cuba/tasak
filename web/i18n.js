@@ -63,7 +63,7 @@ const EN = {
   '⚠ USD aprox.': '⚠ approx. USD',
   'USD aproximado: sin precio histórico de Coinbase, se usa el BTC/USD actual de Yadio': 'Approximate USD: no historical price from Coinbase, using the current Yadio BTC/USD',
   'Configuración sin nodos o sin relays válidos': 'Configuration has no valid nodes or relays',
-  'Falta config.js: ejecuta "node build.mjs" o pasa ?mostro=…&relays=… en la URL': 'config.js is missing: run "node build.mjs" or pass ?mostro=…&relays=… in the URL',
+  'Falta config.js: ejecuta «tasak build» o pasa ?mostro=…&relays=… en la URL': 'config.js is missing: run "tasak build" or pass ?mostro=…&relays=… in the URL',
   // Header figures
   '{n} orden': '{n} order',
   '{n} órdenes': '{n} orders',
@@ -217,7 +217,7 @@ const EN = {
   'Órdenes abiertas ahora': 'Open orders now',
   '← Volver a la tasa': '← Back to the rate',
   'Cargando la información del nodo desde los relays…': 'Loading node information from relays…',
-  'No hay nodos configurados: ejecuta «node build.mjs» o pasa ?mostro=… en la URL.': 'No nodes configured: run "node build.mjs" or pass ?mostro=… in the URL.',
+  'No hay nodos configurados: ejecuta «tasak build» o pasa ?mostro=… en la URL.': 'No nodes configured: run "tasak build" or pass ?mostro=… in the URL.',
   'Esta página no funciona abierta como archivo. Sírvela con un servidor web: en la carpeta del repositorio ejecuta «{cmd}» y abre {url}': 'This page does not work opened as a file. Serve it with a web server: in the repository folder run «{cmd}» and open {url}',
 };
 

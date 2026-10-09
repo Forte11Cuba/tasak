@@ -23,36 +23,32 @@ pay, not what was actually paid. tasaK starts from the opposite:
 
 ## Setup
 
-Requirements: Node.js ≥ 18 (to generate `web/config.js` and to try the site locally, no dependencies).
+Requirements: Rust (`cargo`), to build `tasak`, the program that reads `.env`, generates
+`web/config.js`, copies `shared/` into `web/shared/` and serves the site.
 
 ```sh
 cp .env.example .env            # set your node, relays, currency and community (the example is Kmbalache)
-node build.mjs --serve          # generates web/config.js, copies shared/ into web/shared/ and
-                                # serves web/ at http://localhost:8765/ (--port to change it)
+cargo install --path server --locked   # builds tasak and installs it in ~/.cargo/bin (on PATH with rustup)
+tasak                           # from the repository folder (or --root DIR): generates and serves
+                                # web/ at http://localhost:8765/ (LISTEN to change it)
+tasak build                     # only generates web/config.js and web/shared/
 ```
 
-The folder to publish is `web/` (after running `node build.mjs`): everything the site needs is in it.
-It needs a web server, also to try it locally: opened as a file (`file://`) browsers don't load its
-ES modules and the page shows a warning instead. `node build.mjs --serve` is only for trying it on your
-own machine (it listens on 127.0.0.1 and doesn't cache); run it again after changing `.env` or `shared/`.
-To publish, run `node build.mjs` and serve `web/` with any static web server (nginx, Caddy…) or static
-hosting. On GitHub Pages, publish `web/` with a GitHub Actions workflow that runs `node build.mjs` first:
-Pages can only publish the root or `/docs` of a branch, and `web/config.js` isn't in the repository.
+Run `cargo install` again after updating the repository. Without installing it, `cargo build --release
+--manifest-path server/Cargo.toml` leaves the program in `server/target/release/tasak`.
 
-### tasaK server (optional)
+The site needs a web server, also to try it locally: opened as a file (`file://`) browsers don't load
+its ES modules and the page shows a warning instead. `tasak` generates the files when it starts: run it
+again after changing `.env` or `shared/`. Two ways to publish it:
 
-Instead of `build.mjs` and a separate static server, `web/` can be served by the tasaK server (`server/`,
-in Rust): a single program that reads the same `.env`, generates `web/config.js` exactly as `build.mjs`
-does and serves `web/`. It only serves files (GET and HEAD, nothing that receives data) and listens on
-`127.0.0.1:8765` by default (`LISTEN`): to publish, put a web server with HTTPS (nginx, Caddy…) in front
-of it. Later it will also archive the node's events and publish the Tasa K; the site keeps working
-without it, as a static site.
-
-```sh
-cargo build --release --manifest-path server/Cargo.toml   # needs Rust (cargo)
-server/target/release/tasak         # from the repository folder (or --root DIR): generates and serves
-server/target/release/tasak build   # only generates web/config.js and web/shared/, like node build.mjs
-```
+- **With the tasaK server:** run `tasak` all the time and put a web server with HTTPS (nginx, Caddy…)
+  in front of it. It only serves files (GET and HEAD, nothing that receives data) and listens on
+  `127.0.0.1:8765` by default (`LISTEN`). Later it will also archive the node's events and publish the
+  Tasa K.
+- **As a static site:** run `tasak build` and publish the `web/` folder, which has everything the site
+  needs, with any static web server or hosting. On GitHub Pages, publish `web/` with a GitHub Actions
+  workflow that builds `tasak` and runs `tasak build` first: Pages can only publish the root or `/docs`
+  of a branch, and `web/config.js` isn't in the repository.
 
 `.env` variables:
 
@@ -72,7 +68,7 @@ server/target/release/tasak build   # only generates web/config.js and web/share
 | `COMMUNITY`, `COMMUNITY_URL` | Community running the node (optional) |
 | `SOCIAL_LINKS` | Links to its social media, comma separated (optional; Telegram, X, YouTube, GitHub and Nostr are recognised automatically) |
 | `ARCHIVE_DIR` | Folder for the archiver's data (optional; default `indexer/data/`, see [Archiver](#archiver)) |
-| `LISTEN` | Address the [tasaK server](#tasak-server-optional) listens on (optional; default `127.0.0.1:8765`) |
+| `LISTEN` | Address the tasaK server (`tasak`) listens on (optional; default `127.0.0.1:8765`) |
 
 Each currency's payment methods come from the Mostro app's list; anything not on it is grouped as
 «Otros» (other). In `HIDDEN_PAYMENT_METHODS` add the ones that trade at a different rate in your market
@@ -205,10 +201,9 @@ signed Nostr event is also archived.
 | `web/i18n.js` | language (Spanish / English): dictionary and text translation |
 | `web/common.js`, `web/common.css` | configuration, formatting, colours and node card, shared by both pages |
 | `web/vendor/` | copied libraries (no CDN) and the Mostro app's payment methods per currency (`mostro-payment-methods.js`) |
-| `shared/` | pure logic of the rate (ES modules: payment methods, orders, the node's prices (`mostro-rates`), time zones and periods, units, Tasa K and candles), used by the pages (`build.mjs` copies it to `web/shared/`) |
-| `shared/test/` | tests of `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), fixed real data (`fixtures/`), the reference values the code must reproduce (`expected.json`), hand-written cases (`cases.json`) and the `web/config.js` each `.env` must give (`config-cases.json`) |
-| `build.mjs` | reads `.env`, generates `web/config.js` and copies `shared/` into `web/shared/`; with `--serve`, serves `web/` locally |
-| `server/` | the tasaK server in Rust: generates `web/config.js` and serves `web/` (`cargo test` checks it with the same `config-cases.json`) |
+| `shared/` | pure logic of the rate (ES modules: payment methods, orders, the node's prices (`mostro-rates`), time zones and periods, units, Tasa K and candles), used by the pages (`tasak` copies it to `web/shared/`) |
+| `shared/test/` | tests of `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), fixed real data (`fixtures/`), the reference values the code must reproduce (`expected.json`) and hand-written cases (`cases.json`) |
+| `server/` | the tasaK server in Rust (`tasak`): reads `.env`, generates `web/config.js` and serves `web/`; `server/tests/config-cases.json` is the `web/config.js` each `.env` must give (`cargo test`) |
 | `indexer/` | the event archiver, its systemd service and the Mostro database exporter |
 | `tools/` | development checks in headless Chrome (Node, no dependencies); `node tools/reference.mjs` checks that `web/` computes the values in `shared/test/expected.json` from fixed data |
 

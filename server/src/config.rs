@@ -1,5 +1,6 @@
-//! Reads .env and builds web/config.js exactly like build.mjs: same format, same defaults, same
-//! validations and the same bytes. Both pass the vectors in shared/test/config-cases.json.
+//! Reads .env and builds web/config.js: format, defaults, validations and bytes fixed by the
+//! vectors in server/tests/config-cases.json. The .env reader follows JavaScript's rules (it was
+//! first written in JS, and the vectors were frozen with it).
 
 use serde::Serialize;
 use std::collections::HashMap;
@@ -39,7 +40,7 @@ pub fn parse_env(text: &str) -> HashMap<String, String> {
     env
 }
 
-/// build.mjs: /^\s*([A-Za-z0-9_]+)\s*=\s*(.*?)\s*$/, then /^(["']).*\1$/ removes the quotes
+/// Like /^\s*([A-Za-z0-9_]+)\s*=\s*(.*?)\s*$/ in JavaScript, then /^(["']).*\1$/ removes the quotes
 fn parse_line(line: &str) -> Option<(&str, &str)> {
     let rest = line.trim_start_matches(is_js_space);
     let key_len = rest
@@ -171,11 +172,11 @@ pub fn build_config(get: impl Fn(&str) -> Option<String>, web: &Path) -> (Config
 pub fn render_config(config: &Config) -> String {
     let json = serde_json::to_string_pretty(config).expect("the config is always serializable");
     format!(
-        "// Generated from .env by build.mjs or the tasak server. Do not edit by hand.\nwindow.TASAK_CONFIG = {json};\n"
+        "// Generated from .env by tasak. Do not edit by hand.\nwindow.TASAK_CONFIG = {json};\n"
     )
 }
 
-/// The prefix, ignoring ASCII case (the /i of build.mjs's regular expressions)
+/// The prefix, ignoring ASCII case (like the /i of a JavaScript regular expression)
 fn strip_prefix_ci<'a>(s: &'a str, prefix: &str) -> Option<&'a str> {
     let n = prefix.len();
     (s.len() >= n && s.as_bytes()[..n].eq_ignore_ascii_case(prefix.as_bytes())).then(|| &s[n..])
@@ -234,7 +235,7 @@ fn is_image_path(v: &str) -> bool {
             .any(|e| lower.len() > e.len() && lower.ends_with(e))
 }
 
-/// Like `new URL(v, web)` in build.mjs: `.` and `..` resolved by name, not through the file system
+/// Like JavaScript's `new URL(v, web)`: `.` and `..` resolved by name, not through the file system
 fn resolve(web: &Path, v: &str) -> PathBuf {
     let mut path = if v.starts_with('/') {
         PathBuf::from("/")
@@ -261,7 +262,7 @@ mod tests {
     #[test]
     fn config_cases() {
         let dir = Path::new(env!("CARGO_MANIFEST_DIR")).parent().unwrap();
-        let text = std::fs::read_to_string(dir.join("shared/test/config-cases.json")).unwrap();
+        let text = std::fs::read_to_string(dir.join("server/tests/config-cases.json")).unwrap();
         let vectors: Value = serde_json::from_str(&text).unwrap();
         let web = dir.join("web");
         for case in vectors["cases"].as_array().unwrap() {

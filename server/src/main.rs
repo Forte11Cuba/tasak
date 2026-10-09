@@ -1,4 +1,4 @@
-//! tasak: reads .env, generates web/config.js (like build.mjs) and serves web/.
+//! tasak: reads .env, generates web/config.js and serves web/.
 //! Later it will also archive the node's events and publish the Tasa K (see the README).
 
 mod config;
@@ -16,7 +16,7 @@ const USAGE: &str = "\
 Usage: tasak [build] [--root DIR]
 
   tasak          generates web/config.js from .env, copies shared/ into web/shared/ and serves web/
-  tasak build    only generates them, like node build.mjs
+  tasak build    only generates them (to publish web/ with any static server)
   --root DIR     the repository folder, with .env, web/ and shared/ (default: the current folder)
 
 It listens on LISTEN from .env (default 127.0.0.1:8765). Environment variables take precedence over .env.";

@@ -23,37 +23,31 @@ alguien dice que pagaría, no lo que realmente se pagó. tasaK parte de lo contr
 
 ## Configurar
 
-Requisitos: Node.js ≥ 18 (para generar `web/config.js` y probar el sitio en local, sin dependencias).
+Requisitos: Rust (`cargo`), para compilar `tasak`, el programa que lee el `.env`, genera
+`web/config.js`, copia `shared/` en `web/shared/` y sirve el sitio.
 
 ```sh
 cp .env.example .env            # pon tu nodo, relays, moneda y comunidad (el ejemplo es Kmbalache)
-node build.mjs --serve          # genera web/config.js, copia shared/ en web/shared/ y sirve
-                                # web/ en http://localhost:8765/ (--port para cambiarlo)
+cargo install --path server --locked   # compila tasak y lo instala en ~/.cargo/bin (en el PATH con rustup)
+tasak                           # desde la carpeta del repositorio (o --root CARPETA): genera y
+                                # sirve web/ en http://localhost:8765/ (LISTEN para cambiarlo)
+tasak build                     # solo genera web/config.js y web/shared/
 ```
 
-La carpeta que se publica es `web/` (después de ejecutar `node build.mjs`): contiene todo lo que necesita el sitio.
-Necesita un servidor web, también para probarla en local: abierta como archivo (`file://`) los navegadores
-no cargan sus módulos ES y la página muestra un aviso en su lugar. `node build.mjs --serve` es solo para
-probarla en tu máquina (escucha en 127.0.0.1 y no usa caché); vuelve a ejecutarlo tras cambiar `.env` o
-`shared/`. Para publicarla, ejecuta `node build.mjs` y sirve `web/` con cualquier servidor web estático
-(nginx, Caddy…) o un alojamiento estático. En GitHub Pages, publica `web/` con un flujo de GitHub Actions
-que ejecute antes `node build.mjs`: Pages solo publica la raíz o `/docs` de una rama, y `web/config.js`
-no está en el repositorio.
+Vuelve a ejecutar `cargo install` tras actualizar el repositorio. Sin instalarlo, `cargo build --release
+--manifest-path server/Cargo.toml` deja el programa en `server/target/release/tasak`.
 
-### Servidor de tasaK (opcional)
+El sitio necesita un servidor web, también para probarlo en local: abierto como archivo (`file://`) los
+navegadores no cargan sus módulos ES y la página muestra un aviso en su lugar. `tasak` genera los
+archivos al arrancar: vuelve a ejecutarlo tras cambiar `.env` o `shared/`. Dos formas de publicarlo:
 
-En vez de `build.mjs` y un servidor estático aparte, `web/` puede servirla el servidor de tasaK (`server/`,
-en Rust): un solo programa que lee el mismo `.env`, genera `web/config.js` exactamente igual que
-`build.mjs` y sirve `web/`. Solo sirve archivos (GET y HEAD, nada que reciba datos) y escucha por defecto
-en `127.0.0.1:8765` (`LISTEN`): para publicarla, pon delante un servidor web con HTTPS (nginx, Caddy…).
-Más adelante también archivará los eventos del nodo y publicará la Tasa K; el sitio sigue funcionando
-sin él, como sitio estático.
-
-```sh
-cargo build --release --manifest-path server/Cargo.toml   # necesita Rust (cargo)
-server/target/release/tasak         # desde la carpeta del repositorio (o --root CARPETA): genera y sirve
-server/target/release/tasak build   # solo genera web/config.js y web/shared/, como node build.mjs
-```
+- **Con el servidor de tasaK:** deja `tasak` en marcha y pon delante un servidor web con HTTPS (nginx,
+  Caddy…). Solo sirve archivos (GET y HEAD, nada que reciba datos) y escucha por defecto en
+  `127.0.0.1:8765` (`LISTEN`). Más adelante también archivará los eventos del nodo y publicará la Tasa K.
+- **Como sitio estático:** ejecuta `tasak build` y publica la carpeta `web/`, que contiene todo lo que
+  necesita el sitio, con cualquier servidor web o alojamiento estático. En GitHub Pages, publica `web/`
+  con un flujo de GitHub Actions que compile `tasak` y ejecute antes `tasak build`: Pages solo publica
+  la raíz o `/docs` de una rama, y `web/config.js` no está en el repositorio.
 
 Variables de `.env` (en inglés, para que sirvan a cualquier operador de nodo):
 
@@ -73,7 +67,7 @@ Variables de `.env` (en inglés, para que sirvan a cualquier operador de nodo):
 | `COMMUNITY`, `COMMUNITY_URL` | Comunidad que opera el nodo (opcional) |
 | `SOCIAL_LINKS` | Enlaces a sus redes, separados por coma (opcional; Telegram, X, YouTube, GitHub y Nostr se reconocen solos) |
 | `ARCHIVE_DIR` | Carpeta de los datos del archivador (opcional; por defecto `indexer/data/`, ver [Archivador](#archivador)) |
-| `LISTEN` | Dirección en la que escucha el [servidor de tasaK](#servidor-de-tasak-opcional) (opcional; por defecto `127.0.0.1:8765`) |
+| `LISTEN` | Dirección en la que escucha `tasak`, el servidor de tasaK (opcional; por defecto `127.0.0.1:8765`) |
 
 Los métodos de pago de cada moneda salen de la lista de la app de Mostro; lo que no está en ella se
 agrupa como «Otros». En `HIDDEN_PAYMENT_METHODS` conviene añadir los que en tu mercado se negocian a
@@ -201,10 +195,9 @@ como confirmada cuando su evento firmado de Nostr también está archivado.
 | `web/i18n.js` | idioma (español / inglés): diccionario y traducción de textos |
 | `web/common.js`, `web/common.css` | configuración, formato, colores y tarjeta del nodo, compartidos por las dos páginas |
 | `web/vendor/` | librerías copiadas (sin depender de CDN) y la lista de métodos de pago por moneda de la app de Mostro (`mostro-payment-methods.js`) |
-| `shared/` | lógica pura de la tasa (módulos ES: métodos de pago, órdenes, precios del nodo (`mostro-rates`), zonas horarias y periodos, unidades, Tasa K y velas), que usan las páginas (`build.mjs` la copia a `web/shared/`) |
-| `shared/test/` | pruebas de `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), datos reales fijos (`fixtures/`), los valores de referencia que el código debe reproducir (`expected.json`), casos escritos a mano (`cases.json`) y el `web/config.js` que debe salir de cada `.env` (`config-cases.json`) |
-| `build.mjs` | lee `.env`, genera `web/config.js` y copia `shared/` en `web/shared/`; con `--serve`, sirve `web/` en local |
-| `server/` | el servidor de tasaK en Rust: genera `web/config.js` y sirve `web/` (`cargo test` lo comprueba con el mismo `config-cases.json`) |
+| `shared/` | lógica pura de la tasa (módulos ES: métodos de pago, órdenes, precios del nodo (`mostro-rates`), zonas horarias y periodos, unidades, Tasa K y velas), que usan las páginas (`tasak` la copia a `web/shared/`) |
+| `shared/test/` | pruebas de `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), datos reales fijos (`fixtures/`), los valores de referencia que el código debe reproducir (`expected.json`) y casos escritos a mano (`cases.json`) |
+| `server/` | el servidor de tasaK en Rust (`tasak`): lee el `.env`, genera `web/config.js` y sirve `web/`; `server/tests/config-cases.json` es el `web/config.js` que debe salir de cada `.env` (`cargo test`) |
 | `indexer/` | el archivador de eventos, su servicio de systemd y el exportador de la base de datos de Mostro |
 | `tools/` | comprobaciones de desarrollo en Chrome headless (Node, sin dependencias); `node tools/reference.mjs` comprueba que `web/` calcula con datos fijos los valores de `shared/test/expected.json` |
 
