@@ -60,6 +60,35 @@
    "expected": { "rate": null, "previous": 100, "volume": 0, "count": 0, "ids": [] }
   }
  ],
+ "rateBreakdown": [
+  {
+   "note": "buy and sell in the 24 h window; market or fixed from the pending version (origin) or, without it, from a premium other than 0; premium weighted by volume over the market orders",
+   "now": 1000000,
+   "trades": [
+    { "id": "a", "ts": 900000, "side": "buy", "price": 999, "size": 9, "premium": 10, "origin": null },
+    { "id": "b", "ts": 950000, "side": "buy", "price": 100, "size": 1, "premium": 20, "origin": null },
+    { "id": "c", "ts": 960000, "side": "buy", "price": 200, "size": 3, "premium": 0, "origin": { "fixed": false, "premium": 0 } },
+    { "id": "d", "ts": 970000, "side": "sell", "price": 300, "size": 2, "premium": 0, "origin": { "fixed": true, "premium": 0 } },
+    { "id": "e", "ts": 980000, "side": "sell", "price": 400, "size": 2, "premium": 0, "origin": null },
+    { "id": "f", "ts": 990000, "side": "sell", "price": 500, "size": 1, "premium": 30, "origin": { "fixed": false, "premium": 30 } }
+   ],
+   "expected": {
+    "buy": { "rate": 175, "count": 2, "volume": 4 },
+    "sell": { "rate": 380, "count": 3, "volume": 5 },
+    "market": 3, "fixed": 1, "unknown": 1, "premium": 10
+   }
+  },
+  {
+   "note": "no orders in the window",
+   "now": 1000000,
+   "trades": [{ "id": "a", "ts": 900000, "side": "buy", "price": 100, "size": 1, "premium": 5, "origin": null }],
+   "expected": {
+    "buy": { "rate": null, "count": 0, "volume": 0 },
+    "sell": { "rate": null, "count": 0, "volume": 0 },
+    "market": 0, "fixed": 0, "unknown": 0, "premium": null
+   }
+  }
+ ],
  "movingWeighted": [
   {
    "note": "24 h border: at an end of exactly order + 24 h that order no longer counts",

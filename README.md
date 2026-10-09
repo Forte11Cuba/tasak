@@ -84,6 +84,25 @@ Tasa K = Σ(price × amount) ÷ Σ amount
 Example (in CUP): 3 orders at 785 CUP/USD totalling 3,000 CUP and one at 750 for 5,000 CUP →
 (785×3000 + 750×5000) ÷ 8000 = **763.13**.
 
+### What it measures
+
+The price at which the currency is actually exchanged in bitcoin trades. In currency/USD it is an implied
+rate: currency paid per BTC divided by BTC/USD. It is not the price of cash dollars or transfers: if
+buying or selling bitcoin with the currency carries a premium of its own, it is in the Tasa K too.
+Currency/BTC and currency/sat don't go through the dollar.
+
+Almost all orders are at market price: the node sets the sats from the Yadio reference and the order's
+premium, so their price is roughly `Yadio ÷ (1 − premium)`. The Tasa K therefore follows the Yadio
+reference, and its distance from it («above Yadio» in the header) is mostly the premiums people trade at.
+Fixed-price orders don't depend on Yadio.
+
+BTC buys and sells close at different prices, since each side sets its premium; the Tasa K weighs them all
+together. For information only, without changing the rate, hovering over the Tasa K and the FAQ show the
+weighted price of buys and of sells in the last 24 hours, and how many orders were at market price (with
+their average premium) or at fixed price. Market or fixed comes from the order's `pending` version or,
+without it, from a premium other than 0 (Mostro doesn't allow a premium with a fixed price); orders with
+premium 0 whose `pending` version wasn't seen are counted as unknown.
+
 The chart has three modes:
 
 - **Price**: one point per executed order, or per period (1h, 4h, 1D, 1W, 1M, 1Y) with that period's weighted price.

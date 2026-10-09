@@ -22,7 +22,7 @@
   <div class="brand-box">
     <div class="brand" data-name="site">tasa<span>K</span></div>
   </div>
-  <div class="stat big">
+  <div class="stat big" id="statTasa">
     <span class="label"><span data-name="rate">Tasa K</span> · <span data-i18n>últimas 24h</span></span>
     <span class="value-row">
       <span class="value num" id="sTasa">—</span>
@@ -174,6 +174,14 @@
       <p>Cada orden pesa según la moneda que movió. Ejemplo: 3 órdenes a 785 <span class="fiat-name">CUP</span>/USD que suman 3000 <span class="fiat-name">CUP</span> y una a 750 de 5000 <span class="fiat-name">CUP</span> dan (785×3000 + 750×5000) ÷ 8000 = <strong>763,13</strong>.</p>
     </details>
     <details>
+      <summary>¿Qué mide la <span data-name="rate">Tasa K</span>?</summary>
+      <p>El precio al que de verdad se cambia la moneda en operaciones con bitcoin. En <span class="fiat-name">CUP</span>/USD es una tasa implícita: los <span class="fiat-name">CUP</span> pagados por cada BTC divididos por el precio del BTC en dólares. No es el precio del dólar en efectivo ni en transferencias: si comprar o vender bitcoin con <span class="fiat-name">CUP</span> lleva un sobreprecio propio, también está en la <span data-name="rate">Tasa K</span>. <span class="fiat-name">CUP</span>/BTC y <span class="fiat-name">CUP</span>/sat no pasan por el dólar.</p>
+      <p>Casi todas las órdenes son a precio de mercado: el nodo calcula los sats con la referencia de Yadio y la prima que pone quien publica la orden, así que su precio es aproximadamente <code>Yadio ÷ (1 − prima)</code>. Por eso la <span data-name="rate">Tasa K</span> sigue a la referencia de Yadio, y lo que queda por encima o por debajo de ella («sobre Yadio» en la cabecera) son sobre todo las primas con las que se está operando. Las órdenes a precio fijo (🔒 en el libro de órdenes) no dependen de Yadio.</p>
+      <p>Las compras y las ventas de BTC se cierran a precios distintos, porque cada lado pone su prima; la <span data-name="rate">Tasa K</span> las pondera todas juntas por su monto. Ahora, en las últimas 24 horas:</p>
+      <ul class="rate-breakdown"></ul>
+      <p class="muted">Es solo información: la <span data-name="rate">Tasa K</span> no cambia. Lo mismo se ve al pasar el ratón sobre ella. «Sin saber» son órdenes con prima 0 de las que no se vio la versión <code>pending</code>, la única que dice si eran a precio fijo o a mercado (con prima distinta de 0 son siempre a mercado: Mostro no admite prima con precio fijo).</p>
+    </details>
+    <details>
       <summary>¿Cómo se calcula el precio de cada orden?</summary>
       <p><code>precio = moneda pagada ÷ BTC recibidos ÷ BTC/USD</code>, con el BTC/USD de la hora en que se completó la orden (velas horarias de Coinbase; si no responde, el precio actual de Yadio y se avisa de que el USD es aproximado).</p>
     </details>
@@ -227,6 +235,14 @@
       <p>It is the volume-weighted price of orders <strong>completed</strong> in the last 24 hours, not of published ads:</p>
       <p><code><span data-name="rate">Tasa K</span> = Σ(price × amount) ÷ Σ amount</code></p>
       <p>Each order weighs by the currency it moved. Example: 3 orders at 785 <span class="fiat-name">CUP</span>/USD totalling 3,000 <span class="fiat-name">CUP</span> and one at 750 for 5,000 <span class="fiat-name">CUP</span> give (785×3000 + 750×5000) ÷ 8000 = <strong>763.13</strong>.</p>
+    </details>
+    <details>
+      <summary>What does the <span data-name="rate">Tasa K</span> measure?</summary>
+      <p>The price at which the currency is actually exchanged in bitcoin trades. In <span class="fiat-name">CUP</span>/USD it is an implied rate: the <span class="fiat-name">CUP</span> paid for each BTC divided by the price of BTC in dollars. It is not the price of cash dollars or transfers: if buying or selling bitcoin with <span class="fiat-name">CUP</span> carries a premium of its own, it is in the <span data-name="rate">Tasa K</span> too. <span class="fiat-name">CUP</span>/BTC and <span class="fiat-name">CUP</span>/sat don't go through the dollar.</p>
+      <p>Almost all orders are at market price: the node calculates the sats with the Yadio reference and the premium set by whoever publishes the order, so their price is roughly <code>Yadio ÷ (1 − premium)</code>. That is why the <span data-name="rate">Tasa K</span> follows the Yadio reference, and what lies above or below it («above Yadio» in the header) is mostly the premiums people are trading at. Fixed-price orders (🔒 in the order book) don't depend on Yadio.</p>
+      <p>BTC buys and sells close at different prices, because each side sets its premium; the <span data-name="rate">Tasa K</span> weighs them all together by their amount. Right now, in the last 24 hours:</p>
+      <ul class="rate-breakdown"></ul>
+      <p class="muted">This is for information only: the <span data-name="rate">Tasa K</span> doesn't change. The same shows when hovering over it. «Unknown» are orders with premium 0 whose <code>pending</code> version wasn't seen, the only one that says whether they were at fixed or market price (with a premium other than 0 they are always at market: Mostro doesn't allow a premium with a fixed price).</p>
     </details>
     <details>
       <summary>How is the price of each order calculated?</summary>
