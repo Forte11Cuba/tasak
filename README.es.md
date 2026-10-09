@@ -231,6 +231,15 @@ la publica:
   relays ni Coinbase: cada orden de la ventana con sus montos, su momento y su BTC/USD (y su origen), si
   está firmada, la versión de las reglas y los decimales. Caduca a los 10 minutos.
 
+- **`/api/snapshot.json`**: lo que necesita el sitio para pintar al instante, sin esperar a los relays:
+  los eventos firmados de las órdenes completadas (todas sus versiones), el último `mostro-rates` y la
+  información del nodo, las órdenes sin firma de la base de datos del nodo, el BTC/USD de cada orden con
+  su origen y la última tasa firmada. No lleva las órdenes abiertas: el libro de órdenes sale en vivo de
+  los relays.
+
+Si hay clave, su clave pública va en `config.js` (`ratePubkey`), para que el sitio compruebe quién firmó
+la tasa.
+
 Sin órdenes en las últimas 24 horas se mantiene la última tasa, marcada con `empty_since`. Los valores se
 redondean a `RATE_DECIMALS` decimales, como `toFixed` de JavaScript.
 

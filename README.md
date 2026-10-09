@@ -232,6 +232,14 @@ and also the orders that only come from the node's database, marked as unsigned)
   relays or Coinbase: each order of the window with its amounts, moment and BTC/USD (and its source),
   whether it is signed, the rules' version and the decimals. It expires after 10 minutes.
 
+- **`/api/snapshot.json`**: what the site needs to draw at once, without waiting for the relays: the
+  signed events of the completed orders (all their versions), the newest `mostro-rates` and the node's
+  information, the unsigned orders of the node's database, each order's BTC/USD with its source, and the
+  newest signed rate. The open orders aren't in it: the order book comes live from the relays.
+
+When there is a key, its public key goes into `config.js` (`ratePubkey`), for the site to check who
+signed the rate.
+
 Without orders in the last 24 hours the last rate stays, marked with `empty_since`. Values are rounded to
 `RATE_DECIMALS` decimals, as JavaScript's `toFixed`.
 

@@ -301,13 +301,13 @@ pub fn event(keys: &nostr_sdk::prelude::Keys, rate: &Rate, t: i64) -> Result<nos
         .map_err(|e| format!("cannot sign: {e}"))
 }
 
-/// Signs and sends the rate to the client's relays; its id if at least one relay took it
+/// Signs and sends the rate to the client's relays; the event, if at least one relay took it
 pub async fn send(
     client: &nostr_sdk::prelude::Client,
     keys: &nostr_sdk::prelude::Keys,
     rate: &Rate,
     t: i64,
-) -> Result<String, String> {
+) -> Result<nostr_sdk::prelude::Event, String> {
     let ev = event(keys, rate, t)?;
     let out = client.send_event(&ev).await.map_err(|e| e.to_string())?;
     if out.success.is_empty() {
@@ -316,7 +316,7 @@ pub async fn send(
     if !out.failed.is_empty() {
         tracing::warn!("publish: {} relays refused the rate", out.failed.len());
     }
-    Ok(ev.id.to_hex())
+    Ok(ev)
 }
 
 /// Writes `path` whole or not at all (a reader never sees half a file)
@@ -329,14 +329,14 @@ fn write_atomic(path: &Path, text: &str) -> std::io::Result<()> {
     std::fs::rename(tmp, path)
 }
 
-/// Every 5 minutes: computes the rate, publishes the event (with `keys`) and writes the API. Runs until
-/// the task is dropped
+/// Every 5 minutes: computes the rate, publishes the event (with `keys`) and writes `tasa.json` and
+/// `snapshot.json` into `api_dir`. Runs until the task is dropped
 pub async fn run(
     pool: SqlitePool,
     rules: Rules,
     relays: Vec<String>,
     keys: Option<nostr_sdk::prelude::Keys>,
-    api_file: PathBuf,
+    api_dir: PathBuf,
 ) {
     use nostr_sdk::prelude::*;
     let client = Client::default();
@@ -349,6 +349,8 @@ pub async fn run(
         client.connect().await;
     }
     let pubkey = keys.as_ref().and_then(|k| k.public_key().to_bech32().ok());
+    // The newest signed rate, for the snapshot
+    let mut last_event: Option<serde_json::Value> = None;
     // Let the first sync and pricing of `orders` run first
     tokio::time::sleep(Duration::from_secs(30)).await;
     loop {
@@ -359,21 +361,35 @@ pub async fn run(
                     let mut event_id = None;
                     if let Some(keys) = &keys {
                         match send(&client, keys, &rate, t).await {
-                            Ok(id) => event_id = Some(id),
+                            Ok(ev) => {
+                                event_id = Some(ev.id.to_hex());
+                                last_event = serde_json::from_str(&ev.as_json()).ok();
+                            }
                             Err(e) => tracing::warn!("publish: {e}"),
                         }
                     }
                     let text =
                         serde_json::to_string_pretty(&api(&rate, t, event_id, pubkey.clone())).expect("serializable");
-                    if let Err(e) = write_atomic(&api_file, &text) {
-                        tracing::warn!("publish: cannot write {}: {e}", api_file.display());
-                    }
+                    write(&api_dir.join("tasa.json"), &text);
                 }
                 None => tracing::info!("publish: no completed orders yet"),
             },
             Err(e) => tracing::warn!("publish: {e}"),
         }
+        match crate::snapshot::build(&pool, last_event.clone(), t).await {
+            Ok(snapshot) => write(
+                &api_dir.join("snapshot.json"),
+                &serde_json::to_string(&snapshot).expect("serializable"),
+            ),
+            Err(e) => tracing::warn!("publish: snapshot: {e}"),
+        }
         tokio::time::sleep(EVERY).await;
+    }
+}
+
+fn write(path: &Path, text: &str) {
+    if let Err(e) = write_atomic(path, text) {
+        tracing::warn!("publish: cannot write {}: {e}", path.display());
     }
 }
 
@@ -435,7 +451,7 @@ mod tests {
         let client = Client::default();
         client.add_relay(&url).await.unwrap();
         client.connect().and_wait(Duration::from_secs(5)).await;
-        let id = send(&client, &keys, &rate, t).await.unwrap();
+        let id = send(&client, &keys, &rate, t).await.unwrap().id.to_hex();
         let got = client
             .fetch_events(
                 Filter::new()
