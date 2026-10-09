@@ -31,7 +31,7 @@
     <span class="sub num" id="sTasaSub">&nbsp;</span>
   </div>
   <div class="stat" id="statYadio" title="Tasa de referencia de Yadio, la que usa Mostro para las órdenes a precio de mercado" data-i18n-title>
-    <span class="label" data-i18n>Referencia Yadio</span>
+    <span class="label" id="lblRef" data-i18n>Referencia Yadio</span>
     <span class="value num" id="sYadio">—</span>
     <span class="sub num" id="sYadioSub">&nbsp;</span>
   </div>
@@ -176,7 +176,7 @@
     <details>
       <summary>¿Qué mide la <span data-name="rate">Tasa K</span>?</summary>
       <p>El precio al que de verdad se cambia la moneda en operaciones con bitcoin. En <span class="fiat-name">CUP</span>/USD es una tasa implícita: los <span class="fiat-name">CUP</span> pagados por cada BTC divididos por el precio del BTC en dólares. No es el precio del dólar en efectivo ni en transferencias: si comprar o vender bitcoin con <span class="fiat-name">CUP</span> lleva un sobreprecio propio, también está en la <span data-name="rate">Tasa K</span>. <span class="fiat-name">CUP</span>/BTC y <span class="fiat-name">CUP</span>/sat no pasan por el dólar.</p>
-      <p>Casi todas las órdenes son a precio de mercado: el nodo calcula los sats con la referencia de Yadio y la prima que pone quien publica la orden, así que su precio es aproximadamente <code>Yadio ÷ (1 − prima)</code>. Por eso la <span data-name="rate">Tasa K</span> sigue a la referencia de Yadio, y lo que queda por encima o por debajo de ella («sobre Yadio» en la cabecera) son sobre todo las primas con las que se está operando. Las órdenes a precio fijo (🔒 en el libro de órdenes) no dependen de Yadio.</p>
+      <p>Casi todas las órdenes son a precio de mercado: el nodo calcula los sats con su precio de referencia (casi siempre el de Yadio) y la prima que pone quien publica la orden, así que su precio es aproximadamente <code>referencia ÷ (1 − prima)</code>. Por eso la <span data-name="rate">Tasa K</span> sigue a esa referencia, y lo que queda por encima o por debajo de ella («sobre Yadio» en la cabecera) son sobre todo las primas con las que se está operando. Las órdenes a precio fijo (🔒 en el libro de órdenes) no dependen de ella.</p>
       <p>Las compras y las ventas de BTC se cierran a precios distintos, porque cada lado pone su prima; la <span data-name="rate">Tasa K</span> las pondera todas juntas por su monto. Ahora, en las últimas 24 horas:</p>
       <ul class="rate-breakdown"></ul>
       <p class="muted">Es solo información: la <span data-name="rate">Tasa K</span> no cambia. Lo mismo se ve al pasar el ratón sobre ella. «Sin saber» son órdenes con prima 0 de las que no se vio la versión <code>pending</code>, la única que dice si eran a precio fijo o a mercado (con prima distinta de 0 son siempre a mercado: Mostro no admite prima con precio fijo).</p>
@@ -212,16 +212,17 @@
     </details>
     <details>
       <summary>¿Qué es el libro de órdenes?</summary>
-      <p>Las órdenes abiertas que aún nadie ha tomado. Las de precio de mercado se calculan como <code>Yadio ÷ (1 − prima)</code>, que es como Mostro calcula los sats; las marcadas con 🔒 tienen precio fijo. Si alguien compra por encima de lo que otro vende, el libro aparece como «cruzado».</p>
+      <p>Las órdenes abiertas que aún nadie ha tomado. Las de precio de mercado se calculan con los precios que publica su propio nodo, <code>referencia del nodo ÷ (1 − prima)</code>, que es como Mostro calcula los sats; si el nodo no publica los suyos, se estiman con la API de Yadio y llevan «≈», y si tampoco hay, aparecen sin precio («—»). Las marcadas con 🔒 tienen precio fijo. Si alguien compra por encima de lo que otro vende, el libro aparece como «cruzado».</p>
     </details>
     <details>
       <summary>¿Por qué algunos métodos de pago no cuentan por defecto?</summary>
       <p>Los métodos de cada moneda son los de la app de Mostro; lo que alguien escribe a mano y no está en esa lista se agrupa como «Otros». Quien publica este sitio decide cuáles no cuentan por defecto; aquí: <strong class="hidden-pms"></strong>. Suelen ocultarse los que se negocian a otra tasa en ese mercado; Pruebas son órdenes de prueba. Se pueden activar desde el menú «Método de pago» de la gráfica.</p>
     </details>
     <details>
-      <summary>¿Qué es «Ref. Yadio»?</summary>
+      <summary>¿Qué es la «Referencia Yadio»?</summary>
       <p>La tasa de referencia de Yadio para la moneda, que es la que usa Mostro para las órdenes a precio de mercado. Sirve para comparar con la <span data-name="rate">Tasa K</span>.</p>
-      <p>No se consulta a Yadio: cada pocos minutos el nodo publica en Nostr, firmados, los precios que está usando (evento <code>mostro-rates</code>, kind 30078), y la página los lee por la misma conexión que las órdenes. Así la referencia y los precios de mercado del libro de órdenes son exactamente los del nodo y se pueden verificar. Si el nodo no los publica o han caducado, la página los pide a la API de Yadio; al pasar el ratón sobre la referencia se ve de dónde salen.</p>
+      <p>Cada nodo elige de dónde saca sus precios: Yadio, o varias fuentes combinadas (CoinGecko, Blockchain.com, fuentes del mercado local…). Si el nodo usa algo más que Yadio, la cabecera dice «Referencia del nodo» y, al pasar el ratón, se ven sus fuentes.</p>
+      <p>No se consulta a Yadio: cada pocos minutos el nodo publica en Nostr, firmados, los precios que está usando (evento <code>mostro-rates</code>, kind 30078), y la página los lee por la misma conexión que las órdenes. Así la referencia y los precios de mercado del libro de órdenes son exactamente los del nodo y se pueden verificar. El nodo los sigue usando hasta 30 minutos aunque no pueda actualizarlos, y la página también. Si el nodo no los publica, la página los pide a la API de Yadio; al pasar el ratón sobre la referencia se ve de dónde salen.</p>
     </details>
     <details>
       <summary>¿Puedo ver mi propio nodo Mostro?</summary>
@@ -239,7 +240,7 @@
     <details>
       <summary>What does the <span data-name="rate">Tasa K</span> measure?</summary>
       <p>The price at which the currency is actually exchanged in bitcoin trades. In <span class="fiat-name">CUP</span>/USD it is an implied rate: the <span class="fiat-name">CUP</span> paid for each BTC divided by the price of BTC in dollars. It is not the price of cash dollars or transfers: if buying or selling bitcoin with <span class="fiat-name">CUP</span> carries a premium of its own, it is in the <span data-name="rate">Tasa K</span> too. <span class="fiat-name">CUP</span>/BTC and <span class="fiat-name">CUP</span>/sat don't go through the dollar.</p>
-      <p>Almost all orders are at market price: the node calculates the sats with the Yadio reference and the premium set by whoever publishes the order, so their price is roughly <code>Yadio ÷ (1 − premium)</code>. That is why the <span data-name="rate">Tasa K</span> follows the Yadio reference, and what lies above or below it («above Yadio» in the header) is mostly the premiums people are trading at. Fixed-price orders (🔒 in the order book) don't depend on Yadio.</p>
+      <p>Almost all orders are at market price: the node calculates the sats with its reference price (almost always Yadio's) and the premium set by whoever publishes the order, so their price is roughly <code>reference ÷ (1 − premium)</code>. That is why the <span data-name="rate">Tasa K</span> follows that reference, and what lies above or below it («above Yadio» in the header) is mostly the premiums people are trading at. Fixed-price orders (🔒 in the order book) don't depend on it.</p>
       <p>BTC buys and sells close at different prices, because each side sets its premium; the <span data-name="rate">Tasa K</span> weighs them all together by their amount. Right now, in the last 24 hours:</p>
       <ul class="rate-breakdown"></ul>
       <p class="muted">This is for information only: the <span data-name="rate">Tasa K</span> doesn't change. The same shows when hovering over it. «Unknown» are orders with premium 0 whose <code>pending</code> version wasn't seen, the only one that says whether they were at fixed or market price (with a premium other than 0 they are always at market: Mostro doesn't allow a premium with a fixed price).</p>
@@ -275,16 +276,17 @@
     </details>
     <details>
       <summary>What is the order book?</summary>
-      <p>Open orders nobody has taken yet. Market-price ones are calculated as <code>Yadio ÷ (1 − premium)</code>, which is how Mostro calculates the sats; those marked with 🔒 have a fixed price. If someone buys above what someone else sells, the book shows as «crossed».</p>
+      <p>Open orders nobody has taken yet. Market-price ones are calculated with the prices their own node publishes, <code>node reference ÷ (1 − premium)</code>, which is how Mostro calculates the sats; if the node doesn't publish its own, they are estimated with Yadio's API and marked «≈», and if there is none either, they show without a price («—»). Those marked with 🔒 have a fixed price. If someone buys above what someone else sells, the book shows as «crossed».</p>
     </details>
     <details>
       <summary>Why don't some payment methods count by default?</summary>
       <p>Each currency's methods are the ones in the Mostro app; anything typed by hand that isn't on that list is grouped as «Other». Whoever publishes this site decides which ones don't count by default; here: <strong class="hidden-pms"></strong>. Usually hidden are the ones that trade at a different rate in that market; Tests are test orders. They can be enabled from the chart's «Payment method» menu.</p>
     </details>
     <details>
-      <summary>What is «Yadio reference»?</summary>
+      <summary>What is the «Yadio reference»?</summary>
       <p>Yadio's reference rate for the currency, which Mostro uses for market-price orders. It is there to compare with the <span data-name="rate">Tasa K</span>.</p>
-      <p>Yadio isn't queried: every few minutes the node publishes on Nostr, signed, the prices it is using (<code>mostro-rates</code> event, kind 30078), and the page reads them over the same connection as the orders. So the reference and the market prices in the order book are exactly the node's and can be verified. If the node doesn't publish them or they have expired, the page asks Yadio's API; hovering over the reference shows where they come from.</p>
+      <p>Each node chooses where its prices come from: Yadio, or several sources combined (CoinGecko, Blockchain.com, local-market sources…). If the node uses more than Yadio, the header says «Node reference» and, when hovering, shows its sources.</p>
+      <p>Yadio isn't queried: every few minutes the node publishes on Nostr, signed, the prices it is using (<code>mostro-rates</code> event, kind 30078), and the page reads them over the same connection as the orders. So the reference and the market prices in the order book are exactly the node's and can be verified. The node keeps using them for up to 30 minutes when it can't update them, and so does the page. If the node doesn't publish them, the page asks Yadio's API; hovering over the reference shows where they come from.</p>
     </details>
     <details>
       <summary>Can I see my own Mostro node?</summary>

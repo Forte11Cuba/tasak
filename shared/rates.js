@@ -44,3 +44,22 @@ export function fiatPerUsd(rates, fiat) {
   const v = rates?.btc[fiat];
   return v ? v / rates.btc.USD : null;
 }
+
+// How long Mostro keeps using its last prices when it can't refresh them (max_price_staleness_seconds,
+// 30 min by default): the event expires sooner, but the node still prices market orders with them
+export const STALE_LIMIT = 1800;
+
+// Market price for the orders of a node: its own newest rates `own` while the node still uses them
+// (until they expire or STALE_LIMIT after publishing, whichever is later); otherwise `fallback`
+// (currency per BTC from Yadio's API, an estimate) or null.
+// Returns { fiatPerBtc, from: 'node' | 'api', expired, source } with `source` the node's providers.
+export function marketPrice(own, fiat, now, fallback) {
+  const v = own?.btc[fiat];
+  if (v && now < Math.max(own.expiresAt, own.ts + STALE_LIMIT)) {
+    return { fiatPerBtc: v, from: 'node', expired: now >= own.expiresAt, source: own.source };
+  }
+  return fallback ? { fiatPerBtc: fallback, from: 'api', expired: false, source: own?.source ?? null } : null;
+}
+
+// Whether a list of providers (the `source` tag, e.g. "coingecko,yadio") is Yadio alone
+export const isYadioOnly = source => source === 'yadio';

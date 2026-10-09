@@ -73,6 +73,8 @@ Any visitor can view another node without deploying anything, overriding `.env` 
 index.html?mostro=npub1…,npub1…&relays=wss://relay.mostro.network,wss://nos.lol&fiat=VES&lang=en
 ```
 
+If the URL changes the node and has no `fiat`, the `.env` currency doesn't apply: the page picks the most traded one on that node.
+
 ## Tasa K
 
 Volume-weighted price of the orders completed in the last 24 hours:
@@ -91,10 +93,20 @@ rate: currency paid per BTC divided by BTC/USD. It is not the price of cash doll
 buying or selling bitcoin with the currency carries a premium of its own, it is in the Tasa K too.
 Currency/BTC and currency/sat don't go through the dollar.
 
-Almost all orders are at market price: the node sets the sats from the Yadio reference and the order's
-premium, so their price is roughly `Yadio ÷ (1 − premium)`. The Tasa K therefore follows the Yadio
+Almost all orders are at market price: the node sets the sats from its reference price and the order's
+premium, so their price is roughly `reference ÷ (1 − premium)`. The Tasa K therefore follows that
 reference, and its distance from it («above Yadio» in the header) is mostly the premiums people trade at.
-Fixed-price orders don't depend on Yadio.
+Fixed-price orders don't depend on it.
+
+### The node's reference
+
+Since Mostro 0.19 each node chooses its price sources (Yadio, CoinGecko, Blockchain.com, currency-api,
+local-market sources or other nodes over Nostr), combines them and publishes the result, signed, in its
+`mostro-rates` event with the sources in the `source` tag; it prices market orders with that same value.
+The header says «Yadio reference» when the node uses Yadio alone and «Node reference» otherwise, with the
+sources on hover. In the order book each market order is priced with its own node's prices, which the node
+keeps using for up to 30 minutes when it can't refresh them; without them, the price is estimated with
+Yadio's API and marked «≈», and with neither the order is shown without a price («—»).
 
 BTC buys and sells close at different prices, since each side sets its premium; the Tasa K weighs them all
 together. For information only, without changing the rate, hovering over the Tasa K and the FAQ show the
@@ -126,14 +138,14 @@ External services it uses and what happens if they are blocked:
 | Service | Used for | If blocked |
 |---|---|---|
 | Nostr relays | the orders, and the current prices the node publishes (`mostro-rates`: BTC/USD, the currency's USD reference, market-price order book) | no data without them (one responding is enough) |
-| Yadio | only if the node doesn't publish valid `mostro-rates`: the same current prices | currency/USD can't be calculated; currency/BTC and currency/sat keep working |
+| Yadio | only if a node doesn't publish valid `mostro-rates`: an estimate of the current prices | currency/USD can't be calculated; currency/BTC and currency/sat keep working |
 | Coinbase | hourly historical BTC/USD, for currency/USD | it's calculated with the current BTC/USD (the node's or Yadio's) and marked as approximate |
 
 ## Archiver
 
 Relays keep orders for about 15 days and only their latest version: once an order is completed, the
 `pending` version (market or fixed price) and the `in-progress` one (when it was taken) are gone. The
-node's `mostro-rates` (BTC price in every currency, from Yadio) expire after 10 minutes. To keep a full
+node's `mostro-rates` (BTC price in every currency, from its price sources) expire after 10 minutes. To keep a full
 history, `indexer/archiver.mjs` subscribes to the `.env` relays and stores everything the node
 publishes, verified (signature and author), in daily files:
 

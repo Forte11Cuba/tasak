@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { newerVersion, currentOrder, mostUsedFiat } from '../orders.js';
+import { newerVersion, currentOrder, mostUsedFiat, getBook } from '../orders.js';
 import { expected, cases, loadOrders, viewOf } from './data.js';
 
 test('chosen version and fields of every order', () => {
@@ -44,4 +44,13 @@ test('order book per currency and unit', () => {
       assert.deepEqual({ asks: book.asks.map(row), bids: book.bids.map(row) }, u.book, `${fiat}/${unit}`);
     }
   }
+});
+
+test('order book with the market price of each node (cases.json)', () => {
+  const { note, market, orders, expected: want } = cases.bookPerNode;
+  const os = orders.map(({ id, ...o }) => ({ ...o, key: id, ev: { id }, status: 'pending', fiat: 'CUP', expiresAt: 0, pmKeys: ['X'] }));
+  const book = getBook(os, { fiat: 'CUP', nodes: new Set(['n1', 'n2', 'n3']), pmSel: new Set(['X']) },
+    { now: 100, market: node => market[node], toPrice: p => p });
+  const row = o => [o.key, o.price, o.market?.from ?? null];
+  assert.deepEqual({ asks: book.asks.map(row), bids: book.bids.map(row) }, want, note);
 });

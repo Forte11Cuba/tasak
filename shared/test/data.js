@@ -55,7 +55,7 @@ export function viewOf(orders, fiat, unit) {
   const trades = getTrades(orders, filters, (fiatPerBtc, ts) => toUnit(fiatPerBtc, unit, btcAt(ts)));
   const ref = yadio.USD?.[fiat] ?? (fiat === 'USD' ? 1 : null);
   const book = getBook(orders, filters, {
-    now, market: ref && yadio.BTC ? ref * yadio.BTC : null, toPrice: p => toUnit(p, unit, yadio.BTC),
+    now, market: () => ref && yadio.BTC ? { fiatPerBtc: ref * yadio.BTC, from: 'api' } : null, toPrice: p => toUnit(p, unit, yadio.BTC),
   });
   return { pmSel, trades, book, approx };
 }

@@ -3,7 +3,7 @@
 import { getTrades as tradesOf, getBook as bookOf } from '../shared/orders.js';
 import { state, store, saveView } from './state.js';
 import { createRelayPool } from './nostr-client.js';
-import { ensurePrices, loadBtcHistory, btcSpot, yadioFiatPerUsd, unitPrice } from './prices.js';
+import { ensurePrices, loadBtcHistory, marketFor, unitPrice } from './prices.js';
 import { chartC, view, renderChart, setEmpty, applyChartTheme } from './chart.js';
 import { setStatus, renderStats, renderTrades, renderBook, renderFilters, updatePair } from './panels.js';
 import { openEvent } from './event-dialog.js';
@@ -46,10 +46,10 @@ function getTrades() {
   return tradesOf([...state.orders.values()], filters(), unitPrice);
 }
 
+// Market orders, each with its node's market price
 function getBook() {
-  const ref = yadioFiatPerUsd(), btc = btcSpot();
   return bookOf([...state.orders.values()], filters(), {
-    now: Date.now() / 1000, market: ref && btc ? ref * btc : null, toPrice: p => unitPrice(p),
+    now: Date.now() / 1000, market: marketFor, toPrice: p => unitPrice(p),
   });
 }
 

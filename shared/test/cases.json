@@ -170,6 +170,38 @@
     ],
     "now": [[1200, "a"], [1400, "c"], [1600, "c"], [1900, null]]
    }
+  ],
+  "market": [
+   { "note": "the node's own rates while valid", "own": { "ts": 1000, "expiresAt": 1600, "source": "yadio", "btc": { "USD": 100000, "CUP": 80000000 } }, "fiat": "CUP", "now": 1200, "fallback": 70000000,
+    "expected": { "fiatPerBtc": 80000000, "from": "node", "expired": false, "source": "yadio" } },
+   { "note": "expired, but the node still uses them until 30 min after publishing", "own": { "ts": 1000, "expiresAt": 1600, "source": "yadio", "btc": { "USD": 100000, "CUP": 80000000 } }, "fiat": "CUP", "now": 2799, "fallback": 70000000,
+    "expected": { "fiatPerBtc": 80000000, "from": "node", "expired": true, "source": "yadio" } },
+   { "note": "30 min after publishing: the fallback (Yadio's API), with the node's providers", "own": { "ts": 1000, "expiresAt": 1600, "source": "yadio", "btc": { "USD": 100000, "CUP": 80000000 } }, "fiat": "CUP", "now": 2800, "fallback": 70000000,
+    "expected": { "fiatPerBtc": 70000000, "from": "api", "expired": false, "source": "yadio" } },
+   { "note": "no usable rates and no fallback", "own": { "ts": 1000, "expiresAt": 1600, "source": "yadio", "btc": { "USD": 100000, "CUP": 80000000 } }, "fiat": "CUP", "now": 2800, "fallback": null, "expected": null },
+   { "note": "the node doesn't publish that currency", "own": { "ts": 1000, "expiresAt": 1600, "source": "yadio", "btc": { "USD": 100000, "CUP": 80000000 } }, "fiat": "EUR", "now": 1200, "fallback": 90000000,
+    "expected": { "fiatPerBtc": 90000000, "from": "api", "expired": false, "source": "yadio" } },
+   { "note": "the node publishes no rates", "own": null, "fiat": "CUP", "now": 1200, "fallback": 70000000,
+    "expected": { "fiatPerBtc": 70000000, "from": "api", "expired": false, "source": null } },
+   { "note": "an expiration later than 30 min (long update interval) keeps them valid until it", "own": { "ts": 1000, "expiresAt": 4600, "source": "coingecko,yadio", "btc": { "USD": 100000, "CUP": 90000000 } }, "fiat": "CUP", "now": 4000, "fallback": 70000000,
+    "expected": { "fiatPerBtc": 90000000, "from": "node", "expired": false, "source": "coingecko,yadio" } }
   ]
+ },
+ "bookPerNode": {
+  "note": "each market order with its node's price (n1 and n2), without price (n3) after the priced ones; fixed price doesn't need the market; same price: newest first",
+  "market": { "n1": { "fiatPerBtc": 100000000, "from": "node" }, "n2": { "fiatPerBtc": 200000000, "from": "api" }, "n3": null },
+  "orders": [
+   { "id": "s1", "node": "n1", "side": "sell", "fa": [1000], "amt": 0, "premium": 0, "ts": 10 },
+   { "id": "s2", "node": "n2", "side": "sell", "fa": [1000], "amt": 0, "premium": 0, "ts": 10 },
+   { "id": "s3", "node": "n3", "side": "sell", "fa": [1000], "amt": 0, "premium": 5, "ts": 10 },
+   { "id": "s4", "node": "n3", "side": "sell", "fa": [150000], "amt": 100000, "premium": 0, "ts": 10 },
+   { "id": "b1", "node": "n1", "side": "buy", "fa": [1000], "amt": 0, "premium": 50, "ts": 10 },
+   { "id": "b2", "node": "n3", "side": "buy", "fa": [1000], "amt": 0, "premium": 0, "ts": 10 },
+   { "id": "b3", "node": "n2", "side": "buy", "fa": [1000], "amt": 0, "premium": 0, "ts": 20 }
+  ],
+  "expected": {
+   "asks": [["s1", 100000000, "node"], ["s4", 150000000, null], ["s2", 200000000, "api"], ["s3", null, null]],
+   "bids": [["b3", 200000000, "api"], ["b1", 200000000, "node"], ["b2", null, null]]
+  }
  }
 }

@@ -8,6 +8,7 @@ import { WINDOW, tasaK, rateBreakdown } from '../shared/rate.js';
 import { state, HIDDEN_PM, nodeName } from './state.js';
 import { fmtPrice, fmtPct } from './format.js';
 import { btcSpot, yadioFiatPerUsd, unitName, currentPrices } from './prices.js';
+import { isYadioOnly } from '../shared/rates.js';
 
 export function setStatus(error) {
   const box = document.getElementById('statusBox');
@@ -72,12 +73,20 @@ export function renderStats(trades) {
   const ref = yadioFiatPerUsd();
   const refVal = ref == null ? null : state.unit === 'usd' ? ref : ref * (btcSpot() || NaN) / (state.unit === 'sat' ? 1e8 : 1);
   document.getElementById('sYadio').innerHTML = refVal == null || isNaN(refVal) ? '—' : fmtPrice(refVal) + unit;
+  // The reference is named after the node's provider when it uses one; with several, it is «the
+  // node's» (its `source` tag joins the providers of every currency, not of this one)
+  const p = currentPrices();
+  const sources = p?.from === 'node' && p.rates.source ? p.rates.source.split(',') : ['yadio'];
+  const name = sources.length === 1 ? providerName(sources[0]) : null;
+  document.getElementById('lblRef').textContent = name ? t('Referencia {s}', { s: name }) : t('Referencia del nodo');
   // How far the Tasa K is from the reference
   const diff = tasa != null && refVal ? (tasa / refVal - 1) * 100 : null;
+  const above = name ? t(diff >= 0 ? 'sobre {s}' : 'bajo {s}', { s: name }) : t(diff >= 0 ? 'sobre la referencia' : 'bajo la referencia');
   document.getElementById('sYadioSub').innerHTML = diff == null ? '&nbsp;'
-    : `${esc(CONFIG.rateName)} <span class="${diff >= 0 ? 'up' : 'down'}">${fmtPct(diff, 1)}</span> ${t(diff >= 0 ? 'sobre Yadio' : 'bajo Yadio')}`;
+    : `${esc(CONFIG.rateName)} <span class="${diff >= 0 ? 'up' : 'down'}">${fmtPct(diff, 1)}</span> ${esc(above)}`;
   document.getElementById('statYadio').title = [
-    t('Tasa de referencia de Yadio, la que usa Mostro para las órdenes a precio de mercado'), priceSource()].join('\n');
+    t(name === 'Yadio' ? 'Tasa de referencia de Yadio, la que usa Mostro para las órdenes a precio de mercado'
+      : 'Precio de referencia del nodo, el que usa para las órdenes a precio de mercado'), priceSource()].join('\n');
   return tasa;
 }
 
@@ -103,6 +112,10 @@ function renderBreakdown(trades, now) {
   for (const el of document.querySelectorAll('.rate-breakdown')) el.innerHTML = html;
 }
 
+// Names of Mostro's price providers (the ids of its `source` tag); others are shown as they come
+const PROVIDERS = { yadio: 'Yadio', coingecko: 'CoinGecko', blockchain: 'Blockchain.com', currency_api: 'currency-api', nostr: 'Nostr' };
+const providerName = id => PROVIDERS[id] || id;
+
 // Where the current prices come from, for the tooltip of the reference
 function priceSource() {
   const p = currentPrices();
@@ -111,7 +124,9 @@ function priceSource() {
   const r = p.rates;
   const min = Math.max(0, Math.round((Date.now() / 1000 - r.ts) / 60));
   return t('Publicada por el nodo {node} hace {m} min en un evento firmado (mostro-rates)', { node: nodeName(r.node), m: min })
-    + (r.source && r.source !== 'yadio' ? ` · ${t('fuente: {s}', { s: r.source })}` : '');
+    + (!r.source || r.source === 'yadio' ? ''
+      : '\n' + t(r.source.includes(',') ? 'Fuentes del nodo (de todas sus monedas): {s}' : 'Fuente: {s}',
+        { s: r.source.split(',').map(providerName).join(', ') }));
 }
 
 function pmCell(o) {
@@ -157,23 +172,39 @@ export function renderTrades(trades) {
   for (const o of state.orders.values()) o.fresh = false;
 }
 
+// Where the price of an order in the book comes from (its tooltip)
+function bookPriceTitle(o) {
+  if (o.fixed) return t('Precio fijo');
+  const m = o.market;
+  if (!m) return t('Sin precio: el nodo no publica el suyo y la API de Yadio no respondió');
+  const node = CONFIG.mostros.length > 1 ? ` · ${nodeName(o.node)}` : '';
+  if (m.from === 'api') {
+    return t('Precio estimado con Yadio + prima: el nodo no publica el suyo') + node
+      + (m.source && !isYadioOnly(m.source) ? '\n' + t('El nodo usa: {s}', { s: m.source.split(',').map(providerName).join(', ') }) : '');
+  }
+  return t('Precio de mercado del nodo + prima') + node
+    + (m.expired ? '\n' + t('Precios del nodo sin actualizar: los sigue usando hasta 30 min') : '');
+}
+
 export function renderBook(tasa, { asks, bids }) {
   const max = Math.max(1, ...asks.map(o => o.size), ...bids.map(o => o.size));
   const row = (o, cls) => `
     <tr class="${cls}" data-d="${(o.size / max * 100).toFixed(1)}" data-key="${esc(o.key)}" title="${t('Ver el evento Nostr de esta orden abierta')}">
-      <td class="num" title="${t(o.fixed ? 'Precio fijo' : 'Precio de mercado + prima')}">${fmtPrice(o.price)}${o.fixed ? ' 🔒' : ''}</td>
+      <td class="num" title="${esc(bookPriceTitle(o))}">${o.market?.from === 'api' ? '≈ ' : ''}${fmtPrice(o.price)}${o.fixed ? ' 🔒' : ''}</td>
       <td class="num">${o.fa.length > 1 ? fmtInt(o.fa[0]) + '–' + fmtInt(o.fa[1]) : fmtInt(o.fa[0])}</td>
       <td class="num muted">${o.fixed ? '—' : (o.premium > 0 ? '+' : '') + o.premium + '%'}</td>
       <td>${pmCell(o)}</td>
     </tr>`;
   const none = txt => `<tr class="none"><td colspan="4">${txt}</td></tr>`;
 
+  // Best prices: the orders without price go last
+  const bestAsk = asks.find(o => o.price != null), bestBid = bids.find(o => o.price != null);
   let mid = '';
-  if (asks.length && bids.length) {
-    const spread = asks[0].price - bids[0].price;
+  if (bestAsk && bestBid) {
+    const spread = bestAsk.price - bestBid.price;
     mid = spread < 0
       ? `${t('Libro cruzado')} <span class="muted">${t('(hay compradores por encima de vendedores)')}</span>`
-      : `${t('Diferencial')} <strong class="num">${fmtPrice(spread)}</strong> <span class="muted num">(${(spread / asks[0].price * 100).toFixed(1)}%)</span>`;
+      : `${t('Diferencial')} <strong class="num">${fmtPrice(spread)}</strong> <span class="muted num">(${(spread / bestAsk.price * 100).toFixed(1)}%)</span>`;
   }
   if (tasa != null) mid += `${mid ? ' · ' : ''}${esc(CONFIG.rateName)} <strong class="num">${fmtPrice(tasa)}</strong>`;
 
