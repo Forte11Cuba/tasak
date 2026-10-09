@@ -39,6 +39,21 @@ To publish, run `node build.mjs` and serve `web/` with any static web server (ng
 hosting. On GitHub Pages, publish `web/` with a GitHub Actions workflow that runs `node build.mjs` first:
 Pages can only publish the root or `/docs` of a branch, and `web/config.js` isn't in the repository.
 
+### tasaK server (optional)
+
+Instead of `build.mjs` and a separate static server, `web/` can be served by the tasaK server (`server/`,
+in Rust): a single program that reads the same `.env`, generates `web/config.js` exactly as `build.mjs`
+does and serves `web/`. It only serves files (GET and HEAD, nothing that receives data) and listens on
+`127.0.0.1:8765` by default (`LISTEN`): to publish, put a web server with HTTPS (nginx, Caddy…) in front
+of it. Later it will also archive the node's events and publish the Tasa K; the site keeps working
+without it, as a static site.
+
+```sh
+cargo build --release --manifest-path server/Cargo.toml   # needs Rust (cargo)
+server/target/release/tasak         # from the repository folder (or --root DIR): generates and serves
+server/target/release/tasak build   # only generates web/config.js and web/shared/, like node build.mjs
+```
+
 `.env` variables:
 
 | Variable | What it is |
@@ -57,6 +72,7 @@ Pages can only publish the root or `/docs` of a branch, and `web/config.js` isn'
 | `COMMUNITY`, `COMMUNITY_URL` | Community running the node (optional) |
 | `SOCIAL_LINKS` | Links to its social media, comma separated (optional; Telegram, X, YouTube, GitHub and Nostr are recognised automatically) |
 | `ARCHIVE_DIR` | Folder for the archiver's data (optional; default `indexer/data/`, see [Archiver](#archiver)) |
+| `LISTEN` | Address the [tasaK server](#tasak-server-optional) listens on (optional; default `127.0.0.1:8765`) |
 
 Each currency's payment methods come from the Mostro app's list; anything not on it is grouped as
 «Otros» (other). In `HIDDEN_PAYMENT_METHODS` add the ones that trade at a different rate in your market
@@ -190,8 +206,9 @@ signed Nostr event is also archived.
 | `web/common.js`, `web/common.css` | configuration, formatting, colours and node card, shared by both pages |
 | `web/vendor/` | copied libraries (no CDN) and the Mostro app's payment methods per currency (`mostro-payment-methods.js`) |
 | `shared/` | pure logic of the rate (ES modules: payment methods, orders, the node's prices (`mostro-rates`), time zones and periods, units, Tasa K and candles), used by the pages (`build.mjs` copies it to `web/shared/`) |
-| `shared/test/` | tests of `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), fixed real data (`fixtures/`), the reference values the code must reproduce (`expected.json`) and hand-written cases (`cases.json`) |
+| `shared/test/` | tests of `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), fixed real data (`fixtures/`), the reference values the code must reproduce (`expected.json`), hand-written cases (`cases.json`) and the `web/config.js` each `.env` must give (`config-cases.json`) |
 | `build.mjs` | reads `.env`, generates `web/config.js` and copies `shared/` into `web/shared/`; with `--serve`, serves `web/` locally |
+| `server/` | the tasaK server in Rust: generates `web/config.js` and serves `web/` (`cargo test` checks it with the same `config-cases.json`) |
 | `indexer/` | the event archiver, its systemd service and the Mostro database exporter |
 | `tools/` | development checks in headless Chrome (Node, no dependencies); `node tools/reference.mjs` checks that `web/` computes the values in `shared/test/expected.json` from fixed data |
 
