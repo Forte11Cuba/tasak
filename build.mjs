@@ -4,106 +4,124 @@
 import { existsSync, readFileSync, writeFileSync, readdirSync, mkdirSync, rmSync, copyFileSync, statSync } from 'node:fs';
 import { createServer } from 'node:http';
 import { extname, join, normalize, sep } from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const root = new URL('.', import.meta.url);
 const web = new URL('web/', root);
 const envFile = new URL('.env', root);
 
-const fileEnv = {};
-if (existsSync(envFile)) {
-  for (const line of readFileSync(envFile, 'utf8').split(/\r?\n/)) {
+// The .env format: KEY=value lines, # comments, optional quotes around the value; later lines win.
+// The Rust server (server/src/config.rs) reads it the same way: both pass shared/test/config-cases.json.
+export function parseEnv(text) {
+  const env = {};
+  for (const line of text.split(/\r?\n/)) {
     const m = line.match(/^\s*([A-Za-z0-9_]+)\s*=\s*(.*?)\s*$/);
     if (!m || line.trim().startsWith('#')) continue;
     let v = m[2];
     if (/^(["']).*\1$/.test(v)) v = v.slice(1, -1);
-    fileEnv[m[1]] = v;
+    env[m[1]] = v;
   }
-} else {
-  console.warn('Warning: no .env file; using environment variables only (see .env.example).');
+  return env;
 }
 
-// Process environment variables take precedence (useful in CI)
-const get = k => process.env[k] ?? fileEnv[k];
-const list = s => (s || '').split(/[\s,]+/).filter(Boolean);
+// get(key) gives a variable's value or undefined; webDir is the URL of web/ (to check the logos).
+// Returns { config, errors }: the config is only valid if errors is empty.
+export function buildConfig(get, webDir) {
+  const list = s => (s || '').split(/[\s,]+/).filter(Boolean);
+  const config = {
+    siteName: get('SITE_NAME') || 'tasaK',
+    rateName: get('RATE_NAME') || 'Tasa K',
+    logo: get('LOGO') || '',
+    logoLight: get('LOGO_LIGHT') || '',
+    // Default theme (light | dark); empty = the system's
+    theme: ['light', 'dark'].includes(get('THEME')) ? get('THEME') : '',
+    // Default language (es | en); empty = the browser's
+    language: ['es', 'en'].includes(get('LANGUAGE')) ? get('LANGUAGE') : '',
+    mostros: list(get('MOSTRO_PUBKEYS')),
+    relays: list(get('RELAYS')),
+    // Empty: the most traded currency on the node and the visitor's browser time zone
+    fiat: (get('FIAT') || '').toUpperCase(),
+    timeZone: get('TIMEZONE') || '',
+    community: { name: get('COMMUNITY') || '', url: get('COMMUNITY_URL') || '' },
+    socialLinks: list(get('SOCIAL_LINKS')),
+    // Comma separated only: names may contain spaces («Saldo móvil»)
+    hiddenPaymentMethods: get('HIDDEN_PAYMENT_METHODS') == null ? ['Pruebas', 'Otros']
+      : get('HIDDEN_PAYMENT_METHODS').split(',').map(s => s.trim()).filter(Boolean),
+  };
 
-const config = {
-  siteName: get('SITE_NAME') || 'tasaK',
-  rateName: get('RATE_NAME') || 'Tasa K',
-  logo: get('LOGO') || '',
-  logoLight: get('LOGO_LIGHT') || '',
-  // Default theme (light | dark); empty = the system's
-  theme: ['light', 'dark'].includes(get('THEME')) ? get('THEME') : '',
-  // Default language (es | en); empty = the browser's
-  language: ['es', 'en'].includes(get('LANGUAGE')) ? get('LANGUAGE') : '',
-  mostros: list(get('MOSTRO_PUBKEYS')),
-  relays: list(get('RELAYS')),
-  // Empty: the most traded currency on the node and the visitor's browser time zone
-  fiat: (get('FIAT') || '').toUpperCase(),
-  timeZone: get('TIMEZONE') || '',
-  community: { name: get('COMMUNITY') || '', url: get('COMMUNITY_URL') || '' },
-  socialLinks: list(get('SOCIAL_LINKS')),
-  // Comma separated only: names may contain spaces («Saldo móvil»)
-  hiddenPaymentMethods: get('HIDDEN_PAYMENT_METHODS') == null ? ['Pruebas', 'Otros']
-    : get('HIDDEN_PAYMENT_METHODS').split(',').map(s => s.trim()).filter(Boolean),
-};
-
-const errors = [];
-if (!config.mostros.length) errors.push('MOSTRO_PUBKEYS is empty');
-for (const k of config.mostros) {
-  if (!/^([0-9a-f]{64}|npub1[02-9ac-hj-np-z]{58})$/i.test(k)) errors.push(`invalid pubkey: ${k}`);
-}
-if (!config.relays.length) errors.push('RELAYS is empty');
-for (const r of config.relays) {
-  // Encrypted only (wss://); ws:// just for a local test relay
-  if (!/^wss:\/\/\S+$/i.test(r) && !/^ws:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/\S*)?$/i.test(r)) {
-    errors.push(`invalid relay (must start with wss://): ${r}`);
+  const errors = [];
+  if (!config.mostros.length) errors.push('MOSTRO_PUBKEYS is empty');
+  for (const k of config.mostros) {
+    if (!/^([0-9a-f]{64}|npub1[02-9ac-hj-np-z]{58})$/i.test(k)) errors.push(`invalid pubkey: ${k}`);
   }
-}
-for (const u of [config.community.url, ...config.socialLinks].filter(Boolean)) {
-  if (!/^https:\/\/\S+$/i.test(u)) errors.push(`invalid link (must start with https://): ${u}`);
-}
-if (config.timeZone) {
-  try { new Intl.DateTimeFormat('en', { timeZone: config.timeZone }); }
-  catch { errors.push(`invalid TIMEZONE: ${config.timeZone}`); }
-}
-for (const [k, v] of [['LOGO', config.logo], ['LOGO_LIGHT', config.logoLight]].filter(([, v]) => v)) {
-  if (!/^(https:\/\/\S+|[\w./-]+\.(svg|png|jpe?g|webp))$/i.test(v)) {
-    errors.push(`invalid ${k} (.svg/.png/.jpg/.webp file or https link): ${v}`);
-  } else if (!v.startsWith('https://') && !existsSync(new URL(v, web))) {
-    errors.push(`${k} file not found in web/: ${v}`);
+  if (!config.relays.length) errors.push('RELAYS is empty');
+  for (const r of config.relays) {
+    // Encrypted only (wss://); ws:// just for a local test relay
+    if (!/^wss:\/\/\S+$/i.test(r) && !/^ws:\/\/(localhost|127\.0\.0\.1)(:\d+)?(\/\S*)?$/i.test(r)) {
+      errors.push(`invalid relay (must start with wss://): ${r}`);
+    }
   }
+  for (const u of [config.community.url, ...config.socialLinks].filter(Boolean)) {
+    if (!/^https:\/\/\S+$/i.test(u)) errors.push(`invalid link (must start with https://): ${u}`);
+  }
+  if (config.timeZone) {
+    try { new Intl.DateTimeFormat('en', { timeZone: config.timeZone }); }
+    catch { errors.push(`invalid TIMEZONE: ${config.timeZone}`); }
+  }
+  for (const [k, v] of [['LOGO', config.logo], ['LOGO_LIGHT', config.logoLight]].filter(([, v]) => v)) {
+    if (!/^(https:\/\/\S+|[\w./-]+\.(svg|png|jpe?g|webp))$/i.test(v)) {
+      errors.push(`invalid ${k} (.svg/.png/.jpg/.webp file or https link): ${v}`);
+    } else if (!/^https:\/\//i.test(v) && !existsSync(new URL(v, webDir))) {
+      errors.push(`${k} file not found in web/: ${v}`);
+    }
+  }
+  return { config, errors };
 }
-if (errors.length) {
-  console.error('Configuration error:\n  ' + errors.join('\n  '));
-  process.exit(1);
-}
 
-writeFileSync(new URL('config.js', web),
-  `// Generated by build.mjs from .env. Do not edit by hand.\nwindow.TASAK_CONFIG = ${JSON.stringify(config, null, 2)};\n`);
+export const renderConfig = config =>
+  `// Generated from .env by build.mjs or the tasak server. Do not edit by hand.\n`
+  + `window.TASAK_CONFIG = ${JSON.stringify(config, null, 2)};\n`;
 
-// The pure logic of the rate (shared/*.js, without its tests), as ES modules for the pages
-const sharedSrc = new URL('shared/', root);
-const sharedDst = new URL('shared/', web);
-rmSync(sharedDst, { recursive: true, force: true });
-mkdirSync(sharedDst);
-const modules = readdirSync(sharedSrc).filter(f => f.endsWith('.js'));
-for (const f of modules) copyFileSync(new URL(f, sharedSrc), new URL(f, sharedDst));
+// Only when run (node build.mjs), not when imported by the tests
+if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) main();
 
-console.log(`web/config.js generated: ${config.mostros.length} node(s), ${config.relays.length} relay(s), `
-  + `currency ${config.fiat || 'auto'}; ${modules.length} modules copied to web/shared/`);
+function main() {
+  let fileEnv = {};
+  if (existsSync(envFile)) fileEnv = parseEnv(readFileSync(envFile, 'utf8'));
+  else console.warn('Warning: no .env file; using environment variables only (see .env.example).');
 
-// The pages use ES modules, which browsers don't load from file://: they need a web server
-const args = process.argv.slice(2);
-const portArg = args.indexOf('--port');
-const port = portArg >= 0 ? Number(args[portArg + 1]) : 8765;
-if (!args.includes('--serve')) {
-  console.log('To see it: node build.mjs --serve  ->  http://localhost:8765/');
-} else if (!Number.isInteger(port) || port < 1 || port > 65535) {
-  console.error(`Invalid port: ${args[portArg + 1]}`);
-  process.exit(1);
-} else {
-  serve(port);
+  // Process environment variables take precedence (useful in CI)
+  const { config, errors } = buildConfig(k => process.env[k] ?? fileEnv[k], web);
+  if (errors.length) {
+    console.error('Configuration error:\n  ' + errors.join('\n  '));
+    process.exit(1);
+  }
+
+  writeFileSync(new URL('config.js', web), renderConfig(config));
+
+  // The pure logic of the rate (shared/*.js, without its tests), as ES modules for the pages
+  const sharedSrc = new URL('shared/', root);
+  const sharedDst = new URL('shared/', web);
+  rmSync(sharedDst, { recursive: true, force: true });
+  mkdirSync(sharedDst);
+  const modules = readdirSync(sharedSrc).filter(f => f.endsWith('.js'));
+  for (const f of modules) copyFileSync(new URL(f, sharedSrc), new URL(f, sharedDst));
+
+  console.log(`web/config.js generated: ${config.mostros.length} node(s), ${config.relays.length} relay(s), `
+    + `currency ${config.fiat || 'auto'}; ${modules.length} modules copied to web/shared/`);
+
+  // The pages use ES modules, which browsers don't load from file://: they need a web server
+  const args = process.argv.slice(2);
+  const portArg = args.indexOf('--port');
+  const port = portArg >= 0 ? Number(args[portArg + 1]) : 8765;
+  if (!args.includes('--serve')) {
+    console.log('To see it: node build.mjs --serve  ->  http://localhost:8765/');
+  } else if (!Number.isInteger(port) || port < 1 || port > 65535) {
+    console.error(`Invalid port: ${args[portArg + 1]}`);
+    process.exit(1);
+  } else {
+    serve(port);
+  }
 }
 
 // Minimal static server for trying the site: only this machine (127.0.0.1), only files inside web/,

@@ -1,0 +1,22 @@
+[package]
+name = "tasak"
+version = "0.1.0"
+edition = "2024"
+license = "MIT"
+description = "tasaK server: generates web/config.js from .env and serves web/"
+repository = "https://github.com/Forte11Cuba/tasak"
+publish = false
+
+# Minimal dependencies; exact versions in Cargo.lock
+[dependencies]
+axum = { version = "0.8.9", default-features = false, features = ["http1", "tokio"] }
+chrono-tz = { version = "0.10.4", features = ["case-insensitive"] }
+serde = { version = "1.0.229", features = ["derive"] }
+serde_json = "1.0.151"
+tokio = { version = "1.53.2", features = ["rt-multi-thread", "macros", "net", "signal"] }
+tower-http = { version = "0.7.1", features = ["fs"] }
+tracing = "0.1.44"
+tracing-subscriber = { version = "0.3.23", default-features = false, features = ["fmt", "std", "ansi"] }
+
+[profile.release]
+strip = true

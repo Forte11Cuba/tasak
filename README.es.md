@@ -40,6 +40,21 @@ probarla en tu máquina (escucha en 127.0.0.1 y no usa caché); vuelve a ejecuta
 que ejecute antes `node build.mjs`: Pages solo publica la raíz o `/docs` de una rama, y `web/config.js`
 no está en el repositorio.
 
+### Servidor de tasaK (opcional)
+
+En vez de `build.mjs` y un servidor estático aparte, `web/` puede servirla el servidor de tasaK (`server/`,
+en Rust): un solo programa que lee el mismo `.env`, genera `web/config.js` exactamente igual que
+`build.mjs` y sirve `web/`. Solo sirve archivos (GET y HEAD, nada que reciba datos) y escucha por defecto
+en `127.0.0.1:8765` (`LISTEN`): para publicarla, pon delante un servidor web con HTTPS (nginx, Caddy…).
+Más adelante también archivará los eventos del nodo y publicará la Tasa K; el sitio sigue funcionando
+sin él, como sitio estático.
+
+```sh
+cargo build --release --manifest-path server/Cargo.toml   # necesita Rust (cargo)
+server/target/release/tasak         # desde la carpeta del repositorio (o --root CARPETA): genera y sirve
+server/target/release/tasak build   # solo genera web/config.js y web/shared/, como node build.mjs
+```
+
 Variables de `.env` (en inglés, para que sirvan a cualquier operador de nodo):
 
 | Variable | Qué es |
@@ -58,6 +73,7 @@ Variables de `.env` (en inglés, para que sirvan a cualquier operador de nodo):
 | `COMMUNITY`, `COMMUNITY_URL` | Comunidad que opera el nodo (opcional) |
 | `SOCIAL_LINKS` | Enlaces a sus redes, separados por coma (opcional; Telegram, X, YouTube, GitHub y Nostr se reconocen solos) |
 | `ARCHIVE_DIR` | Carpeta de los datos del archivador (opcional; por defecto `indexer/data/`, ver [Archivador](#archivador)) |
+| `LISTEN` | Dirección en la que escucha el [servidor de tasaK](#servidor-de-tasak-opcional) (opcional; por defecto `127.0.0.1:8765`) |
 
 Los métodos de pago de cada moneda salen de la lista de la app de Mostro; lo que no está en ella se
 agrupa como «Otros». En `HIDDEN_PAYMENT_METHODS` conviene añadir los que en tu mercado se negocian a
@@ -186,8 +202,9 @@ como confirmada cuando su evento firmado de Nostr también está archivado.
 | `web/common.js`, `web/common.css` | configuración, formato, colores y tarjeta del nodo, compartidos por las dos páginas |
 | `web/vendor/` | librerías copiadas (sin depender de CDN) y la lista de métodos de pago por moneda de la app de Mostro (`mostro-payment-methods.js`) |
 | `shared/` | lógica pura de la tasa (módulos ES: métodos de pago, órdenes, precios del nodo (`mostro-rates`), zonas horarias y periodos, unidades, Tasa K y velas), que usan las páginas (`build.mjs` la copia a `web/shared/`) |
-| `shared/test/` | pruebas de `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), datos reales fijos (`fixtures/`), los valores de referencia que el código debe reproducir (`expected.json`) y casos escritos a mano (`cases.json`) |
+| `shared/test/` | pruebas de `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), datos reales fijos (`fixtures/`), los valores de referencia que el código debe reproducir (`expected.json`), casos escritos a mano (`cases.json`) y el `web/config.js` que debe salir de cada `.env` (`config-cases.json`) |
 | `build.mjs` | lee `.env`, genera `web/config.js` y copia `shared/` en `web/shared/`; con `--serve`, sirve `web/` en local |
+| `server/` | el servidor de tasaK en Rust: genera `web/config.js` y sirve `web/` (`cargo test` lo comprueba con el mismo `config-cases.json`) |
 | `indexer/` | el archivador de eventos, su servicio de systemd y el exportador de la base de datos de Mostro |
 | `tools/` | comprobaciones de desarrollo en Chrome headless (Node, sin dependencias); `node tools/reference.mjs` comprueba que `web/` calcula con datos fijos los valores de `shared/test/expected.json` |
 
