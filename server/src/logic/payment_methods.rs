@@ -43,6 +43,13 @@ pub fn norm_pm(s: &str) -> String {
         .join(" ")
 }
 
+/// The lists of web/vendor/mostro-payment-methods.js, a classic script that sets
+/// `window.MOSTRO_PAYMENT_METHODS = {…};`: its object is JSON
+pub fn parse_vendor_script(script: &str) -> Option<PmLists> {
+    let object = &script[script.find('{')?..=script.rfind('}')?];
+    serde_json::from_str(object).ok()
+}
+
 /// Methods of a currency: its list, `default`, or the fallback
 pub fn pm_list_for(lists: &PmLists, fiat: &str) -> Vec<String> {
     lists

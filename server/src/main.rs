@@ -4,6 +4,8 @@
 mod archive;
 mod config;
 mod import;
+mod orders;
+mod prices;
 mod serve;
 mod site;
 mod store;
@@ -200,11 +202,27 @@ fn main() -> ExitCode {
             }
             Command::Serve => {
                 let addr = addr.expect("checked above");
-                let archiver = if archive {
+                let mut tasks = Vec::new();
+                if archive {
                     match open_store().await {
                         Ok((store, path)) => {
                             info!("archiving in {}", path.display());
-                            Some(tokio::spawn(archive::run(store, nodes, config.relays.clone())))
+                            let lists = fs::read_to_string(root.join("web/vendor/mostro-payment-methods.js"))
+                                .ok()
+                                .and_then(|s| tasak::logic::payment_methods::parse_vendor_script(&s));
+                            let Some(lists) = lists else {
+                                error!("cannot read web/vendor/mostro-payment-methods.js");
+                                return ExitCode::FAILURE;
+                            };
+                            let coinbase = match prices::Coinbase::new() {
+                                Ok(c) => c,
+                                Err(e) => {
+                                    error!("coinbase: {e}");
+                                    return ExitCode::FAILURE;
+                                }
+                            };
+                            tasks.push(tokio::spawn(orders::run(store.pool().clone(), lists, coinbase)));
+                            tasks.push(tokio::spawn(archive::run(store, nodes, config.relays.clone())));
                         }
                         Err(e) => {
                             error!("{e} (ARCHIVE=false serves without archiving)");
@@ -213,10 +231,9 @@ fn main() -> ExitCode {
                     }
                 } else {
                     info!("ARCHIVE=false: not archiving");
-                    None
-                };
+                }
                 let served = serve::serve(root.join("web"), addr).await;
-                if let Some(task) = archiver {
+                for task in tasks {
                     task.abort();
                 }
                 match served {
