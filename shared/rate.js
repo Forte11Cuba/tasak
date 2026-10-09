@@ -11,10 +11,12 @@ export function weightedPrice(trades) {
   return vol ? pv / vol : null;
 }
 
+const inWindow24h = (trades, now) => trades.filter(t => t.ts > now - WINDOW && t.ts <= now);
+
 // Tasa K at `now`: orders in (now − 24 h, now], the previous 24 h to compare, and the ids of the
 // orders used, so anyone can recompute it
 export function tasaK(trades, now) {
-  const inWindow = trades.filter(t => t.ts > now - WINDOW && t.ts <= now);
+  const inWindow = inWindow24h(trades, now);
   const before = trades.filter(t => t.ts > now - 2 * WINDOW && t.ts <= now - WINDOW);
   return {
     rate: weightedPrice(inWindow),
@@ -22,6 +24,32 @@ export function tasaK(trades, now) {
     volume: inWindow.reduce((a, t) => a + t.size, 0),
     count: inWindow.length,
     ids: inWindow.map(t => t.ev.id),
+  };
+}
+
+// How an order was priced: 'market', 'fixed' or null if unknown. The pending version says it; without
+// it, a premium other than 0 means market price, because Mostro rejects a premium with fixed sats.
+export const priceKind = o => o.origin ? (o.origin.fixed ? 'fixed' : 'market') : o.premium ? 'market' : null;
+
+// Breakdown of the Tasa K's window, only as information (the rate doesn't change): weighted price of
+// the buy and sell orders, how many were at market or fixed price, and the volume-weighted premium of
+// the market ones
+export function rateBreakdown(trades, now) {
+  const inWindow = inWindow24h(trades, now);
+  const side = s => {
+    const of = inWindow.filter(t => t.side === s);
+    return { rate: weightedPrice(of), count: of.length, volume: of.reduce((a, t) => a + t.size, 0) };
+  };
+  const kinds = inWindow.map(priceKind);
+  const market = inWindow.filter((t, i) => kinds[i] === 'market');
+  const vol = market.reduce((a, t) => a + t.size, 0);
+  return {
+    buy: side('buy'),
+    sell: side('sell'),
+    market: market.length,
+    fixed: kinds.filter(k => k === 'fixed').length,
+    unknown: kinds.filter(k => k === null).length,
+    premium: vol ? market.reduce((a, t) => a + (t.origin?.premium ?? t.premium) * t.size, 0) / vol : null,
   };
 }
 

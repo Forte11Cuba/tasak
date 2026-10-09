@@ -4,7 +4,7 @@ import { isHidden, pmStats, defaultPmSelection } from '../shared/payment-methods
 import { mostUsedFiat } from '../shared/orders.js';
 import { UNITS } from '../shared/units.js';
 import { WEEK, MONTH, YEAR } from '../shared/time.js';
-import { WINDOW, tasaK } from '../shared/rate.js';
+import { WINDOW, tasaK, rateBreakdown } from '../shared/rate.js';
 import { state, HIDDEN_PM, nodeName } from './state.js';
 import { fmtPrice, fmtPct } from './format.js';
 import { btcSpot, yadioFiatPerUsd, unitName, currentPrices } from './prices.js';
@@ -46,6 +46,7 @@ export function renderStats(trades) {
   document.getElementById('sTasaSub').textContent = count
     ? `${nOrders(count)} · ${fmtInt(vol)} ${state.fiat}`
     : t('sin órdenes en las últimas 24h');
+  renderBreakdown(trades, now);
   const lastT = trades.at(-1);
   document.getElementById('sLast').innerHTML = lastT ? fmtPrice(lastT.price) + unit : '—';
   document.getElementById('sLastSub').textContent = lastT
@@ -78,6 +79,28 @@ export function renderStats(trades) {
   document.getElementById('statYadio').title = [
     t('Tasa de referencia de Yadio, la que usa Mostro para las órdenes a precio de mercado'), priceSource()].join('\n');
   return tasa;
+}
+
+// Buy and sell orders, market and fixed price, in the Tasa K's window: only as information, on hover
+// over the Tasa K and in the FAQ
+function renderBreakdown(trades, now) {
+  const b = rateBreakdown(trades, now);
+  const side = (s, text) => s.count && t(text, { n: nOrders(s.count), p: fmtPrice(s.rate), u: unitName() });
+  const kinds = [
+    t('{n} a precio de mercado', { n: b.market }) + (b.premium == null ? '' : ` (${t('prima media {p}', { p: fmtPct(b.premium, 1) })})`),
+    t('{n} a precio fijo', { n: b.fixed }),
+    b.unknown && t('{n} sin saber (prima 0)', { n: b.unknown }),
+  ].filter(Boolean).join(' · ');
+  const lines = b.buy.count + b.sell.count ? [
+    side(b.buy, 'Compras de BTC: {n}, media {p} {u}'),
+    side(b.sell, 'Ventas de BTC: {n}, media {p} {u}'),
+    kinds,
+  ].filter(Boolean) : [t('Sin órdenes en las últimas 24 horas')];
+  document.getElementById('statTasa').title = [
+    t('{rate}: precio ponderado de las órdenes completadas en las últimas 24 horas', { rate: CONFIG.rateName }), '', ...lines,
+    t('Solo información: la {rate} pondera todas juntas', { rate: CONFIG.rateName })].join('\n');
+  const html = lines.map(l => `<li>${esc(l)}</li>`).join('');
+  for (const el of document.querySelectorAll('.rate-breakdown')) el.innerHTML = html;
 }
 
 // Where the current prices come from, for the tooltip of the reference

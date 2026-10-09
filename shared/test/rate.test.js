@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { weightedPrice, tasaK, buildCandles, chartPoints, movingWeighted } from '../rate.js';
+import { weightedPrice, tasaK, rateBreakdown, buildCandles, chartPoints, movingWeighted } from '../rate.js';
 import { emptyPeriods, toChartTime, TIMEFRAMES } from '../time.js';
 import { expected, cases, now, tz, loadOrders, viewOf } from './data.js';
 
@@ -20,6 +20,22 @@ test('tasaK: 24 h border and empty window', () => {
   for (const { now, trades, expected, note } of cases.tasaK) {
     const ts = trades.map(({ id, ...t }) => ({ ...t, ev: { id } }));
     assert.deepEqual(tasaK(ts, now), expected, note);
+  }
+});
+
+test('rateBreakdown: buy and sell, market and fixed', () => {
+  for (const { now, trades, expected, note } of cases.rateBreakdown) {
+    const ts = trades.map(({ id, ...t }) => ({ ...t, ev: { id } }));
+    assert.deepEqual(rateBreakdown(ts, now), expected, note);
+  }
+});
+
+test('rateBreakdown adds up to the Tasa K window', () => {
+  for (const { name, trades } of views()) {
+    const k = tasaK(trades, now), b = rateBreakdown(trades, now);
+    assert.equal(b.buy.count + b.sell.count, k.count, name);
+    assert.equal(b.market + b.fixed + b.unknown, k.count, name);
+    assert.equal(b.buy.volume + b.sell.volume, k.volume, name);
   }
 });
 

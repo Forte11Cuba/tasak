@@ -82,6 +82,25 @@ Tasa K = Σ(precio × monto) ÷ Σ monto
 Ejemplo (en CUP): 3 órdenes a 785 CUP/USD que suman 3000 CUP y una a 750 de 5000 CUP →
 (785×3000 + 750×5000) ÷ 8000 = **763,13**.
 
+### Qué mide
+
+El precio al que de verdad se cambia la moneda en operaciones con bitcoin. En moneda/USD es una tasa
+implícita: moneda pagada por cada BTC dividida por el BTC/USD. No es el precio del dólar en efectivo ni en
+transferencias: si comprar o vender bitcoin con la moneda lleva un sobreprecio propio, también está en la
+Tasa K. Moneda/BTC y moneda/sat no pasan por el dólar.
+
+Casi todas las órdenes son a precio de mercado: el nodo fija los sats con la referencia de Yadio y la prima
+de la orden, así que su precio es aproximadamente `Yadio ÷ (1 − prima)`. Por eso la Tasa K sigue a la
+referencia de Yadio, y lo que se separa de ella («sobre Yadio» en la cabecera) son sobre todo las primas
+con las que se opera. Las órdenes a precio fijo no dependen de Yadio.
+
+Las compras y las ventas de BTC se cierran a precios distintos, porque cada lado pone su prima; la Tasa K
+las pondera todas juntas. Solo como información, sin cambiar la tasa, al pasar el ratón sobre la Tasa K y
+en la FAQ se ven el precio ponderado de las compras y el de las ventas de las últimas 24 horas, y cuántas
+órdenes fueron a precio de mercado (con su prima media) o a precio fijo. Mercado o fijo sale de la versión
+`pending` de la orden o, sin ella, de una prima distinta de 0 (Mostro no admite prima con precio fijo); las
+órdenes con prima 0 de las que no se vio la versión `pending` cuentan como «sin saber».
+
 La gráfica tiene tres modos:
 
 - **Precio**: un punto por orden ejecutada, o por periodo (1h, 4h, 1D, 1W, 1M, 1Y) con el precio ponderado del periodo.
