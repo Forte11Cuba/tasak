@@ -124,6 +124,7 @@ function priceSource() {
   const r = p.rates;
   const min = Math.max(0, Math.round((Date.now() / 1000 - r.ts) / 60));
   return t('Publicada por el nodo {node} hace {m} min en un evento firmado (mostro-rates)', { node: nodeName(r.node), m: min })
+    + (r.expiresAt <= Date.now() / 1000 ? '\n' + t('Precios del nodo sin actualizar: los sigue usando hasta 30 min') : '')
     + (!r.source || r.source === 'yadio' ? ''
       : '\n' + t(r.source.includes(',') ? 'Fuentes del nodo (de todas sus monedas): {s}' : 'Fuente: {s}',
         { s: r.source.split(',').map(providerName).join(', ') }));
