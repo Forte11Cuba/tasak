@@ -47,7 +47,8 @@ if (existsSync(envFile)) {
 }
 const get = k => process.env[k] ?? fileEnv[k];
 
-// nostr-tools from web/vendor/, only to read an npub (see archiver.mjs for why runInThisContext)
+// nostr-tools from web/vendor/, only to read an npub. It must run in this context: in a separate vm
+// context its Uint8Array checks fail
 runInThisContext(readFileSync(new URL('web/vendor/nostr-tools-2.25.2.bundle.min.js', root), 'utf8')
   + ';globalThis.NostrTools = NostrTools;');
 const key = keyArg || (get('MOSTRO_PUBKEYS') || '').split(/[\s,]+/).filter(Boolean)[0] || '';

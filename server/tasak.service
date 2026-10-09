@@ -1,0 +1,23 @@
+# systemd user service for the tasaK server: serves web/ and archives the nodes' events.
+#
+# Install (with tasak installed by `cargo install --path server --locked`; adjust WorkingDirectory):
+#   cp server/tasak.service ~/.config/systemd/user/
+#   systemctl --user daemon-reload
+#   systemctl --user enable --now tasak
+#   loginctl enable-linger "$USER"     # start at boot, without logging in
+# Logs: journalctl --user -u tasak -f
+
+[Unit]
+Description=tasaK server (serves the site and archives the Mostro nodes' events in SQLite)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+ExecStart=%h/.cargo/bin/tasak
+# The repository folder: tasak reads its .env, web/ and shared/ from here and archives in data/
+WorkingDirectory=%h/tasak
+Restart=always
+RestartSec=10
+
+[Install]
+WantedBy=default.target

@@ -3,7 +3,7 @@ name = "tasak"
 version = "0.1.0"
 edition = "2024"
 license = "MIT"
-description = "tasaK server: generates web/config.js from .env and serves web/"
+description = "tasaK server: generates web/config.js from .env, serves web/ and archives the Mostro nodes' events"
 repository = "https://github.com/Forte11Cuba/tasak"
 publish = false
 
@@ -11,12 +11,20 @@ publish = false
 [dependencies]
 axum = { version = "0.8.9", default-features = false, features = ["http1", "tokio"] }
 chrono-tz = { version = "0.10.4", features = ["case-insensitive"] }
+futures = { version = "0.3.34", default-features = false, features = ["std"] }
+nostr-sdk = "0.45.4"
+reqwest = { version = "0.12.28", default-features = false, features = ["rustls-tls", "json"] }
 serde = { version = "1.0.229", features = ["derive"] }
 serde_json = "1.0.151"
+sqlx = { version = "0.9.0", default-features = false, features = ["sqlite", "runtime-tokio", "migrate", "macros"] }
 tokio = { version = "1.53.2", features = ["rt-multi-thread", "macros", "net", "signal"] }
 tower-http = { version = "0.7.1", features = ["fs"] }
 tracing = "0.1.44"
 tracing-subscriber = { version = "0.3.23", default-features = false, features = ["fmt", "std", "ansi"] }
+
+# A local relay for the archive's tests
+[dev-dependencies]
+nostr-sdk = { version = "0.45.4", features = ["local-relay"] }
 
 [profile.release]
 strip = true

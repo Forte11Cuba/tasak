@@ -43,8 +43,8 @@ again after changing `.env` or `shared/`. Two ways to publish it:
 
 - **With the tasaK server:** run `tasak` all the time and put a web server with HTTPS (nginx, Caddy…)
   in front of it. It only serves files (GET and HEAD, nothing that receives data) and listens on
-  `127.0.0.1:8765` by default (`LISTEN`). Later it will also archive the node's events and publish the
-  Tasa K.
+  `127.0.0.1:8765` by default (`LISTEN`). It also archives the node's events (see [Archive](#archive));
+  later it will publish the Tasa K.
 - **As a static site:** run `tasak build` and publish the `web/` folder, which has everything the site
   needs, with any static web server or hosting. On GitHub Pages, publish `web/` with a GitHub Actions
   workflow that builds `tasak` and runs `tasak build` first: Pages can only publish the root or `/docs`
@@ -67,7 +67,8 @@ again after changing `.env` or `shared/`. Two ways to publish it:
 | `HIDDEN_PAYMENT_METHODS` | Payment methods that don't count by default, comma separated (default `Pruebas,Otros`) |
 | `COMMUNITY`, `COMMUNITY_URL` | Community running the node (optional) |
 | `SOCIAL_LINKS` | Links to its social media, comma separated (optional; Telegram, X, YouTube, GitHub and Nostr are recognised automatically) |
-| `ARCHIVE_DIR` | Folder for the archiver's data (optional; default `indexer/data/`, see [Archiver](#archiver)) |
+| `ARCHIVE_DIR` | Folder of the archive's database (optional; default `data/`, relative to the repository folder; see [Archive](#archive)) |
+| `ARCHIVE` | `false` serves the site without archiving (optional; default `true`) |
 | `LISTEN` | Address the tasaK server (`tasak`) listens on (optional; default `127.0.0.1:8765`) |
 
 Each currency's payment methods come from the Mostro app's list; anything not on it is grouped as
@@ -153,31 +154,33 @@ External services it uses and what happens if they are blocked:
 | Yadio | only if a node doesn't publish valid `mostro-rates`: an estimate of the current prices | currency/USD can't be calculated; currency/BTC and currency/sat keep working |
 | Coinbase | hourly historical BTC/USD, for currency/USD | it's calculated with the current BTC/USD (the node's or Yadio's) and marked as approximate |
 
-## Archiver
+## Archive
 
 Relays keep orders for about 15 days and only their latest version: once an order is completed, the
 `pending` version (market or fixed price) and the `in-progress` one (when it was taken) are gone. The
 node's `mostro-rates` (BTC price in every currency, from its price sources) expire after 10 minutes. To keep a full
-history, `indexer/archiver.mjs` subscribes to the `.env` relays and stores everything the node
-publishes, verified (signature and author), in daily files:
+history, the tasaK server (`tasak`) subscribes to the `.env` relays and stores everything the node
+publishes, verified (signature, author and kind), in a SQLite database, `data/tasak.sqlite`
+(`ARCHIVE_DIR` to change the folder):
 
-- `indexer/data/eventos/YYYY-MM-DD.jsonl`: orders of every currency (one line per relay that had it, to
-  check which relay had what), each `mostro-rates` once, and the node's metadata when it changes.
-- `indexer/data/yadio/YYYY-MM-DD.jsonl`: Yadio's BTC/USD every 5 minutes for the last 24 h, to fill the
-  gaps when the archiver was off.
+- `events`: every signed event as received: orders of every currency and every version, each
+  `mostro-rates`, and the node's metadata when it changes. Anyone can verify them again.
+- `event_relays`: which relays sent each event and when, to check which relay had what.
+- `yadio`: Yadio's BTC/USD every 5 minutes for the last 24 h, to fill the gaps when the archive was off.
 
-It needs Node.js ≥ 22 (native WebSocket), no dependencies, and must run all the time: whatever happens
-while it is off is lost, except the latest version of each order. Around 1 MB per day.
+It must run all the time: whatever happens while it is off is lost, except the latest version of each
+order. Each relay has a live subscription and, every 5 minutes, a catch-up of its recent history that
+covers disconnections. Around 1 MB per day. `ARCHIVE=false` serves the site without archiving.
+
+To run it as a service that starts by itself, see `server/tasak.service`. The daily files of the old
+JavaScript archiver (`{"relay", "recibido", "evento"}` lines) can be imported; importing twice changes
+nothing:
 
 ```sh
-node indexer/archiver.mjs
+tasak import-jsonl indexer/data/eventos/*.jsonl indexer/data/yadio/*.jsonl
 ```
 
-To run it as a service that starts by itself, see `indexer/tasak-archiver.service`. Two archivers on
-different machines can be merged later (events are deduplicated by id). These files will feed the
-future indexer.
-
-The history from before the archiver can be recovered by the node's operator from the Mostro
+The history from before the archive can be recovered by the node's operator from the Mostro
 database. On a copy (`sqlite3 mostro.db ".backup mostro-copy.db"`), run:
 
 ```sh
@@ -203,8 +206,8 @@ signed Nostr event is also archived.
 | `web/vendor/` | copied libraries (no CDN) and the Mostro app's payment methods per currency (`mostro-payment-methods.js`) |
 | `shared/` | pure logic of the rate (ES modules: payment methods, orders, the node's prices (`mostro-rates`), time zones and periods, units, Tasa K and candles), used by the pages (`tasak` copies it to `web/shared/`) |
 | `shared/test/` | tests of `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), fixed real data (`fixtures/`), the reference values the code must reproduce (`expected.json`) and hand-written cases (`cases.json`) |
-| `server/` | the tasaK server in Rust (`tasak`): reads `.env`, generates `web/config.js` and serves `web/`; `server/tests/config-cases.json` is the `web/config.js` each `.env` must give (`cargo test`) |
-| `indexer/` | the event archiver, its systemd service and the Mostro database exporter |
+| `server/` | the tasaK server in Rust (`tasak`): reads `.env`, generates `web/config.js`, serves `web/` and archives the node's events; its systemd service is `server/tasak.service`; `server/tests/config-cases.json` is the `web/config.js` each `.env` must give (`cargo test`) |
+| `indexer/` | the Mostro database exporter (`export-mostro.mjs`; it will move to `tasak`) |
 | `tools/` | development checks in headless Chrome (Node, no dependencies); `node tools/reference.mjs` checks that `web/` computes the values in `shared/test/expected.json` from fixed data |
 
 ## Languages

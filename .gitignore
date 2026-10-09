@@ -1,5 +1,6 @@
 .env
 web/config.js
 web/shared/
+data/
 indexer/data/
 server/target/
