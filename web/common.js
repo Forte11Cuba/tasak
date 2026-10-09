@@ -167,13 +167,16 @@ function nodeCardHtml(pk, m = {}, activity = []) {
   const fmtDur = sec => sec >= 3600 ? `${sec / 3600} h` : `${Math.round(sec / 60)} min`;
   const p = m.profile || {}, info = m.info;
   const npub = window.NostrTools?.nip19?.npubEncode(pk) || pk;
+  // Its orders (38383) and information (38385), as the relays return them
+  const nodeEventsUrl = 'https://nostrinspect.com/?relays=' + encodeURIComponent(CONFIG.relays.map(r => r.replace(/^wss:\/\//i, '')).join(',')).replace(/%2C/g, ',')
+    + '&authors=' + npub + '&kinds=38383,38385&limit=100';
   const kv = rows => `<dl class="node-kv">${rows.filter(Boolean).map(([k, v]) => `<dt>${k}</dt><dd>${v}</dd>`).join('')}</dl>`;
 
   const links = [
     p.website && extLink(p.website, t('Web del nodo')),
     CONFIG.community?.url && extLink(CONFIG.community.url, CONFIG.community.name || t('Comunidad')),
     ...CONFIG.socialLinks.map(u => extLink(u, linkLabel(u))),
-    extLink('https://njump.me/' + npub, t('El nodo en Nostr')),
+    extLink(nodeEventsUrl, t('Eventos del nodo en Nostr')),
   ].filter(Boolean).join('');
 
   return `<div class="node-card">
