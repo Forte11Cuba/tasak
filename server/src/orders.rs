@@ -2,7 +2,7 @@
 //! shared/ (`parse_order`, `current_order`). Each run looks only at the orders that received a new
 //! version since the previous one; the first run (and any rebuild) looks at all of them.
 
-use crate::prices::{Candles, price_orders};
+use crate::prices::{Asked, Candles, price_orders};
 use sqlx::SqlitePool;
 use std::time::Duration;
 use tasak::logic::RawEvent;
@@ -13,18 +13,19 @@ use tracing::{info, warn};
 /// Every minute: brings `orders` up to date with the archive and prices the orders without BTC/USD.
 /// Runs until the task is dropped
 pub async fn run(pool: SqlitePool, lists: PmLists, candles: impl Candles) {
-    let mut last = 0;
+    let (mut last, mut first) = (0, true);
+    let mut asked = Asked::new();
     loop {
         match sync(&pool, &lists, last).await {
             Ok((synced, rowid)) => {
-                if last == 0 || synced.completed > 0 {
+                if first || synced.completed > 0 {
                     info!("orders: {} completed orders updated", synced.completed);
                 }
-                last = rowid;
+                (last, first) = (rowid, false);
             }
             Err(e) => warn!("orders: {e}"),
         }
-        match price_orders(&pool, &candles).await {
+        match price_orders(&pool, &candles, &mut asked).await {
             Ok(0) => {}
             Ok(n) => info!("orders: {n} priced in USD"),
             Err(e) => warn!("orders: cannot price: {e}"),

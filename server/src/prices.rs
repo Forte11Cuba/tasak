@@ -7,7 +7,8 @@
 //! An order no source has stays without price and is tried again on the next run.
 
 use sqlx::SqlitePool;
-use std::collections::BTreeSet;
+use std::collections::{BTreeSet, HashMap};
+use std::time::{Duration, Instant};
 use tasak::logic::RawEvent;
 use tasak::logic::rates::{parse_rates, usable_until};
 use tracing::warn;
@@ -19,6 +20,9 @@ const YADIO_GAP: i64 = 10 * 60;
 /// Coinbase gives at most 300 candles per request (more is a 400): each request covers a window of
 /// STEP plus the CANDLE_GAP before it, 300 minutes in all
 pub const STEP: i64 = 300 * 60 - CANDLE_GAP;
+/// A window already asked for isn't asked again before this (Coinbase down or blocked, or a window
+/// without the candle an order needs): otherwise every run would ask for all of them again
+pub const RETRY: Duration = Duration::from_secs(3600);
 pub const COINBASE_URL: &str = "https://api.exchange.coinbase.com/products/BTC-USD/candles";
 
 /// Where the 1-minute candles come from (Coinbase; a fake one in the tests)
@@ -158,10 +162,13 @@ async fn from_yadio(pool: &SqlitePool, t: i64) -> Result<Option<Price>, sqlx::Er
     }))
 }
 
-/// Gives a BTC/USD to the completed orders that don't have one. Asks Coinbase only for the 5-hour
-/// windows that contain an order without price from the node, each window once per run. Returns how
-/// many orders got a price
-pub async fn price_orders(pool: &SqlitePool, candles: &impl Candles) -> Result<usize, sqlx::Error> {
+/// When each Coinbase window was last asked for (its start -> moment)
+pub type Asked = HashMap<i64, Instant>;
+
+/// Gives a BTC/USD to the completed orders that don't have one. Asks Coinbase only for the windows
+/// that contain an order without price from the node, each one at most once per RETRY (`asked` keeps
+/// track across runs). Returns how many orders got a price
+pub async fn price_orders(pool: &SqlitePool, candles: &impl Candles, asked: &mut Asked) -> Result<usize, sqlx::Error> {
     let pending: Vec<(String, String, i64)> =
         sqlx::query_as("SELECT key, node, priced_at FROM orders WHERE btc_usd IS NULL ORDER BY priced_at")
             .fetch_all(pool)
@@ -184,11 +191,14 @@ pub async fn price_orders(pool: &SqlitePool, candles: &impl Candles) -> Result<u
     let windows: BTreeSet<i64> = missing
         .iter()
         .map(|(_, t)| (t.div_euclid(60) * 60).div_euclid(STEP) * STEP)
+        .filter(|start| asked.get(start).is_none_or(|at| at.elapsed() >= RETRY))
         .collect();
+    let (mut failed, mut last_error) = (0, String::new());
     for (i, start) in windows.into_iter().enumerate() {
         if i > 0 {
-            tokio::time::sleep(std::time::Duration::from_millis(500)).await;
+            tokio::time::sleep(Duration::from_millis(500)).await;
         }
+        asked.insert(start, Instant::now());
         match candles.candles(start - CANDLE_GAP, start + STEP - 60).await {
             Ok(rows) => {
                 for (minute, close) in rows.into_iter().filter(|&(_, c)| c > 0.0) {
@@ -199,8 +209,14 @@ pub async fn price_orders(pool: &SqlitePool, candles: &impl Candles) -> Result<u
                         .await?;
                 }
             }
-            Err(e) => warn!("coinbase: {e}"),
+            Err(e) => {
+                failed += 1;
+                last_error = e;
+            }
         }
+    }
+    if failed > 0 {
+        warn!("coinbase: {failed} requests failed ({last_error}); trying them again in an hour");
     }
     for (key, t) in missing {
         if let Some(p) = first(&[from_coinbase(pool, t).await?, from_yadio(pool, t).await?]) {
@@ -293,7 +309,7 @@ mod tests {
             price: Some(90_000.0),
             asked: Mutex::new(vec![]),
         };
-        assert_eq!(price_orders(store.pool(), &fake).await.unwrap(), 3);
+        assert_eq!(price_orders(store.pool(), &fake, &mut Asked::new()).await.unwrap(), 3);
         let at = |t: i64| Some(t.div_euclid(60) * 60);
         let rows = prices(store.pool()).await;
         let by = |d: &str| rows.iter().find(|r| r.0 == d).unwrap().clone();
@@ -310,7 +326,7 @@ mod tests {
         let windows: BTreeSet<i64> = [t0 + 7200, t0 - 60].iter().map(|t| t.div_euclid(STEP)).collect();
         assert_eq!(fake.asked.lock().unwrap().len(), windows.len());
         // Already priced: nothing to do, nothing asked
-        assert_eq!(price_orders(store.pool(), &fake).await.unwrap(), 0);
+        assert_eq!(price_orders(store.pool(), &fake, &mut Asked::new()).await.unwrap(), 0);
         assert_eq!(fake.asked.lock().unwrap().len(), windows.len());
     }
 
@@ -346,7 +362,12 @@ mod tests {
             price: None,
             asked: Mutex::new(vec![]),
         };
-        assert_eq!(price_orders(store.pool(), &down).await.unwrap(), 1);
+        let mut asked = Asked::new();
+        assert_eq!(price_orders(store.pool(), &down, &mut asked).await.unwrap(), 1);
+        let requests = down.asked.lock().unwrap().len();
+        // Coinbase down: the next run doesn't ask for the same windows again before RETRY
+        assert_eq!(price_orders(store.pool(), &down, &mut asked).await.unwrap(), 0);
+        assert_eq!(down.asked.lock().unwrap().len(), requests);
         let rows = prices(store.pool()).await;
         let by = |d: &str| rows.iter().find(|r| r.0 == d).unwrap().clone();
         assert_eq!(
@@ -359,7 +380,8 @@ mod tests {
             price: Some(80_000.0),
             asked: Mutex::new(vec![]),
         };
-        assert_eq!(price_orders(store.pool(), &up).await.unwrap(), 1);
+        // Once it's time to ask again (a new memory here) and Coinbase answers, it gets its price
+        assert_eq!(price_orders(store.pool(), &up, &mut Asked::new()).await.unwrap(), 1);
     }
 
     #[tokio::test]
@@ -381,7 +403,7 @@ mod tests {
             price: Some(1.0),
             asked: Mutex::new(vec![]),
         };
-        price_orders(store.pool(), &fake).await.unwrap();
+        price_orders(store.pool(), &fake, &mut Asked::new()).await.unwrap();
         for (start, end) in fake.asked.lock().unwrap().iter() {
             assert_eq!((end - start) / 60 + 1, 300, "{start}..{end}");
         }
