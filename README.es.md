@@ -73,7 +73,8 @@ Variables de `.env` (en inglés, para que sirvan a cualquier operador de nodo):
 
 Los métodos de pago de cada moneda salen de la lista de la app de Mostro; lo que no está en ella se
 agrupa como «Otros». En `HIDDEN_PAYMENT_METHODS` conviene añadir los que en tu mercado se negocian a
-otra tasa (en el ejemplo de Cuba, «Saldo móvil»).
+otra tasa o se usan por error (en el ejemplo de Cuba, «Saldo móvil» y «Tarjeta Clásica»), con su nombre
+completo, como en la lista de la app.
 
 La información del nodo (nombre, descripción, web, comisión, montos, versión, nodo Lightning, relays) se lee de sus propios eventos Nostr (kind 0, 38385 y 10002). Está en su propia página, `node.html`, a la que se llega con el botón «Nodo Mostro» o haciendo clic en el nombre del nodo en la barra de moneda (conserva los parámetros de la URL). La comunidad y las redes solo se muestran con los nodos del `.env`.
 
@@ -107,6 +108,23 @@ Casi todas las órdenes son a precio de mercado: el nodo fija los sats con su pr
 prima de la orden, así que su precio es aproximadamente `referencia ÷ (1 − prima)`. Por eso la Tasa K
 sigue a esa referencia, y lo que se separa de ella («sobre Yadio» en la cabecera) son sobre todo las primas
 con las que se opera. Las órdenes a precio fijo no dependen de ella.
+
+### Qué órdenes cuentan
+
+La Tasa K sigue siempre las mismas reglas, para que todos los visitantes vean la misma cifra:
+
+- **Cuentan** las órdenes completadas (`success`) en las últimas 24 horas, en la moneda elegida, de los
+  nodos del `.env` y con la firma del nodo verificada.
+- **No cuentan** las que no llegaron a completarse (abiertas, tomadas, canceladas, caducadas, en
+  disputa); las de un método de pago de `HIDDEN_PAYMENT_METHODS` (con «Otros», texto que no está en la
+  lista de la app de Mostro, y «Pruebas», órdenes de prueba: «prueba», «test», «no tomar»); ni las que no
+  tienen un monto en moneda y en sats mayor que cero.
+- No se descarta ningún precio por atípico, y cuentan tanto las órdenes a precio de mercado como las de
+  precio fijo.
+
+Los visitantes pueden elegir otros métodos de pago o nodos: la gráfica y las tablas siguen su elección, y
+**Tu selección** muestra su precio ponderado de las últimas 24 horas junto a los filtros. La Tasa K de la
+cabecera no cambia.
 
 ### La referencia del nodo
 

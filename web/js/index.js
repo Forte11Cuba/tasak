@@ -1,11 +1,12 @@
 // Page of the rate. The logic of the rate comes from shared/ (pure, tested with node --test); this
 // module connects the data (relays → event store) to the render and wires the page together.
 import { getTrades as tradesOf, getBook as bookOf } from '../shared/orders.js';
-import { state, store, saveView } from './state.js';
+import { pmStats, defaultPmSelection } from '../shared/payment-methods.js';
+import { state, store, saveView, HIDDEN_PM } from './state.js';
 import { createRelayPool } from './nostr-client.js';
 import { ensurePrices, loadBtcHistory, marketFor, unitPrice } from './prices.js';
 import { chartC, view, renderChart, setEmpty, applyChartTheme } from './chart.js';
-import { setStatus, renderStats, renderTrades, renderBook, renderFilters, updatePair } from './panels.js';
+import { setStatus, renderStats, renderSelection, renderTrades, renderBook, renderFilters, updatePair } from './panels.js';
 import { openEvent } from './event-dialog.js';
 
 // ---------- Data: the node's relays ----------
@@ -46,6 +47,15 @@ function getTrades() {
   return tradesOf([...state.orders.values()], filters(), unitPrice);
 }
 
+// The official Tasa K follows the site's rules, not the visitor's filters: every node of the
+// configuration and the payment methods it doesn't hide. Only the currency and the unit are chosen
+function getOfficialTrades() {
+  const orders = [...state.orders.values()];
+  const nodes = new Set(CONFIG.mostros);
+  const keys = pmStats(orders, { fiat: state.fiat, nodes, now: Date.now() / 1000 }).map(s => s.key);
+  return tradesOf(orders, { fiat: state.fiat, nodes, pmSel: defaultPmSelection(keys, HIDDEN_PM) }, unitPrice);
+}
+
 // Market orders, each with its node's market price
 function getBook() {
   return bookOf([...state.orders.values()], filters(), {
@@ -72,7 +82,8 @@ function scheduleRender() {
       }
       const trades = getTrades();
       renderChart(trades);
-      const tasa = renderStats(trades);
+      const tasa = renderStats(getOfficialTrades(), trades);
+      renderSelection(trades, tasa);
       renderTrades(trades);
       renderBook(tasa, getBook());
       setStatus();
@@ -85,6 +96,13 @@ document.getElementById('pms').onclick = e => {
   if (!b) return;
   const k = b.dataset.pm;
   state.pmSel.has(k) ? state.pmSel.delete(k) : state.pmSel.add(k);
+  scheduleRender();
+};
+// Back to the default methods and nodes: «Your selection» disappears
+document.getElementById('selReset').onclick = () => {
+  state.nodeSel = new Set(CONFIG.mostros);
+  state.pmSel = null;
+  state.pmKnown = null;
   scheduleRender();
 };
 document.getElementById('nodes').onclick = e => {

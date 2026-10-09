@@ -73,7 +73,8 @@ again after changing `.env` or `shared/`. Two ways to publish it:
 
 Each currency's payment methods come from the Mostro app's list; anything not on it is grouped as
 «Otros» (other). In `HIDDEN_PAYMENT_METHODS` add the ones that trade at a different rate in your market
-(in the Cuba example, «Saldo móvil»).
+or are used by mistake (in the Cuba example, «Saldo móvil» and «Tarjeta Clásica»), with their full name as
+in the app's list.
 
 The node information (name, description, website, fee, amounts, version, Lightning node, relays) is read
 from its own Nostr events (kind 0, 38385 and 10002). It has its own page, `node.html`, reached with the
@@ -110,6 +111,22 @@ Almost all orders are at market price: the node sets the sats from its reference
 premium, so their price is roughly `reference ÷ (1 − premium)`. The Tasa K therefore follows that
 reference, and its distance from it («above Yadio» in the header) is mostly the premiums people trade at.
 Fixed-price orders don't depend on it.
+
+### Which orders count
+
+The Tasa K always follows the same rules, so every visitor sees the same figure:
+
+- **They count**: orders completed (`success`) in the last 24 hours, in the chosen currency, from the
+  nodes in `.env`, with the node's signature verified.
+- **They don't count**: orders never completed (open, taken, canceled, expired, in dispute); those with
+  a payment method in `HIDDEN_PAYMENT_METHODS` (with «Otros», text not on the Mostro app's list, and
+  «Pruebas», test orders: «prueba», «test», «no tomar»); and those without an amount in currency and in
+  sats greater than zero.
+- No price is discarded as an outlier, and market-price and fixed-price orders both count.
+
+Visitors can choose other payment methods or nodes: the chart and the tables follow their choice, and
+**Your selection** shows its weighted price of the last 24 hours next to the filters. The Tasa K in the
+header doesn't change.
 
 ### The node's reference
 

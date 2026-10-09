@@ -70,6 +70,12 @@
     <span id="nodesBox" hidden><span id="nodes"></span></span>
     <a class="node-btn" id="nodeBtn" href="node.html" title="Información del nodo Mostro" data-i18n-title><span id="pair">—</span><span class="i">i</span></a>
   </span>
+  <span class="selection" id="selection" hidden>
+    <span class="label" data-i18n>Tu selección</span>
+    <strong class="num" id="selRate">—</strong>
+    <span class="muted num" id="selSub"></span>
+    <button class="icon-btn" id="selReset" type="button" title="Volver a los métodos de pago y nodos por defecto" aria-label="Volver a los métodos de pago y nodos por defecto" data-i18n-title>✕</button>
+  </span>
 </div>
 
 <main>
@@ -103,8 +109,8 @@
         <details class="menu" id="pmMenu">
           <summary id="pmSummary">Método de pago ▾</summary>
           <div class="pop">
-            <p data-lang="es">Órdenes que entran en la gráfica, la <span data-name="rate">Tasa K</span> y las tablas. Números: <strong>completadas · abiertas</strong> (las abiertas están en el libro de órdenes).</p>
-            <p data-lang="en">Orders included in the chart, the <span data-name="rate">Tasa K</span> and the tables. Numbers: <strong>completed · open</strong> (open ones are in the order book).</p>
+            <p data-lang="es">Órdenes que entran en la gráfica, las tablas y «Tu selección»; la <span data-name="rate">Tasa K</span> usa siempre los métodos por defecto. Números: <strong>completadas · abiertas</strong> (las abiertas están en el libro de órdenes).</p>
+            <p data-lang="en">Orders included in the chart, the tables and «Your selection»; the <span data-name="rate">Tasa K</span> always uses the default methods. Numbers: <strong>completed · open</strong> (open ones are in the order book).</p>
             <div class="chips" id="pms"></div>
           </div>
         </details>
@@ -215,8 +221,16 @@
       <p>Las órdenes abiertas que aún nadie ha tomado. Las de precio de mercado se calculan con los precios que publica su propio nodo, <code>referencia del nodo ÷ (1 − prima)</code>, que es como Mostro calcula los sats; si el nodo no publica los suyos, se estiman con la API de Yadio y llevan «≈», y si tampoco hay, aparecen sin precio («—»). Las marcadas con 🔒 tienen precio fijo. Si alguien compra por encima de lo que otro vende, el libro aparece como «cruzado».</p>
     </details>
     <details>
-      <summary>¿Por qué algunos métodos de pago no cuentan por defecto?</summary>
-      <p>Los métodos de cada moneda son los de la app de Mostro; lo que alguien escribe a mano y no está en esa lista se agrupa como «Otros». Quien publica este sitio decide cuáles no cuentan por defecto; aquí: <strong class="hidden-pms"></strong>. Suelen ocultarse los que se negocian a otra tasa en ese mercado; Pruebas son órdenes de prueba. Se pueden activar desde el menú «Método de pago» de la gráfica.</p>
+      <summary>¿Qué órdenes cuentan en la <span data-name="rate">Tasa K</span>?</summary>
+      <p>La <span data-name="rate">Tasa K</span> sigue siempre las mismas reglas, para que todos vean la misma cifra:</p>
+      <ul>
+        <li><strong>Cuentan</strong> las órdenes completadas en las últimas 24 horas, en la moneda elegida, de los nodos configurados en este sitio y con la firma del nodo verificada.</li>
+        <li><strong>No cuentan</strong> las que no llegaron a completarse (abiertas, tomadas, canceladas, caducadas o en disputa): no hubo intercambio.</li>
+        <li>Ni las de los métodos de pago que quien publica este sitio oculta; aquí: <strong class="hidden-pms"></strong>. Suelen ocultarse los que se negocian a otra tasa en ese mercado o los que se usan por error. Los métodos de cada moneda son los de la app de Mostro: lo que alguien escribe a mano y no está en esa lista es «Otros», y «Pruebas» son las órdenes de prueba («prueba», «test», «no tomar»).</li>
+        <li>Ni las que no tienen un monto en moneda y en sats mayor que cero.</li>
+      </ul>
+      <p>Sí cuentan los precios extremos (no se descarta ninguno: la tasa muestra lo que pasa en el mercado) y tanto las órdenes a precio de mercado como las de precio fijo.</p>
+      <p>Para calcular con otros métodos de pago o nodos, cámbialos en el menú «Método de pago» de la gráfica o en la barra de nodos: aparece <strong>Tu selección</strong>, el precio ponderado de las últimas 24 horas con lo que elegiste. La gráfica y las tablas también la siguen; la <span data-name="rate">Tasa K</span> de la cabecera no cambia. ✕ vuelve a los de por defecto.</p>
     </details>
     <details>
       <summary>¿Qué es la «Referencia Yadio»?</summary>
@@ -279,8 +293,16 @@
       <p>Open orders nobody has taken yet. Market-price ones are calculated with the prices their own node publishes, <code>node reference ÷ (1 − premium)</code>, which is how Mostro calculates the sats; if the node doesn't publish its own, they are estimated with Yadio's API and marked «≈», and if there is none either, they show without a price («—»). Those marked with 🔒 have a fixed price. If someone buys above what someone else sells, the book shows as «crossed».</p>
     </details>
     <details>
-      <summary>Why don't some payment methods count by default?</summary>
-      <p>Each currency's methods are the ones in the Mostro app; anything typed by hand that isn't on that list is grouped as «Other». Whoever publishes this site decides which ones don't count by default; here: <strong class="hidden-pms"></strong>. Usually hidden are the ones that trade at a different rate in that market; Tests are test orders. They can be enabled from the chart's «Payment method» menu.</p>
+      <summary>Which orders count in the <span data-name="rate">Tasa K</span>?</summary>
+      <p>The <span data-name="rate">Tasa K</span> always follows the same rules, so everyone sees the same figure:</p>
+      <ul>
+        <li><strong>They count</strong>: orders completed in the last 24 hours, in the chosen currency, from the nodes configured on this site, with the node's signature verified.</li>
+        <li><strong>They don't count</strong>: orders that were never completed (open, taken, canceled, expired or in dispute): no exchange took place.</li>
+        <li>Nor those with payment methods hidden by whoever publishes this site; here: <strong class="hidden-pms"></strong>. Usually hidden are the ones that trade at a different rate in that market or are used by mistake. Each currency's methods are the ones in the Mostro app: anything typed by hand that isn't on that list is «Other», and «Tests» are test orders («prueba», «test», «no tomar»).</li>
+        <li>Nor those without an amount in currency and in sats greater than zero.</li>
+      </ul>
+      <p>Extreme prices do count (none is discarded: the rate shows what happens in the market), and so do both market-price and fixed-price orders.</p>
+      <p>To calculate with other payment methods or nodes, change them in the chart's «Payment method» menu or in the nodes bar: <strong>Your selection</strong> appears, the weighted price of the last 24 hours with what you chose. The chart and the tables follow it too; the <span data-name="rate">Tasa K</span> in the header doesn't change. ✕ goes back to the default ones.</p>
     </details>
     <details>
       <summary>What is the «Yadio reference»?</summary>

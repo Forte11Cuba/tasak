@@ -27,16 +27,18 @@ export function setStatus(error) {
   box.title = full.join('\n');
 }
 
-export function renderStats(trades) {
+// The header: the official Tasa K (`official`, the site's rules) and, of what the visitor selected
+// (`trades`), the volume and the last order, as the tables
+export function renderStats(official, trades) {
   const now = Date.now() / 1000;
-  const { rate: tasa, previous: prev, volume: vol, count } = tasaK(trades, now);
+  const { rate: tasa, previous: prev, volume: vol, count } = tasaK(official, now);
 
   const unit = `<span class="unit">${esc(unitName())}</span>`;
   const sTasa = document.getElementById('sTasa');
   sTasa.innerHTML = tasa == null ? '—' : fmtPrice(tasa) + unit;
-  // Blink only if the rate changed with the same view (currency, unit, nodes and methods): that
-  // way changing a filter doesn't look like a market move
-  const viewKey = [state.fiat, state.unit, [...state.nodeSel], [...(state.pmSel || [])].sort()].join('|');
+  // Blink only if the rate changed with the same currency and unit: that way changing them doesn't
+  // look like a market move (the filters don't change the official rate)
+  const viewKey = [state.fiat, state.unit].join('|');
   const prevTasa = state.tick?.key === viewKey ? state.tick.value : null;
   if (tasa != null && prevTasa != null && Math.abs(tasa / prevTasa - 1) > 1e-9) {
     sTasa.classList.remove('tick-up', 'tick-down');
@@ -47,7 +49,7 @@ export function renderStats(trades) {
   document.getElementById('sTasaSub').textContent = count
     ? `${nOrders(count)} · ${fmtInt(vol)} ${state.fiat}`
     : t('sin órdenes en las últimas 24h');
-  renderBreakdown(trades, now);
+  renderBreakdown(official, now);
   const lastT = trades.at(-1);
   document.getElementById('sLast').innerHTML = lastT ? fmtPrice(lastT.price) + unit : '—';
   document.getElementById('sLastSub').textContent = lastT
@@ -88,6 +90,24 @@ export function renderStats(trades) {
     t(name === 'Yadio' ? 'Tasa de referencia de Yadio, la que usa Mostro para las órdenes a precio de mercado'
       : 'Precio de referencia del nodo, el que usa para las órdenes a precio de mercado'), priceSource()].join('\n');
   return tasa;
+}
+
+// «Your selection»: the weighted price of the last 24 h with the methods and nodes the visitor chose,
+// only when they differ from the default ones (then it would be the Tasa K itself)
+export function renderSelection(trades, official) {
+  const isDefault = state.nodeSel.size === CONFIG.mostros.length
+    && [...(state.pmKnown || [])].every(k => state.pmSel.has(k) === !isHidden(k, HIDDEN_PM));
+  const box = document.getElementById('selection');
+  box.hidden = isDefault;
+  if (isDefault) return;
+  const { rate, count } = tasaK(trades, Date.now() / 1000);
+  document.getElementById('selRate').innerHTML = rate == null ? '—'
+    : fmtPrice(rate) + `<span class="unit">${esc(unitName())}</span>`;
+  const diff = rate != null && official ? (rate / official - 1) * 100 : null;
+  document.getElementById('selSub').textContent = count
+    ? nOrders(count) + (diff == null ? '' : ' · ' + t('{p} frente a la {rate}', { p: fmtPct(diff, 1), rate: CONFIG.rateName }))
+    : t('sin órdenes en las últimas 24h');
+  box.title = t('Precio ponderado de las órdenes completadas en las últimas 24 horas con los métodos de pago y nodos que elegiste. La {rate} usa siempre los de por defecto.', { rate: CONFIG.rateName });
 }
 
 // Buy and sell orders, market and fixed price, in the Tasa K's window: only as information, on hover
