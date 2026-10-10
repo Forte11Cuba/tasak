@@ -17,9 +17,8 @@ alguien dice que pagaría, no lo que realmente se pagó. tasaK parte de lo contr
   recalcular la misma tasa. Al hacer clic en una orden se ve su evento original.
 - **Precio, volumen y órdenes a la vista.** Además de la tasa se ven el volumen negociado, cada orden
   ejecutada, el libro de órdenes con las órdenes abiertas y la referencia del mercado para comparar.
-- **Verificable.** Los datos son los eventos firmados del nodo, leídos de los relays y comprobados en el
-  navegador. El servidor del sitio (opcional) la hace más rápida y guarda el historial que los relays
-  borran, pero lo que manda se comprueba igual, y la página funciona sin él.
+- **Con o sin servidor.** El servidor del sitio (opcional) la hace más rápida y guarda el historial que
+  los relays borran, pero lo que manda se comprueba igual, y la página funciona sin él.
 - **De cualquier nodo.** Cualquier comunidad puede apuntarla a su propio nodo Mostro y su moneda.
 
 ## Configurar
@@ -44,8 +43,8 @@ archivos al arrancar: vuelve a ejecutarlo tras cambiar `.env` o `shared/`. Dos f
 
 - **Con el servidor de tasaK:** deja `tasak` en marcha y pon delante un servidor web con HTTPS (nginx,
   Caddy…). Solo sirve archivos (GET y HEAD, nada que reciba datos) y escucha por defecto en
-  `127.0.0.1:8765` (`LISTEN`). También archiva los eventos del nodo (ver [Archivo](#archivo)); más
-  adelante publicará la Tasa K.
+  `127.0.0.1:8765` (`LISTEN`). También archiva los eventos del nodo (ver [Archivo](#archivo)) y
+  publica la Tasa K (ver [Tasa publicada](#tasa-publicada)).
 - **Como sitio estático:** ejecuta `tasak build` y publica la carpeta `web/`, que contiene todo lo que
   necesita el sitio, con cualquier servidor web o alojamiento estático. En GitHub Pages, publica `web/`
   con un flujo de GitHub Actions que compile `tasak` y ejecute antes `tasak build`: Pages solo publica
@@ -101,10 +100,11 @@ Tasa K = Σ(precio × monto) ÷ Σ monto
 Ejemplo (en CUP): 3 órdenes a 785 CUP/USD que suman 3000 CUP y una a 750 de 5000 CUP →
 (785×3000 + 750×5000) ÷ 8000 = **763,13**.
 
-Así la Tasa K solo cambia cuando se completa una orden nueva: no se mueve sola con el paso del tiempo (con
-una ventana que terminara «ahora», una orden antigua al salir de ella movería la tasa a cualquier hora), y
-cada valor es «la Tasa K tras tal orden». Si la última orden es de hace más de 24 horas, la cabecera dice
-de cuándo es.
+Así la Tasa K de la cabecera solo cambia cuando se completa una orden nueva: no se mueve sola con el paso
+del tiempo (con una ventana que terminara «ahora», una orden antigua al salir de ella movería la tasa a
+cualquier hora), y cada valor es «la Tasa K tras tal orden». Si la última orden es de hace más de 24
+horas, la cabecera dice de cuándo es. Los puntos «Ponderado» de la gráfica por periodo son otra cosa: ver
+más abajo.
 
 ### Qué mide
 
@@ -160,7 +160,7 @@ La gráfica tiene tres modos:
 
 - **Precio**: un punto por orden ejecutada, o por periodo (1h, 4h, 1D, 1W, 1M, 1Y) con el precio ponderado del periodo.
 - **Velas**: apertura, máximo, mínimo y cierre de cada periodo.
-- **Ponderado**: en cada punto, el precio ponderado por volumen de las 24 horas anteriores, `Σ(precio × monto) ÷ Σ monto` (tras cada orden, o al cierre de cada periodo). Es la Tasa K vista a lo largo del tiempo.
+- **Ponderado**: en cada punto, el precio ponderado por volumen de las 24 horas anteriores, `Σ(precio × monto) ÷ Σ monto`. Con un punto por orden, las 24 horas hasta esa orden: la Tasa K tras ella. Por periodo, las 24 horas hasta el cierre del periodo (o hasta ahora, en el actual): ese sí se mueve con el tiempo, y difiere de la Tasa K cuando el periodo cerró sin órdenes.
 
 El volumen va en la parte baja de la gráfica y, al pasar el ratón, la leyenda de arriba muestra los valores de ese punto. La gráfica se puede ampliar y desplazar (el zoom se mantiene aunque lleguen órdenes nuevas; doble clic para volver a verlo todo) y expandir a pantalla completa. El filtro por método de pago está en el menú «Método de pago».
 

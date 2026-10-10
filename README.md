@@ -17,9 +17,8 @@ pay, not what was actually paid. tasaK starts from the opposite:
   the same rate. Clicking an order shows its original event.
 - **Price, volume and orders in plain sight.** Besides the rate you see the traded volume, every
   executed order, the order book with open orders and the market reference to compare with.
-- **Verifiable.** The data is the node's signed events, read from the relays and checked in the browser.
-  The site's server (optional) makes it faster and keeps the history the relays delete, but what it sends
-  is checked the same way, and the page works without it.
+- **With or without a server.** The site's server (optional) makes it faster and keeps the history the
+  relays delete, but what it sends is checked the same way, and the page works without it.
 - **Any node.** Any community can point it at its own Mostro node and currency.
 
 ## Setup
@@ -44,8 +43,8 @@ again after changing `.env` or `shared/`. Two ways to publish it:
 
 - **With the tasaK server:** run `tasak` all the time and put a web server with HTTPS (nginx, Caddy…)
   in front of it. It only serves files (GET and HEAD, nothing that receives data) and listens on
-  `127.0.0.1:8765` by default (`LISTEN`). It also archives the node's events (see [Archive](#archive));
-  later it will publish the Tasa K.
+  `127.0.0.1:8765` by default (`LISTEN`). It also archives the node's events (see [Archive](#archive))
+  and publishes the Tasa K (see [Published rate](#published-rate)).
 - **As a static site:** run `tasak build` and publish the `web/` folder, which has everything the site
   needs, with any static web server or hosting. On GitHub Pages, publish `web/` with a GitHub Actions
   workflow that builds `tasak` and runs `tasak build` first: Pages can only publish the root or `/docs`
@@ -103,9 +102,10 @@ Tasa K = Σ(price × amount) ÷ Σ amount
 Example (in CUP): 3 orders at 785 CUP/USD totalling 3,000 CUP and one at 750 for 5,000 CUP →
 (785×3000 + 750×5000) ÷ 8000 = **763.13**.
 
-So the Tasa K changes only when a new order is completed: it doesn't move by itself as time passes (with
-a window ending «now», an old order leaving it would shift the rate at any hour), and each value is «the
-Tasa K after that order». If the last order is more than 24 hours old, the header says how old.
+So the Tasa K in the header changes only when a new order is completed: it doesn't move by itself as time
+passes (with a window ending «now», an old order leaving it would shift the rate at any hour), and each
+value is «the Tasa K after that order». If the last order is more than 24 hours old, the header says how
+old. The chart's «Weighted» points per period are another thing: see below.
 
 ### What it measures
 
@@ -159,7 +159,7 @@ The chart has three modes:
 
 - **Price**: one point per executed order, or per period (1h, 4h, 1D, 1W, 1M, 1Y) with that period's weighted price.
 - **Candles**: open, high, low and close of each period.
-- **Weighted**: at each point, the volume-weighted price of the previous 24 hours, `Σ(price × amount) ÷ Σ amount` (after each order, or at the close of each period). It is the Tasa K over time.
+- **Weighted**: at each point, the volume-weighted price of the previous 24 hours, `Σ(price × amount) ÷ Σ amount`. With one point per order, the 24 hours up to that order: the Tasa K after it. Per period, the 24 hours up to the period's close (or now, in the current one): it does move with time, and differs from the Tasa K when the period closed without an order.
 
 Volume is shown at the bottom of the chart and, when hovering, the legend at the top shows that point's
 values. The chart can be zoomed and scrolled (the zoom is kept when new orders arrive; double-click to see
