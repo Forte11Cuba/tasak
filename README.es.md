@@ -21,6 +21,151 @@ alguien dice que pagaría, no lo que realmente se pagó. tasaK parte de lo contr
   los relays borran, pero lo que manda se comprueba igual, y la página funciona sin él.
 - **De cualquier nodo.** Cualquier comunidad puede apuntarla a su propio nodo Mostro y su moneda.
 
+## Paso a paso en un servidor
+
+Tu propio tasaK con su archivo y la Tasa K firmada, en un servidor Linux con Docker, la imagen publicada
+y Caddy para HTTPS. Necesitas:
+
+- un servidor (VPS) con Debian o Ubuntu, amd64 o arm64, con los puertos 80 y 443 abiertos; basta uno pequeño;
+- un dominio o subdominio cuyo DNS administres;
+- la clave pública y los relays del nodo Mostro (y, para recuperar su historial, una copia de su base de
+  datos: solo la tiene el operador del nodo).
+
+Las órdenes se ejecutan en el servidor como root, salvo que digan otra cosa. `tasa.ejemplo.org` es tu
+dominio y `X.Y.Z` la última [versión publicada](https://github.com/Forte11Cuba/tasak/releases).
+
+**1. Apunta el dominio al servidor.** En tu proveedor de DNS, añade un registro `A` con la IPv4 del
+servidor (host `@` para el dominio sin subdominio). Añade `AAAA` solo si el servidor tiene IPv6 que
+funcione: Let's Encrypt la usa si existe. Borra los registros de aparcamiento o redirección del
+registrador para ese nombre. Cada par de líneas debe dar la misma IP (la primera columna de
+`getent`):
+
+```sh
+getent ahostsv4 tasa.ejemplo.org | head -1; curl -4 ifconfig.me; echo   # el registro A
+getent ahostsv6 tasa.ejemplo.org | head -1; curl -6 ifconfig.me; echo   # el AAAA, si lo añadiste
+```
+
+Si tus usuarios están en un país donde hay servicios bloqueados, comprueba desde allí que abren el
+dominio y la IP del servidor: el bloqueo puede ser del proveedor del servidor, no del dominio.
+
+**2. Instala Docker y git** (Docker Compose 2.24 o más reciente, el que instala el script oficial):
+
+```sh
+apt update && apt install -y git curl sqlite3      # sqlite3, para las copias de seguridad
+curl -fsSL https://get.docker.com | sh
+docker compose version
+```
+
+**3. Descarga tasaK y usa la imagen publicada.** Tus cambios van en `docker-compose.override.yml`, que
+Docker Compose combina con `docker-compose.yml`: los archivos del repositorio no se tocan y actualizar es
+cambiar la versión.
+
+```sh
+git clone --branch vX.Y.Z https://github.com/Forte11Cuba/tasak.git && cd tasak
+cat > docker-compose.override.yml <<'EOF'
+services:
+  tasak:
+    image: ghcr.io/forte11cuba/tasak:X.Y.Z   # la misma versión que el clon
+    build: !reset null                       # no compilar: usar la imagen publicada
+  caddy:
+    environment:
+      DOMAIN: tasa.ejemplo.org
+EOF
+docker compose pull tasak
+```
+
+**4. Configura tu nodo.** `cp .env.example .env` y edítalo: `MOSTRO_PUBKEYS`, `RELAYS`, `FIAT`,
+`TIMEZONE`, `HIDDEN_PAYMENT_METHODS`, tu comunidad… (ver las [variables](#docker)). Deja vacíos
+`ARCHIVE_DIR`, `LISTEN` y `SIGNING_KEY_FILE`: los pone Docker. La imagen lleva el `web/` del repositorio;
+para tu propio logo, pon el archivo junto a `docker-compose.yml`, móntalo bajo `tasak:` en el override y
+pon `LOGO=mi-logo.svg`:
+
+```yaml
+    volumes:
+      - ./mi-logo.svg:/app/web/mi-logo.svg:ro
+```
+
+**5. Crea la clave de firma** (para publicar la Tasa K firmada; sin ella, el sitio y el archivo funcionan
+igual). Se genera en el servidor y solo para esto (ni la clave del nodo ni una personal):
+
+```sh
+mkdir -m 700 secrets
+docker compose run --rm --no-deps --user root -v "$PWD/secrets:/secrets" tasak keygen /secrets/nsec
+docker compose run --rm --no-deps --user root -v "$PWD/secrets:/secrets" --entrypoint chown tasak 10001:10001 /secrets/nsec
+```
+
+Muestra la npub de la clave: es lo que se comparte. La nsec nunca va a un chat ni al repositorio. Después
+dásela a `tasak` en el override, que queda así:
+
+```yaml
+services:
+  tasak:
+    image: ghcr.io/forte11cuba/tasak:X.Y.Z
+    build: !reset null
+    environment:
+      SIGNING_KEY_FILE: /run/secrets/tasak-key
+    secrets:
+      - tasak-key
+  caddy:
+    environment:
+      DOMAIN: tasa.ejemplo.org
+
+secrets:
+  tasak-key:
+    file: ./secrets/nsec
+```
+
+Guarda una copia de `secrets/nsec` fuera del servidor, en un sitio cifrado (desde tu ordenador, `scp
+root@SERVIDOR:tasak/secrets/nsec .`): sin ella, una clave nueva es una npub nueva.
+
+**6. Importa el historial del nodo** (opcional, solo para el operador del nodo; antes del primer
+arranque). Los relays solo guardan unos 15 días; la base de datos de Mostro lo tiene todo (ver
+[Archivo](#archivo)). En la máquina del nodo, haz una copia y mándala directamente al servidor (tiene
+datos privados: ni por git ni por un chat):
+
+```sh
+sqlite3 /ruta/a/mostro.db ".backup /tmp/mostro-copia.db"
+scp /tmp/mostro-copia.db root@SERVIDOR:/root/mostro-copia.db
+```
+
+En el servidor, impórtala y borra la copia:
+
+```sh
+docker compose run --rm -v /root/mostro-copia.db:/import/mostro.db:ro tasak import-mostro /import/mostro.db
+rm /root/mostro-copia.db
+```
+
+**7. Arranca.** Si el proveedor tiene un cortafuegos en su panel, abre los puertos 80 y 443 (TCP).
+
+```sh
+docker compose --profile https up -d
+docker compose logs tasak | grep npub                       # signing the Tasa K as npub1…
+docker compose logs caddy | grep "certificate obtained"     # el certificado HTTPS
+```
+
+**8. Comprueba.** Abre `https://tasa.ejemplo.org`. `https://tasa.ejemplo.org/api/tasa.json` da la Tasa K
+y, en `event`, el id del evento firmado, publicado cada 5 minutos en los relays del `.env`: búscalo en
+`https://nostrinspect.com/e/` seguido de ese id: debe firmarlo tu npub.
+
+**9. Copias de seguridad** del archivo (es el historial que los relays olvidan) y de la clave. `.backup`
+es seguro con `tasak` en marcha; copiar el archivo no. El volumen se llama `tasak_tasak-data` con el
+repositorio en una carpeta llamada `tasak`:
+
+```sh
+sqlite3 "$(docker volume inspect -f '{{.Mountpoint}}' tasak_tasak-data)/tasak.sqlite" ".backup /root/tasak-copia.sqlite"
+```
+
+Llévala fuera del servidor, por ejemplo cada día con cron.
+
+**10. En el día a día.** Tras cambiar el `.env`: `docker compose restart tasak`. Registro: `docker
+compose logs -f tasak`. Para actualizar a una versión nueva:
+
+```sh
+git fetch --tags && git checkout vX.Y.Z          # la nueva
+# cambia la versión en docker-compose.override.yml (image:)
+docker compose pull tasak && docker compose --profile https up -d
+```
+
 ## Configurar
 
 Requisitos: Rust (`cargo`), para compilar `tasak`, el programa que lee el `.env`, genera
@@ -51,7 +196,7 @@ El sitio necesita un servidor web, también para probarlo en local: abierto como
 navegadores no cargan sus módulos ES y la página muestra un aviso en su lugar. `tasak` genera los
 archivos al arrancar: vuelve a ejecutarlo tras cambiar `.env` o `shared/`. Dos formas de publicarlo:
 
-- **Con el servidor de tasaK:** con Docker (ver [Docker](#docker)) o deja `tasak` en marcha y pon delante un servidor web con HTTPS (nginx,
+- **Con el servidor de tasaK:** con Docker (ver [Docker](#docker) y el [paso a paso](#paso-a-paso-en-un-servidor)) o deja `tasak` en marcha y pon delante un servidor web con HTTPS (nginx,
   Caddy…). Solo sirve archivos (GET y HEAD, nada que reciba datos) y escucha por defecto en
   `127.0.0.1:8765` (`LISTEN`). También archiva los eventos del nodo (ver [Archivo](#archivo)) y
   publica la Tasa K (ver [Tasa publicada](#tasa-publicada)).
@@ -81,8 +226,9 @@ docker compose logs -f tasak
 - Los archivos del logo o del icono (`LOGO`, `FAVICON`) van en `web/` antes de construir la imagen.
 - Tras actualizar el repositorio: `docker compose up -d --build`.
 - Sin compilar: cada versión publica también la imagen, `ghcr.io/forte11cuba/tasak:X.Y.Z` (y `:latest`),
-  para amd64 y arm64. En `docker-compose.yml`, cambia `build: .` por ese `image:` y ejecuta
-  `docker compose up -d`. Lleva el `web/` del repositorio: monta tus propios archivos de logo en `/app/web/`.
+  para amd64 y arm64. Úsala desde un `docker-compose.override.yml`, como en el
+  [paso a paso](#paso-a-paso-en-un-servidor). Lleva el `web/` del repositorio: monta tus propios archivos
+  de logo en `/app/web/`.
 
 Para importar el historial del nodo, monta la copia de la base de datos de Mostro de solo lectura (ver
 [Archivo](#archivo)):
@@ -94,7 +240,8 @@ docker compose run --rm -v /tmp/mostro-copia.db:/import/mostro.db:ro tasak impor
 
 Para publicar la Tasa K firmada, crea la clave en una carpeta `secrets/` fuera de `web/` (como root
 dentro del contenedor, y luego dásela a su usuario, uid 10001) y descomenta `SIGNING_KEY_FILE` y las
-líneas de `secrets` en `docker-compose.yml`:
+líneas de `secrets` en `docker-compose.yml` (o añádelas al override, como en el
+[paso a paso](#paso-a-paso-en-un-servidor)):
 
 ```sh
 mkdir -p secrets
