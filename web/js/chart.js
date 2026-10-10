@@ -36,6 +36,18 @@ chartC.candles = chartC.chart.addSeries(CandlestickSeries, {
 // Weighted: volume-weighted price of the 24 h before each point (the Tasa K at that moment)
 chartC.avg = chartC.chart.addSeries(LineSeries, { color: C('--avg'), lineWidth: 2, visible: false });
 chartC.line.priceScale().applyOptions({ scaleMargins: { top: 0.12, bottom: 0.08 } });
+// When everything visible is at one price (periods without orders), ±1% around it: else the scale has no
+// height and repeats that price on every label
+const flatPadded = original => {
+  const r = original();
+  const p = r?.priceRange;
+  if (p && p.minValue === p.maxValue) {
+    const d = Math.abs(p.minValue) * 0.01 || 1;
+    return { ...r, priceRange: { minValue: p.minValue - d, maxValue: p.maxValue + d } };
+  }
+  return r;
+};
+for (const s of [chartC.line, chartC.candles, chartC.avg]) s.applyOptions({ autoscaleInfoProvider: flatPadded });
 // Fine precision so that CUP/sat (≈ 0.9) is not rounded to 2 decimals
 for (const s of [chartC.line, chartC.candles, chartC.avg]) {
   s.applyOptions({ priceFormat: { type: 'custom', formatter: fmtPrice, minMove: 0.0001 } });
@@ -158,6 +170,9 @@ function renderLegend(time) {
       : `<div class="row">${when}${kv(t('Ponderado'), fmtPrice(p.avg), cls)}${fmtChg(p.chg)}</div>
       <div class="row"><span class="muted">${t(p.avgN === 1 ? '{n} orden · {vol} en las 24h anteriores' : '{n} órdenes · {vol} en las 24h anteriores', { n: p.avgN, vol: `${fmtInt(p.avgVol)} ${state.fiat}` })}</span></div>
       ${p.order ? evRow(p.order) : ''}`;
+  } else if (p.empty) {
+    const flat = state.mode === 'candles' ? p.flatClose : p.flatValue;
+    el.innerHTML = `<div class="row">${when}<span class="muted">${t('sin órdenes')}</span>${flat == null ? '' : kv(t('Precio'), fmtPrice(flat))}</div>`;
   } else if (p.order) {
     const o = p.order;
     el.innerHTML = `
@@ -181,7 +196,9 @@ export function renderChart(trades) {
   setEmpty(chartC, !trades.length, state.live ? t('No hay órdenes completadas con estos filtros') : null);
   const mode = state.mode;
   if (mode === 'candles' && !state.tf) state.tf = 86400;   // candles need a period
-  chartC.line.applyOptions({ visible: mode === 'line' });
+  // A marker per point only in «Each order» (each one is an order): by period, the flat stretches without
+  // orders would look like trades; the volume says which periods had them
+  chartC.line.applyOptions({ visible: mode === 'line', pointMarkersVisible: !state.tf });
   chartC.candles.applyOptions({ visible: mode === 'candles' });
   chartC.avg.applyOptions({ visible: mode === 'avg' });
   document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
@@ -192,9 +209,17 @@ export function renderChart(trades) {
   document.getElementById('tfOrders').hidden = mode === 'candles';
   document.getElementById('tfSummary').textContent = `${t(TF_SHORT[state.tf])} ▾`;
 
-  // Points: one per period or one per order, each with the weighted price of its previous 24 h.
-  // In Weighted mode the periods without orders count too: their previous 24 h may have an average
-  const points = chartPoints(trades, { tf: state.tf, tz: CONFIG.tz, now: Date.now() / 1000, withEmpty: mode === 'avg' });
+  // Points: one per period or one per order, each with the weighted price of its previous 24 h. The
+  // periods follow the calendar up to now, also those without orders (their previous 24 h may still
+  // have an average); «Each order» has a point per order, whenever it was
+  const points = chartPoints(trades, { tf: state.tf, tz: CONFIG.tz, now: Date.now() / 1000, withEmpty: true });
+  // A period without orders is drawn flat at the previous one's price (a candle with open = close, green
+  // as an unchanged one) and without volume: the volume says there was no trade
+  let lastValue = null, lastClose = null;
+  for (const p of points) {
+    if (p.empty) Object.assign(p, { flatValue: lastValue, flatClose: lastClose });
+    else { lastValue = p.value; lastClose = p.close; }
+  }
 
   // Change from the previous point: colours the volume and the legend
   const valueOf = p => mode === 'candles' ? p.close : mode === 'avg' ? p.avg : p.value;
@@ -207,8 +232,10 @@ export function renderChart(trades) {
     if (v != null) prevVal = v;
   }
 
-  chartC.line.setData(mode === 'line' ? points.map(p => ({ time: p.time, value: p.value })) : []);
-  chartC.candles.setData(mode === 'candles' ? points.map(({ time, open, high, low, close }) => ({ time, open, high, low, close })) : []);
+  chartC.line.setData(mode === 'line' ? points.map(p => !p.empty ? { time: p.time, value: p.value }
+    : p.flatValue == null ? { time: p.time } : { time: p.time, value: p.flatValue }) : []);
+  chartC.candles.setData(mode === 'candles' ? points.map(({ time, open, high, low, close, empty, flatClose: c }) => !empty
+    ? { time, open, high, low, close } : c == null ? { time } : { time, open: c, high: c, low: c, close: c }) : []);
   // Without an average in the previous 24 h the line is broken
   chartC.avg.setData(mode === 'avg' ? points.map(p => p.avg == null ? { time: p.time } : { time: p.time, value: p.avg }) : []);
   chartC.vol.setData(points.map(p => p.empty ? { time: p.time } :
@@ -220,8 +247,19 @@ export function renderChart(trades) {
   // every render (a new order, the refresh every minute) would lose their zoom
   const fitKey = [state.fiat, state.unit, mode, state.tf, [...state.nodeSel], [...(state.pmSel || [])].sort()].join('|');
   if (fitKey !== chartFit.key) chartFit = { key: fitKey, moved: false };
-  if (!chartFit.moved) chartC.chart.timeScale().fitContent();
+  if (!chartFit.moved) fitView();
   positionVolTag();
+}
+
+// The default view: everything, or the newest points that fit at BAR_PX pixels each (by hour the calendar
+// gives thousands of periods, and fitted all together the candles would have no body). The same width on
+// every screen: more periods on a computer, fewer on a phone
+const BAR_PX = 12;
+function fitView() {
+  const n = view.info.size;
+  const fit = Math.max(10, Math.floor(chartC.chart.timeScale().width() / BAR_PX));
+  if (n > fit) chartC.chart.timeScale().setVisibleLogicalRange({ from: n - fit, to: n + 1 });
+  else chartC.chart.timeScale().fitContent();
 }
 
 // The legend shows the point under the cursor; on leaving, back to the last one
@@ -240,5 +278,5 @@ chartC.el.addEventListener('pointerdown', e => {
 }, true);
 chartC.el.addEventListener('pointermove', e => { if (e.buttons && !draggingOther) userMoved(); }, true);
 chartC.el.addEventListener('touchmove', userMoved, { passive: true });
-// Double click: back to seeing all the data
-chartC.el.addEventListener('dblclick', () => { chartFit.moved = false; chartC.chart.timeScale().fitContent(); });
+// Double click: back to the default view
+chartC.el.addEventListener('dblclick', () => { chartFit.moved = false; fitView(); });

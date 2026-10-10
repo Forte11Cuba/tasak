@@ -96,15 +96,19 @@ export function movingWeighted(ends, trades, tz) {
 
 // Points of the chart: one per order (tf = 0) or one per period, with the weighted average of the
 // 24 h before each one (after each order, or at the close of each period, never after `now`).
-// `withEmpty` adds the periods without orders: their previous 24 h may still have an average.
+// `withEmpty` adds the periods without orders, between orders and from the last one up to the period of
+// `now` (the chart follows the calendar up to now): their previous 24 h may still have an average.
 export function chartPoints(trades, { tf, tz, now, withEmpty = false }) {
   let points;
   if (tf) {
     points = buildCandles(trades, tf, tz).map(c => ({ ...c, value: c.pv / c.vol, n: 0 }));
     const byTime = new Map(points.map(p => [p.time, p]));
     for (const t of trades) byTime.get(periodStart(toChartTime(t.ts, tz), tf)).n++;
-    if (withEmpty) {
-      for (const time of emptyPeriods(points.map(p => p.time), tf)) points.push({ time, vol: 0, n: 0, empty: true });
+    if (withEmpty && points.length) {
+      const empty = emptyPeriods(points.map(p => p.time), tf);
+      const nowStart = periodStart(toChartTime(now, tz), tf);
+      for (let t = nextPeriod(Math.max(...points.map(p => p.time)), tf); t <= nowStart; t = nextPeriod(t, tf)) empty.push(t);
+      for (const time of empty) points.push({ time, vol: 0, n: 0, empty: true });
       points.sort((a, b) => a.time - b.time);
     }
   } else {
