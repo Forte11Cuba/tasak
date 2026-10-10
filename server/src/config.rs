@@ -184,9 +184,7 @@ pub fn build_config(get: impl Fn(&str) -> Option<String>, web: &Path) -> (Config
 
 pub fn render_config(config: &Config) -> String {
     let json = serde_json::to_string_pretty(config).expect("the config is always serializable");
-    format!(
-        "// Generated from .env by tasak. Do not edit by hand.\nwindow.TASAK_CONFIG = {json};\n"
-    )
+    format!("// Generated from .env by tasak. Do not edit by hand.\nwindow.TASAK_CONFIG = {json};\n")
 }
 
 /// The prefix, ignoring ASCII case (like the /i of a JavaScript regular expression)

@@ -345,6 +345,7 @@ itself through the premiums.
 | `shared/test/` | tests of `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), fixed real data (`fixtures/`), the reference values the code must reproduce (`expected.json`) and hand-written cases (`cases.json`): the vectors that the Rust version of this logic (`server/src/logic/`) passes too |
 | `server/` | the tasaK server in Rust (`tasak`): reads `.env`, generates `web/config.js`, serves `web/` and archives the node's events; its systemd service is `server/tasak.service`. `src/logic/` is the logic of `shared/` in Rust, checked with the same vectors (`server/tests/shared_vectors.rs`); `server/tests/config-cases.json` is the `web/config.js` each `.env` must give (`cargo test`) |
 | `Dockerfile`, `docker-compose.yml`, `Caddyfile` | the Docker image (`tasak` with `web/` and `shared/`) and an example deployment, with Caddy for HTTPS (see [Docker](#docker)) |
+| `.github/workflows/ci.yml` | the checks run on every pull request and every push to `main`: `cargo fmt`, `clippy` and `cargo test` of the server, `node --test` of `shared/`, `tools/reference.mjs` and `tools/snapshot.mjs` in headless Chrome (after `tasak build`), and the Docker image (it builds, starts and serves the site) |
 | `tools/` | development checks in headless Chrome (Node, no dependencies); `node tools/reference.mjs` checks that `web/` computes the values in `shared/test/expected.json` from fixed data, without the server; `node tools/snapshot.mjs`, with a server's snapshot and a signed rate |
 
 ## Languages
