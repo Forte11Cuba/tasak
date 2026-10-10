@@ -17,8 +17,9 @@ pay, not what was actually paid. tasaK starts from the opposite:
   the same rate. Clicking an order shows its original event.
 - **Price, volume and orders in plain sight.** Besides the rate you see the traded volume, every
   executed order, the order book with open orders and the market reference to compare with.
-- **No middleman.** The data comes straight from the relays; the page doesn't depend on its own server
-  or on a database you have to trust.
+- **Verifiable.** The data is the node's signed events, read from the relays and checked in the browser.
+  The site's server (optional) makes it faster and keeps the history the relays delete, but what it sends
+  is checked the same way, and the page works without it.
 - **Any node.** Any community can point it at its own Mostro node and currency.
 
 ## Setup
@@ -122,7 +123,9 @@ Fixed-price orders don't depend on it.
 The Tasa K always follows the same rules, so every visitor sees the same figure:
 
 - **They count**: orders completed (`success`) in the last 24 hours, in the chosen currency, from the
-  nodes in `.env`, with the node's signature verified.
+  nodes in `.env`: signed by the node (checked in the browser) or, once their event is no longer on the
+  relays, from the node's database (`tasak import-mostro`), unsigned and marked ◌, relying on whoever
+  publishes the site.
 - **They don't count**: orders never completed (open, taken, canceled, expired, in dispute); those with
   a payment method in `HIDDEN_PAYMENT_METHODS` (with «Otros», text not on the Mostro app's list, and
   «Pruebas», test orders: «prueba», «test», «no tomar»); and those without an amount in currency and in
@@ -247,7 +250,9 @@ signed the rate.
 The site served by `tasak` loads the snapshot first and draws at once; the relays then add what's new.
 It verifies the snapshot's events as those of the relays (author, kind, signature), shows the signed Tasa
 K only if `ratePubkey` signed it (with a ⚠ if it doesn't match the one it computes with the same data),
-marks the unsigned orders (◌) and says how old the server's data is. Without the server, or if it fails,
+marks the unsigned orders (◌) and says how old the server's data is. It asks the relays only for the
+last 7 days (longer if the node's orders last longer) and warns if the server lacks a completed order
+they have. Without the server, or if it fails,
 it works as before, with the relays alone.
 
 Without orders in the last 24 hours the last rate stays, marked with `empty_since`. Values are rounded to

@@ -20,6 +20,9 @@ export function createRelayPool({ urls, authors, kinds, metaFilters, verify, has
     live: 0,       // relays with the history loaded and subscribed live
     rejected: 0,   // events with an invalid signature
     newest: 0,     // created_at of the newest event of `kinds` received
+    // Ask the relays only for what is newer than this (unix s; 0 = their whole history): with the server's
+    // snapshot, the older history comes from it
+    historyFrom: 0,
     start: () => urls.forEach(url => connect(url)),
   };
 
@@ -36,8 +39,8 @@ export function createRelayPool({ urls, authors, kinds, metaFilters, verify, has
     let ws;
     try { ws = new WebSocket(url); } catch { return; }
     const base = { kinds, authors };
-    // On reconnect we only ask for what is new
-    const since = pool.newest ? { since: pool.newest - 3600 } : {};
+    // On reconnect we only ask for what is new; at first, from historyFrom or everything
+    const since = pool.newest ? { since: pool.newest - 3600 } : pool.historyFrom ? { since: pool.historyFrom } : {};
     let page = 0, count = 0, oldest = Infinity, prevOldest = Infinity;
     let isLive = false, startedAt = 0, changed = false;
     const req = (id, extra) => ws.send(JSON.stringify(['REQ', id, { ...base, ...since, ...extra }]));

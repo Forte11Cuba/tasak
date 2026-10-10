@@ -38,6 +38,9 @@ export const state = {
   signedRate: null,          // the Tasa K signed with the key of config.js (ratePubkey)
   snapshotAt: 0,             // when the server wrote the snapshot
   snapshotRejected: 0,       // its events with an invalid signature
+  snapshotKeys: null,        // completed orders (pubkey:d) it has
+  relaysFrom: 0,             // with it, the relays are asked only from this moment
+  snapshotMissing: 0,        // completed orders of that period the relays have and it doesn't
 };
 
 // Last chart view chosen (mode and timeframe)

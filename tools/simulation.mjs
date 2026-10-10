@@ -25,6 +25,8 @@ export function simulation(FIX) {
     send(text) {
       const [type, id, ...filters] = JSON.parse(text);
       if (type !== 'REQ') return;
+      // What the page asks for, for the checks
+      (window.tasakRequests ||= []).push(...filters);
       const out = new Map();
       for (const f of filters) {
         let l = FIX.events.filter(e => matches(e, f)).sort((a, b) => b.created_at - a.created_at);
