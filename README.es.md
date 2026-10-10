@@ -31,7 +31,7 @@ cp .env.example .env            # pon tu nodo, relays, moneda y comunidad (el ej
 cargo install --path server --locked   # compila tasak y lo instala en ~/.cargo/bin (en el PATH con rustup)
 tasak                           # desde la carpeta del repositorio (o --root CARPETA): genera y
                                 # sirve web/ en http://localhost:8765/ (LISTEN para cambiarlo)
-tasak build                     # solo genera web/config.js y web/shared/
+tasak build                     # solo genera web/config.js, web/favicon.svg y web/shared/
 ```
 
 Vuelve a ejecutar `cargo install` tras actualizar el repositorio. Sin instalarlo, `cargo build --release
@@ -165,6 +165,18 @@ La gráfica tiene tres modos:
 El volumen va en la parte baja de la gráfica y, al pasar el ratón, la leyenda de arriba muestra los valores de ese punto. La gráfica se puede ampliar y desplazar (el zoom se mantiene aunque lleguen órdenes nuevas; doble clic para volver a verlo todo) y expandir a pantalla completa. El filtro por método de pago está en el menú «Método de pago».
 
 Los métodos de `HIDDEN_PAYMENT_METHODS` quedan fuera por defecto; se pueden activar desde el menú.
+
+## Seguridad
+
+Las páginas llevan una política de seguridad de contenido (CSP, en una `<meta>` de `index.html` y
+`node.html`, así que también vale en un alojamiento estático): solo los scripts, estilos y fuentes del
+propio sitio, nada en línea; imágenes del sitio o `https` (la foto del nodo); y conexiones solo al sitio,
+a los relays (`wss://`) y a las API de Yadio y Coinbase. Si alguien consiguiera inyectar código en la
+página (por ejemplo, con el texto de un evento), el navegador no lo ejecutaría ni lo dejaría mandar datos
+fuera. El único estilo en línea permitido, por su hash, es el que añade lightweight-charts para el logo
+de atribución de TradingView. `tasak` envía además `frame-ancestors 'none'` (ningún otro sitio puede
+mostrar este en un marco), que solo funciona como cabecera, y genera el icono (`favicon.svg`, la letra de
+`SITE_NAME`) como archivo, porque la política no admite imágenes `data:`.
 
 ## Funcionar aunque haya servicios bloqueados
 

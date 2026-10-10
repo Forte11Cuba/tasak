@@ -31,7 +31,7 @@ cp .env.example .env            # set your node, relays, currency and community 
 cargo install --path server --locked   # builds tasak and installs it in ~/.cargo/bin (on PATH with rustup)
 tasak                           # from the repository folder (or --root DIR): generates and serves
                                 # web/ at http://localhost:8765/ (LISTEN to change it)
-tasak build                     # only generates web/config.js and web/shared/
+tasak build                     # only generates web/config.js, web/favicon.svg and web/shared/
 ```
 
 Run `cargo install` again after updating the repository. Without installing it, `cargo build --release
@@ -166,6 +166,17 @@ values. The chart can be zoomed and scrolled (the zoom is kept when new orders a
 everything again) and can go full screen. The payment method filter is in the «Payment method» menu.
 
 The methods in `HIDDEN_PAYMENT_METHODS` are left out by default; they can be enabled from that menu.
+
+## Security
+
+The pages carry a Content Security Policy (`<meta>` in `index.html` and `node.html`, so it also applies
+on a static host): only the site's own scripts, styles and fonts, nothing inline; images from the site or
+`https` (the node's picture); and connections only to the site, to relays (`wss://`) and to the Yadio and
+Coinbase APIs. If someone managed to inject code into the page (say, through text in an event), the
+browser wouldn't run it nor let it send data elsewhere. The one inline style allowed, by its hash, is the
+one lightweight-charts adds for TradingView's attribution logo. `tasak` also sends `frame-ancestors
+'none'` (no other site may show this one in a frame), which only works as a header, and generates the
+icon (`favicon.svg`, the letter of `SITE_NAME`) as a file, since the policy doesn't allow `data:` images.
 
 ## Working when services are blocked
 

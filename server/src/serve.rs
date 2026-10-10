@@ -3,7 +3,7 @@
 
 use axum::Router;
 use axum::http::HeaderValue;
-use axum::http::header::{CACHE_CONTROL, CONTENT_TYPE, X_CONTENT_TYPE_OPTIONS};
+use axum::http::header::{CACHE_CONTROL, CONTENT_SECURITY_POLICY, CONTENT_TYPE, X_CONTENT_TYPE_OPTIONS};
 use axum::middleware::map_response;
 use axum::response::Response;
 use std::io;
@@ -35,6 +35,12 @@ async fn headers(mut res: Response) -> Response {
     // Always revalidated (cheap: 304 with Last-Modified), so a new config.js or release shows at once
     h.insert(CACHE_CONTROL, HeaderValue::from_static("no-cache"));
     h.insert(X_CONTENT_TYPE_OPTIONS, HeaderValue::from_static("nosniff"));
+    // The rest of the Content Security Policy is in the pages (<meta>), so it also applies on a static
+    // host; this part only works as a header: no other site may show this one in a frame
+    h.insert(
+        CONTENT_SECURITY_POLICY,
+        HeaderValue::from_static("frame-ancestors 'none'"),
+    );
     res
 }
 
