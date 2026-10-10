@@ -42,10 +42,20 @@ export async function openChrome(args = []) {
   const proc = spawn(process.env.CHROME || 'google-chrome', [
     '--headless=new', '--remote-debugging-port=0', `--user-data-dir=${profile}`,
     '--no-first-run', '--no-default-browser-check', '--disable-gpu', '--hide-scrollbars', ...args,
-  ], { stdio: 'ignore' });
+  ], { stdio: ['ignore', 'ignore', 'pipe'] });
+  // What it writes, to say why if it doesn't start (only the end: it can be long)
+  let stderr = '', exited = null;
+  proc.stderr.on('data', d => { stderr = (stderr + d).slice(-2000); });
+  proc.on('exit', code => { exited = code; });
+  proc.on('error', e => { exited = e.message; });
   const portFile = join(profile, 'DevToolsActivePort');
-  for (let i = 0; i < 100 && !existsSync(portFile); i++) await sleep(100);
-  if (!existsSync(portFile)) { proc.kill(); throw new Error('Chrome did not start (set CHROME to its path)'); }
+  // Up to 30 s: a cold start on a CI runner can take more than 10
+  for (let i = 0; i < 300 && !existsSync(portFile) && exited === null; i++) await sleep(100);
+  if (!existsSync(portFile)) {
+    proc.kill();
+    throw new Error(`Chrome did not start (set CHROME to its path)${exited === null ? ' in 30 s' : `: exited (${exited})`}`
+      + (stderr.trim() ? `\n${stderr.trim()}` : ''));
+  }
   const port = Number(readFileSync(portFile, 'utf8').split('\n')[0]);
   return {
     port,

@@ -1,0 +1,208 @@
+# Publishes a version when a tag vX.Y.Z is pushed (it must match the version in server/Cargo.toml):
+# - static binaries (musl) for Linux x86_64 and aarch64, each with web/, shared/ and the files to run it,
+#   and their SHA256SUMS, in a GitHub Release;
+# - the Docker image for linux/amd64 and linux/arm64 in GHCR (ghcr.io/<owner>/tasak:X.Y.Z and :latest).
+# Run by hand (Actions → Release → Run workflow), or in a pull request that changes this file, it only
+# builds and checks everything, leaving the binaries as artifacts of the run: nothing is published.
+name: Release
+
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+  pull_request:
+    paths: ['.github/workflows/release.yml']
+
+permissions:
+  contents: read
+
+jobs:
+  version:
+    runs-on: ubuntu-24.04
+    outputs:
+      version: ${{ steps.v.outputs.version }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - id: v
+        name: Version of server/Cargo.toml (and of the tag)
+        run: |
+          version=$(grep -m1 '^version = ' server/Cargo.toml | cut -d'"' -f2)
+          if [ "$GITHUB_REF_TYPE" = tag ] && [ "$GITHUB_REF_NAME" != "v$version" ]; then
+            echo "::error::the tag $GITHUB_REF_NAME doesn't match the version in server/Cargo.toml ($version)"
+            exit 1
+          fi
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+
+  binaries:
+    needs: version
+    strategy:
+      matrix:
+        include:
+          - { arch: x86_64, target: x86_64-unknown-linux-musl, runner: ubuntu-24.04 }
+          - { arch: aarch64, target: aarch64-unknown-linux-musl, runner: ubuntu-24.04-arm }
+    runs-on: ${{ matrix.runner }}
+    env:
+      NAME: tasak-${{ needs.version.outputs.version }}-${{ matrix.arch }}-linux
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - uses: dtolnay/rust-toolchain@e2a55d2ffb04f378e9626c28d38b36d230d1e12f # master
+        with:
+          toolchain: 1.94.1
+          targets: ${{ matrix.target }}
+      # ring and SQLite are compiled from C: musl's compiler, for a binary that runs on any distribution
+      - name: musl-tools
+        run: sudo apt-get update && sudo apt-get install -y --no-install-recommends musl-tools
+      - name: cargo build
+        run: cargo build --manifest-path server/Cargo.toml --release --locked --target ${{ matrix.target }} --bin tasak
+      # tasak needs web/ and shared/ next to it: only what is in git, without the tests
+      - name: Package
+        run: |
+          mkdir dist
+          git archive --format=tar --prefix="$NAME/" HEAD web shared .env.example LICENSE README.md README.es.md \
+            server/tasak.service ':(exclude)shared/test' | tar -x -C dist
+          mv "dist/$NAME/server/tasak.service" "dist/$NAME/" && rmdir "dist/$NAME/server"
+          cp "server/target/${{ matrix.target }}/release/tasak" "dist/$NAME/"
+          tar -czf "dist/$NAME.tar.gz" -C dist "$NAME"
+      - name: The package runs
+        run: |
+          file "dist/$NAME/tasak" | grep -q 'static'
+          cd "dist/$NAME"
+          cp .env.example .env
+          ./tasak build
+          test -f web/config.js && test -f web/favicon.svg
+          ARCHIVE=false ./tasak &
+          pid=$!
+          for _ in $(seq 20); do curl -fsS -o /dev/null http://127.0.0.1:8765/ && break; sleep 1; done
+          curl -fsS http://127.0.0.1:8765/ | grep -q '<title'
+          kill "$pid"
+      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: ${{ env.NAME }}
+          path: dist/${{ env.NAME }}.tar.gz
+          if-no-files-found: error
+
+  image:
+    needs: version
+    strategy:
+      matrix:
+        include:
+          - { platform: linux/amd64, runner: ubuntu-24.04 }
+          - { platform: linux/arm64, runner: ubuntu-24.04-arm }
+    runs-on: ${{ matrix.runner }}
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+      - name: Image name (lowercase, as GHCR wants)
+        run: |
+          echo "IMAGE=ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/tasak" >> "$GITHUB_ENV"
+          echo "ARCH=${PLATFORM#linux/}" >> "$GITHUB_ENV"
+        env:
+          PLATFORM: ${{ matrix.platform }}
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      # Built on a runner of its own architecture (emulating ARM to compile Rust would take far longer)
+      - name: Build
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          load: true
+          tags: tasak:test
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.description=tasaK: the exchange rate of a currency from the orders executed on Mostro nodes
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.version=${{ needs.version.outputs.version }}
+      - name: The image starts and serves the site
+        run: |
+          cp .env.example .env
+          docker run -d --name tasak -p 127.0.0.1:8765:8765 -e ARCHIVE=false -v "$PWD/.env:/app/.env:ro" tasak:test
+          for _ in $(seq 30); do curl -fsS -o /dev/null http://127.0.0.1:8765/ && break; sleep 1; done
+          docker logs tasak
+          curl -fsS http://127.0.0.1:8765/ | grep -q '<title'
+      - if: github.ref_type == 'tag'
+        uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      # The same build (from the cache), pushed by digest: the manifest job joins both architectures
+      - if: github.ref_type == 'tag'
+        id: push
+        name: Push
+        uses: docker/build-push-action@c3c9e263c25d99ce0380d002d59b67737d91b0dc # v7.4.0
+        with:
+          context: .
+          platforms: ${{ matrix.platform }}
+          labels: |
+            org.opencontainers.image.source=${{ github.server_url }}/${{ github.repository }}
+            org.opencontainers.image.description=tasaK: the exchange rate of a currency from the orders executed on Mostro nodes
+            org.opencontainers.image.licenses=MIT
+            org.opencontainers.image.version=${{ needs.version.outputs.version }}
+          outputs: type=image,name=${{ env.IMAGE }},push-by-digest=true,name-canonical=true,push=true
+      - if: github.ref_type == 'tag'
+        name: Digest
+        run: |
+          mkdir digests
+          touch "digests/${DIGEST#sha256:}"
+        env:
+          DIGEST: ${{ steps.push.outputs.digest }}
+      - if: github.ref_type == 'tag'
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: digest-${{ env.ARCH }}
+          path: digests/*
+          if-no-files-found: error
+
+  manifest:
+    if: github.ref_type == 'tag'
+    needs: [version, image]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+      packages: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: digest-*
+          merge-multiple: true
+          path: digests
+      - uses: docker/setup-buildx-action@f87e5991a6d7451dcb8d9637bfbc97413f497069 # v4.4.1
+      - uses: docker/login-action@dbcb813823bdd20940b903addbd779551569679f # v4.6.0
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }}
+          password: ${{ secrets.GITHUB_TOKEN }}
+      - name: One image for both architectures, as X.Y.Z and latest
+        working-directory: digests
+        run: |
+          image="ghcr.io/${GITHUB_REPOSITORY_OWNER,,}/tasak"
+          refs=()
+          for digest in *; do refs+=("$image@sha256:$digest"); done
+          docker buildx imagetools create -t "$image:$VERSION" -t "$image:latest" "${refs[@]}"
+          docker buildx imagetools inspect "$image:$VERSION"
+        env:
+          VERSION: ${{ needs.version.outputs.version }}
+
+  release:
+    if: github.ref_type == 'tag'
+    needs: [binaries, manifest]
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          pattern: tasak-*
+          merge-multiple: true
+          path: dist
+      - name: GitHub Release
+        working-directory: dist
+        run: |
+          sha256sum tasak-*.tar.gz > SHA256SUMS
+          cat SHA256SUMS
+          gh release create "$GITHUB_REF_NAME" --repo "$GITHUB_REPOSITORY" --verify-tag --generate-notes \
+            --title "tasaK $GITHUB_REF_NAME" tasak-*.tar.gz SHA256SUMS
+        env:
+          GH_TOKEN: ${{ github.token }}

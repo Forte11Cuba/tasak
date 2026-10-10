@@ -37,6 +37,16 @@ tasak build                     # solo genera web/config.js, web/favicon.svg y w
 Vuelve a ejecutar `cargo install` tras actualizar el repositorio. Sin instalarlo, `cargo build --release
 --manifest-path server/Cargo.toml` deja el programa en `server/target/release/tasak`.
 
+Sin Rust: cada [versión publicada](https://github.com/Forte11Cuba/tasak/releases) trae `tasak` compilado
+para Linux (x86_64 y aarch64, estático: funciona en cualquier distribución) junto con `web/`, `shared/`,
+`.env.example` y `tasak.service`, y un archivo `SHA256SUMS` para comprobarlos:
+
+```sh
+tar xzf tasak-X.Y.Z-x86_64-linux.tar.gz   # tras sha256sum -c --ignore-missing SHA256SUMS
+cd tasak-X.Y.Z-x86_64-linux
+cp .env.example .env && ./tasak           # la carpeta es la del repositorio: no hace falta --root
+```
+
 El sitio necesita un servidor web, también para probarlo en local: abierto como archivo (`file://`) los
 navegadores no cargan sus módulos ES y la página muestra un aviso en su lugar. `tasak` genera los
 archivos al arrancar: vuelve a ejecutarlo tras cambiar `.env` o `shared/`. Dos formas de publicarlo:
@@ -70,6 +80,9 @@ docker compose logs -f tasak
   proxy, no lo uses y apúntalo a `127.0.0.1:8765`.
 - Los archivos del logo o del icono (`LOGO`, `FAVICON`) van en `web/` antes de construir la imagen.
 - Tras actualizar el repositorio: `docker compose up -d --build`.
+- Sin compilar: cada versión publica también la imagen, `ghcr.io/forte11cuba/tasak:X.Y.Z` (y `:latest`),
+  para amd64 y arm64. En `docker-compose.yml`, cambia `build: .` por ese `image:` y ejecuta
+  `docker compose up -d`. Lleva el `web/` del repositorio: monta tus propios archivos de logo en `/app/web/`.
 
 Para importar el historial del nodo, monta la copia de la base de datos de Mostro de solo lectura (ver
 [Archivo](#archivo)):
@@ -352,6 +365,7 @@ se la devolvería a sí mismo a través de las primas.
 | `shared/test/` | pruebas de `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), datos reales fijos (`fixtures/`), los valores de referencia que el código debe reproducir (`expected.json`) y casos escritos a mano (`cases.json`): los vectores que también pasa la versión en Rust de esta lógica (`server/src/logic/`) |
 | `server/` | el servidor de tasaK en Rust (`tasak`): lee el `.env`, genera `web/config.js`, sirve `web/` y archiva los eventos del nodo; su servicio de systemd es `server/tasak.service`. `src/logic/` es la lógica de `shared/` en Rust, comprobada con los mismos vectores (`server/tests/shared_vectors.rs`); `server/tests/config-cases.json` es el `web/config.js` que debe salir de cada `.env` (`cargo test`) |
 | `Dockerfile`, `docker-compose.yml`, `Caddyfile` | la imagen de Docker (`tasak` con `web/` y `shared/`) y un despliegue de ejemplo, con Caddy para HTTPS (ver [Docker](#docker)) |
+| `.github/workflows/release.yml` | publica una versión al empujar una etiqueta `vX.Y.Z` (debe coincidir con `server/Cargo.toml`): los binarios estáticos y la imagen de Docker (amd64 y arm64, en GHCR), tras comprobar que funcionan; lanzada a mano, o en un pull request que la cambie, solo compila y comprueba |
 | `.github/workflows/ci.yml` | las comprobaciones de cada pull request y de cada push a `main`: `cargo fmt`, `clippy` y `cargo test` del servidor, `node --test` de `shared/`, `tools/reference.mjs` y `tools/snapshot.mjs` en Chrome headless (tras `tasak build`) y la imagen de Docker (se construye, arranca y sirve el sitio) |
 | `tools/` | comprobaciones de desarrollo en Chrome headless (Node, sin dependencias); `node tools/reference.mjs` comprueba que `web/` calcula con datos fijos los valores de `shared/test/expected.json`, sin el servidor; `node tools/snapshot.mjs`, con el snapshot de un servidor y una tasa firmada |
 
