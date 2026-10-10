@@ -559,13 +559,19 @@ fn trades_tasa_k_and_previous_24h_per_currency_and_unit() {
             .map(|t| json!({ "key": t.key, "ts": t.ts, "size": t.size, "price": t.price, "chartTime": to_chart_time(t.ts as f64, tz) }))
             .collect();
         check(Value::Array(trades), &u["trades"], &format!("{name} trades"));
-        let k = tasa_k(&v.trades, DATA.now);
+        let k = last_tasa_k(&v.trades, DATA.now);
         check(
-            json!([k.rate, k.previous, k.count, k.volume]),
-            &json!([u["rate"], u["previousRate"], u["orders24h"], u["volume24h"]]),
+            json!([k.to, k.k.rate, k.k.previous, k.k.count, k.k.volume]),
+            &json!([
+                u["rateTo"],
+                u["rate"],
+                u["previousRate"],
+                u["orders24h"],
+                u["volume24h"]
+            ]),
             &name,
         );
-        assert_eq!(k.ids.len(), k.count);
+        assert_eq!(k.k.ids.len(), k.k.count);
     }
 }
 

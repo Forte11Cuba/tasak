@@ -11,7 +11,7 @@ Many reference rates are calculated from **ads or buy/sell intentions**: what so
 pay, not what was actually paid. tasaK starts from the opposite:
 
 - **Only completed orders.** The rate is the volume-weighted price of the trades that were actually
-  executed in the last 24 hours, not of published offers.
+  executed in the 24 hours up to the last one, not of published offers.
 - **Verifiable by anyone.** Each order is an event signed by the Mostro node and published on Nostr.
   The page checks the signatures, and anyone can read the same events from the relays and recompute
   the same rate. Clicking an order shows its original event.
@@ -94,7 +94,7 @@ If the URL changes the node and has no `fiat`, the `.env` currency doesn't apply
 
 ## Tasa K
 
-Volume-weighted price of the orders completed in the last 24 hours:
+Volume-weighted price of the orders completed in the 24 hours that end at the last completed order:
 
 ```
 Tasa K = Σ(price × amount) ÷ Σ amount
@@ -103,8 +103,9 @@ Tasa K = Σ(price × amount) ÷ Σ amount
 Example (in CUP): 3 orders at 785 CUP/USD totalling 3,000 CUP and one at 750 for 5,000 CUP →
 (785×3000 + 750×5000) ÷ 8000 = **763.13**.
 
-If no order was completed in the last 24 hours, the last Tasa K there was stays (that of the 24 hours
-before the last order), and the header says how old it is.
+So the Tasa K changes only when a new order is completed: it doesn't move by itself as time passes (with
+a window ending «now», an old order leaving it would shift the rate at any hour), and each value is «the
+Tasa K after that order». If the last order is more than 24 hours old, the header says how old.
 
 ### What it measures
 
@@ -122,7 +123,7 @@ Fixed-price orders don't depend on it.
 
 The Tasa K always follows the same rules, so every visitor sees the same figure:
 
-- **They count**: orders completed (`success`) in the last 24 hours, in the chosen currency, from the
+- **They count**: orders completed (`success`) in the 24 hours up to the last one, in the chosen currency, from the
   nodes in `.env`: signed by the node (checked in the browser) or, once their event is no longer on the
   relays, from the node's database (`tasak import-mostro`), unsigned and marked ◌, relying on whoever
   publishes the site.
@@ -133,7 +134,7 @@ The Tasa K always follows the same rules, so every visitor sees the same figure:
 - No price is discarded as an outlier, and market-price and fixed-price orders both count.
 
 Visitors can choose other payment methods or nodes: the chart and the tables follow their choice, and
-**Your selection** shows its weighted price of the last 24 hours next to the filters. The Tasa K in the
+**Your selection** shows its weighted price of the 24 hours up to its last order next to the filters. The Tasa K in the
 header doesn't change.
 
 ### The node's reference
@@ -149,7 +150,7 @@ Yadio's API and marked «≈», and with neither the order is shown without a pr
 
 BTC buys and sells close at different prices, since each side sets its premium; the Tasa K weighs them all
 together. For information only, without changing the rate, hovering over the Tasa K and the FAQ show the
-weighted price of buys and of sells in the last 24 hours, and how many orders were at market price (with
+weighted price of buys and of sells in the Tasa K's window, and how many orders were at market price (with
 their average premium) or at fixed price. Market or fixed comes from the order's `pending` version or,
 without it, from a premium other than 0 (Mostro doesn't allow a premium with a fixed price); orders with
 premium 0 whose `pending` version wasn't seen are counted as unknown.
@@ -255,7 +256,8 @@ last 7 days (longer if the node's orders last longer) and warns if the server la
 they have. Without the server, or if it fails,
 it works as before, with the relays alone.
 
-Without orders in the last 24 hours the last rate stays, marked with `empty_since`. Values are rounded to
+Its window always ends at the last completed order (`to`); `empty_since` says since when there have been
+no orders in the last 24 hours. Values are rounded to
 `RATE_DECIMALS` decimals, as JavaScript's `toFixed`.
 
 The key must be dedicated to this (not the Mostro node's, not a personal one) and live outside the

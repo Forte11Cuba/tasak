@@ -16,11 +16,11 @@
   ]
  },
  "header": {
-  "sTasa": "1027,03CUP/USD",
-  "sTasaSub": "4 órdenes · 33.700 CUP",
-  "sChg": "▼ 8,58 %",
+  "sTasa": "1056,71CUP/USD",
+  "sTasaSub": "6 órdenes · 48.700 CUP",
+  "sChg": "▼ 7,35 %",
   "sYadio": "780CUP/USD",
-  "sYadioSub": "Tasa K +31,7 % sobre Yadio",
+  "sYadioSub": "Tasa K +35,5 % sobre Yadio",
   "sVol": "207.900 CUP",
   "sVolSub": "22 órdenes · desde 27/9",
   "sLast": "1055,22CUP/USD",
@@ -3133,10 +3133,11 @@
    "units": {
     "usd": {
      "approximateUsd": false,
-     "rate": 1027.033570381891,
-     "previousRate": 1123.3965253508538,
-     "orders24h": 4,
-     "volume24h": 33700,
+     "rateTo": 1791168509,
+     "rate": 1056.7141519945078,
+     "previousRate": 1140.5677058672293,
+     "orders24h": 6,
+     "volume24h": 48700,
      "trades": [
       {
        "key": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a:9e65024e-02af-443b-aadc-b4a2e35011a5",
@@ -6753,10 +6754,11 @@
     },
     "btc": {
      "approximateUsd": false,
-     "rate": 88833707.97841597,
-     "previousRate": 95269653.5663444,
-     "orders24h": 4,
-     "volume24h": 33700,
+     "rateTo": 1791168509,
+     "rate": 90816032.081474,
+     "previousRate": 96474953.61781076,
+     "orders24h": 6,
+     "volume24h": 48700,
      "trades": [
       {
        "key": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a:9e65024e-02af-443b-aadc-b4a2e35011a5",
@@ -10373,10 +10375,11 @@
     },
     "sat": {
      "approximateUsd": false,
-     "rate": 0.8883370797841595,
-     "previousRate": 0.952696535663444,
-     "orders24h": 4,
-     "volume24h": 33700,
+     "rateTo": 1791168509,
+     "rate": 0.90816032081474,
+     "previousRate": 0.9647495361781077,
+     "orders24h": 6,
+     "volume24h": 48700,
      "trades": [
       {
        "key": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a:9e65024e-02af-443b-aadc-b4a2e35011a5",
@@ -14000,10 +14003,11 @@
    "units": {
     "usd": {
      "approximateUsd": false,
-     "rate": 100.94322972989015,
-     "previousRate": 100.88902476275126,
-     "orders24h": 1,
-     "volume24h": 25,
+     "rateTo": 1791116199,
+     "rate": 100.91612724632073,
+     "previousRate": null,
+     "orders24h": 3,
+     "volume24h": 50,
      "trades": [
       {
        "key": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a:06c805e4-794c-4879-bcc3-2194c1ed3456",
@@ -14604,10 +14608,11 @@
     },
     "btc": {
      "approximateUsd": false,
-     "rate": 8591065.29209622,
-     "previousRate": 8561660.561660562,
-     "orders24h": 1,
-     "volume24h": 25,
+     "rateTo": 1791116199,
+     "rate": 8576362.92687839,
+     "previousRate": null,
+     "orders24h": 3,
+     "volume24h": 50,
      "trades": [
       {
        "key": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a:06c805e4-794c-4879-bcc3-2194c1ed3456",
@@ -15208,10 +15213,11 @@
     },
     "sat": {
      "approximateUsd": false,
-     "rate": 0.0859106529209622,
-     "previousRate": 0.08561660561660561,
-     "orders24h": 1,
-     "volume24h": 25,
+     "rateTo": 1791116199,
+     "rate": 0.0857636292687839,
+     "previousRate": null,
+     "orders24h": 3,
+     "volume24h": 50,
      "trades": [
       {
        "key": "00000235a3e904cfe1213a8a54d6f1ec1bef7cc6bfaabd6193e82931ccf1366a:06c805e4-794c-4879-bcc3-2194c1ed3456",

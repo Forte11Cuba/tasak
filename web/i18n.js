@@ -22,7 +22,6 @@ const LOCALE = LANG === 'en' ? 'en-US' : 'es';
 
 const EN = {
   // Header and bar
-  'últimas 24h': 'last 24h',
   'Cambio respecto a las 24 horas anteriores': 'Change from the previous 24 hours',
   'Referencia Yadio': 'Yadio reference',
   'Referencia del nodo': 'Node reference',
@@ -84,7 +83,7 @@ const EN = {
   'sin firma: viene de la base de datos del nodo, porque su evento ya no está en los relays. Se confía en quien publica este sitio': "unsigned: it comes from the node's database, because its event is no longer on the relays. It relies on whoever publishes this site",
   '{p} frente a la {rate}': '{p} vs the {rate}',
   'Volver a los métodos de pago y nodos por defecto': 'Back to the default payment methods and nodes',
-  'Precio ponderado de las órdenes completadas en las últimas 24 horas con los métodos de pago y nodos que elegiste. La {rate} usa siempre los de por defecto.': 'Weighted price of the orders completed in the last 24 hours with the payment methods and nodes you chose. The {rate} always uses the default ones.',
+  'Precio ponderado de las órdenes completadas en las 24 horas hasta la última, con los métodos de pago y nodos que elegiste. La {rate} usa siempre los de por defecto.': 'Weighted price of the orders completed in the 24 hours up to the last one, with the payment methods and nodes you chose. The {rate} always uses the default ones.',
   'desde {d}': 'since {d}',
   'sobre la referencia': 'above the reference',
   'sobre {s}': 'above {s}',
@@ -92,14 +91,13 @@ const EN = {
   'bajo la referencia': 'below the reference',
   'compra de BTC': 'BTC buy',
   'venta de BTC': 'BTC sell',
-  '{rate}: precio ponderado de las órdenes completadas en las últimas 24 horas': '{rate}: weighted price of the orders completed in the last 24 hours',
+  '{rate}: precio ponderado de las órdenes completadas en las 24 horas hasta la última orden ({t})': '{rate}: weighted price of the orders completed in the 24 hours up to the last order ({t})',
   'Compras de BTC: {n}, media {p} {u}': 'BTC buys: {n}, average {p} {u}',
   'Ventas de BTC: {n}, media {p} {u}': 'BTC sells: {n}, average {p} {u}',
   '{n} a precio de mercado': '{n} at market price',
   'prima media {p}': 'average premium {p}',
   '{n} a precio fijo': '{n} at fixed price',
   '{n} sin saber (prima 0)': '{n} unknown (premium 0)',
-  'Sin órdenes en las últimas 24 horas': 'No orders in the last 24 hours',
   'Solo información: la {rate} pondera todas juntas': 'For information only: the {rate} weighs them all together',
   '{n} nodos Mostro': '{n} Mostro nodes',
   // Chart

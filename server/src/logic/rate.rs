@@ -67,21 +67,22 @@ pub struct LastTasaK {
     pub empty_since: Option<f64>,
 }
 
-/// The Tasa K of the last 24 h or, without orders in them, the last one there was (the window that
-/// ends at the last order), so the rate stays until there is a new order
+/// The Tasa K of the 24 hours that end at the last completed order (up to `now`), so it changes only
+/// when there is a new order, and each one is «the Tasa K after order X». `empty_since`: since when there
+/// have been no orders in the last 24 hours (None while there are). Without orders, the window ends at
+/// `now` (and is empty)
 pub fn last_tasa_k(trades: &[Trade], now: f64) -> LastTasaK {
-    let k = tasa_k(trades, now);
-    match trades.last() {
-        Some(last) if k.count == 0 && (last.ts as f64) <= now => {
+    match trades.iter().rev().find(|t| t.ts as f64 <= now) {
+        Some(last) => {
             let to = last.ts as f64;
             LastTasaK {
                 k: tasa_k(trades, to),
                 to,
-                empty_since: Some(to + WINDOW),
+                empty_since: (to <= now - WINDOW).then_some(to + WINDOW),
             }
         }
-        _ => LastTasaK {
-            k,
+        None => LastTasaK {
+            k: tasa_k(trades, now),
             to: now,
             empty_since: None,
         },
