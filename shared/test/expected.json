@@ -6100,6 +6100,94 @@
         "avgVol": 48700,
         "empty": false,
         "key": null
+       },
+       {
+        "time": 1791154800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 1056.714151994508,
+        "avgN": 6,
+        "avgVol": 48700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 1027.0335703818914,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791162000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 1027.0335703818914,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791165600,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 1027.0335703818914,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791169200,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 1027.0335703818914,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791172800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 1027.0335703818914,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791176400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 1027.0335703818914,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791180000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 1027.0335703818914,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
        }
       ],
       "14400": [
@@ -6597,6 +6685,28 @@
         "avgVol": 48700,
         "empty": false,
         "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 1027.0335703818914,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791172800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 1027.0335703818914,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
        }
       ],
       "86400": [
@@ -6687,6 +6797,17 @@
         "avgVol": 48700,
         "empty": false,
         "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 1027.0335703818914,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
        }
       ],
       "604800": [
@@ -6710,6 +6831,17 @@
         "avgN": 6,
         "avgVol": 48700,
         "empty": false,
+        "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 1027.0335703818914,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
         "key": null
        }
       ],
@@ -9721,6 +9853,94 @@
         "avgVol": 48700,
         "empty": false,
         "key": null
+       },
+       {
+        "time": 1791154800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 90816032.08147399,
+        "avgN": 6,
+        "avgVol": 48700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 88833707.97841594,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791162000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 88833707.97841594,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791165600,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 88833707.97841594,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791169200,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 88833707.97841594,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791172800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 88833707.97841594,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791176400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 88833707.97841594,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791180000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 88833707.97841594,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
        }
       ],
       "14400": [
@@ -10218,6 +10438,28 @@
         "avgVol": 48700,
         "empty": false,
         "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 88833707.97841594,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791172800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 88833707.97841594,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
        }
       ],
       "86400": [
@@ -10308,6 +10550,17 @@
         "avgVol": 48700,
         "empty": false,
         "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 88833707.97841594,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
        }
       ],
       "604800": [
@@ -10331,6 +10584,17 @@
         "avgN": 6,
         "avgVol": 48700,
         "empty": false,
+        "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 88833707.97841588,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
         "key": null
        }
       ],
@@ -13342,6 +13606,94 @@
         "avgVol": 48700,
         "empty": false,
         "key": null
+       },
+       {
+        "time": 1791154800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.90816032081474,
+        "avgN": 6,
+        "avgVol": 48700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.8883370797841595,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791162000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.8883370797841595,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791165600,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.8883370797841595,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791169200,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.8883370797841595,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791172800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.8883370797841595,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791176400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.8883370797841595,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791180000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.8883370797841595,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
        }
       ],
       "14400": [
@@ -13839,6 +14191,28 @@
         "avgVol": 48700,
         "empty": false,
         "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.8883370797841595,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791172800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.8883370797841595,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
        }
       ],
       "86400": [
@@ -13929,6 +14303,17 @@
         "avgVol": 48700,
         "empty": false,
         "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.8883370797841591,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
+        "key": null
        }
       ],
       "604800": [
@@ -13952,6 +14337,17 @@
         "avgN": 6,
         "avgVol": 48700,
         "empty": false,
+        "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.8883370797841595,
+        "avgN": 4,
+        "avgVol": 33700,
+        "empty": true,
         "key": null
        }
       ],
@@ -14460,6 +14856,248 @@
         "avgVol": 50,
         "empty": false,
         "key": null
+       },
+       {
+        "time": 1791104400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.91612724632073,
+        "avgN": 3,
+        "avgVol": 50,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791108000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.91612724632073,
+        "avgN": 3,
+        "avgVol": 50,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791111600,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791115200,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791118800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791122400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791126000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791129600,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791133200,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791136800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791140400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791144000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791147600,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791151200,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791154800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791162000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791165600,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791169200,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791172800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791176400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791180000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
        }
       ],
       "14400": [
@@ -14539,6 +15177,61 @@
         "avgVol": 25,
         "empty": false,
         "key": null
+       },
+       {
+        "time": 1791115200,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791129600,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791144000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791172800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
        }
       ],
       "86400": [
@@ -14563,6 +15256,17 @@
         "avgVol": 25,
         "empty": false,
         "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
        }
       ],
       "604800": [
@@ -14575,6 +15279,17 @@
         "avgN": 1,
         "avgVol": 25,
         "empty": false,
+        "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 100.94322972989015,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
         "key": null
        }
       ],
@@ -15065,6 +15780,248 @@
         "avgVol": 50,
         "empty": false,
         "key": null
+       },
+       {
+        "time": 1791104400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8576362.92687839,
+        "avgN": 3,
+        "avgVol": 50,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791108000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8576362.92687839,
+        "avgN": 3,
+        "avgVol": 50,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791111600,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791115200,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791118800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791122400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791126000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791129600,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791133200,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791136800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791140400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791144000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791147600,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791151200,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791154800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791162000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791165600,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791169200,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791172800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791176400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791180000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
        }
       ],
       "14400": [
@@ -15144,6 +16101,61 @@
         "avgVol": 25,
         "empty": false,
         "key": null
+       },
+       {
+        "time": 1791115200,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791129600,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791144000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791172800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
        }
       ],
       "86400": [
@@ -15168,6 +16180,17 @@
         "avgVol": 25,
         "empty": false,
         "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
        }
       ],
       "604800": [
@@ -15180,6 +16203,17 @@
         "avgN": 1,
         "avgVol": 25,
         "empty": false,
+        "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 8591065.29209622,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
         "key": null
        }
       ],
@@ -15670,6 +16704,248 @@
         "avgVol": 50,
         "empty": false,
         "key": null
+       },
+       {
+        "time": 1791104400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.0857636292687839,
+        "avgN": 3,
+        "avgVol": 50,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791108000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.0857636292687839,
+        "avgN": 3,
+        "avgVol": 50,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791111600,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791115200,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791118800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791122400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791126000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791129600,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791133200,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791136800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791140400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791144000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791147600,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791151200,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791154800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791162000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791165600,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791169200,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791172800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791176400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791180000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
        }
       ],
       "14400": [
@@ -15749,6 +17025,61 @@
         "avgVol": 25,
         "empty": false,
         "key": null
+       },
+       {
+        "time": 1791115200,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791129600,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791144000,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
+       },
+       {
+        "time": 1791172800,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
        }
       ],
       "86400": [
@@ -15773,6 +17104,17 @@
         "avgVol": 25,
         "empty": false,
         "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
+        "key": null
        }
       ],
       "604800": [
@@ -15785,6 +17127,17 @@
         "avgN": 1,
         "avgVol": 25,
         "empty": false,
+        "key": null
+       },
+       {
+        "time": 1791158400,
+        "value": null,
+        "vol": 0,
+        "n": 0,
+        "avg": 0.08591065292096221,
+        "avgN": 1,
+        "avgVol": 25,
+        "empty": true,
         "key": null
        }
       ],

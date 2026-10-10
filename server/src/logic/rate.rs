@@ -275,9 +275,17 @@ pub fn chart_points(trades: &[Trade], tf: f64, tz: &Tz, now: f64, with_empty: bo
                 p.n += 1;
             }
         }
-        if with_empty {
+        if with_empty && !points.is_empty() {
             let starts: Vec<f64> = points.iter().map(|p| p.time).collect();
-            for time in empty_periods(&starts, tf) {
+            let mut empty = empty_periods(&starts, tf);
+            // And from the last order up to the period of `now`: the chart follows the calendar up to now
+            let now_start = period_start(to_chart_time(now, tz), tf);
+            let mut t = next_period(starts.iter().copied().fold(f64::MIN, f64::max), tf);
+            while t <= now_start {
+                empty.push(t);
+                t = next_period(t, tf);
+            }
+            for time in empty {
                 points.push(Point {
                     empty: true,
                     ..blank(time)
