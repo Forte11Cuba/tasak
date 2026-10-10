@@ -46,13 +46,13 @@ test('rateBreakdown adds up to the Tasa K window', () => {
   }
 });
 
-test('trades, Tasa K and previous 24 h per currency and unit', () => {
+test('trades, Tasa K (24 h up to the last order) and the previous 24 h per currency and unit', () => {
   for (const { name, u, trades, approx } of views()) {
     assert.equal(approx, u.approximateUsd, name + ' approximate USD');
     assert.deepEqual(trades.map(t => ({ key: t.key, ts: t.ts, size: t.size, price: t.price, chartTime: toChartTime(t.ts, tz) })),
       u.trades, name + ' trades');
-    const k = tasaK(trades, now);
-    assert.deepEqual([k.rate, k.previous, k.count, k.volume], [u.rate, u.previousRate, u.orders24h, u.volume24h], name);
+    const k = lastTasaK(trades, now);
+    assert.deepEqual([k.to, k.rate, k.previous, k.count, k.volume], [u.rateTo, u.rate, u.previousRate, u.orders24h, u.volume24h], name);
     assert.equal(k.ids.length, k.count);
   }
 });

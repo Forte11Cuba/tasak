@@ -72,7 +72,8 @@ export function renderStats(official, trades) {
   if (signed?.mismatch) {
     sub.insertAdjacentHTML('beforeend', ` <span class="warn" title="${esc(t('La {rate} firmada por el servidor ({s}) no coincide con la calculada en este navegador con los mismos datos ({l})', { rate: CONFIG.rateName, s: fmtPrice(signed.rate), l: fmtPrice(signed.local) }))}">⚠</span>`);
   }
-  renderBreakdown(official, now);
+  // The breakdown of the same window as the rate shown
+  renderBreakdown(official, head.to);
   const lastT = trades.at(-1);
   document.getElementById('sLast').innerHTML = lastT ? fmtPrice(lastT.price) + unit : '—';
   document.getElementById('sLastSub').textContent = lastT
@@ -123,14 +124,15 @@ export function renderSelection(trades, official) {
   const box = document.getElementById('selection');
   box.hidden = isDefault;
   if (isDefault) return;
-  const { rate, count } = tasaK(trades, Date.now() / 1000);
+  // The same rule as the Tasa K: the 24 h up to its last order
+  const { rate, count } = lastTasaK(trades, Date.now() / 1000);
   document.getElementById('selRate').innerHTML = rate == null ? '—'
     : fmtPrice(rate) + `<span class="unit">${esc(unitName())}</span>`;
   const diff = rate != null && official ? (rate / official - 1) * 100 : null;
   document.getElementById('selSub').textContent = count
     ? nOrders(count) + (diff == null ? '' : ' · ' + t('{p} frente a la {rate}', { p: fmtPct(diff, 1), rate: CONFIG.rateName }))
     : t('sin órdenes en las últimas 24h');
-  box.title = t('Precio ponderado de las órdenes completadas en las últimas 24 horas con los métodos de pago y nodos que elegiste. La {rate} usa siempre los de por defecto.', { rate: CONFIG.rateName });
+  box.title = t('Precio ponderado de las órdenes completadas en las 24 horas hasta la última, con los métodos de pago y nodos que elegiste. La {rate} usa siempre los de por defecto.', { rate: CONFIG.rateName });
 }
 
 // The Tasa K signed by the server (snapshot), in the chosen currency and unit, while its event hasn't
@@ -156,8 +158,8 @@ function signedRate(official, now) {
 
 // Buy and sell orders, market and fixed price, in the Tasa K's window: only as information, on hover
 // over the Tasa K and in the FAQ
-function renderBreakdown(trades, now) {
-  const b = rateBreakdown(trades, now);
+function renderBreakdown(trades, to) {
+  const b = rateBreakdown(trades, to);
   const side = (s, text) => s.count && t(text, { n: nOrders(s.count), p: fmtPrice(s.rate), u: unitName() });
   const kinds = [
     t('{n} a precio de mercado', { n: b.market }) + (b.premium == null ? '' : ` (${t('prima media {p}', { p: fmtPct(b.premium, 1) })})`),
@@ -168,9 +170,9 @@ function renderBreakdown(trades, now) {
     side(b.buy, 'Compras de BTC: {n}, media {p} {u}'),
     side(b.sell, 'Ventas de BTC: {n}, media {p} {u}'),
     kinds,
-  ].filter(Boolean) : [t('Sin órdenes en las últimas 24 horas')];
+  ].filter(Boolean) : [t('Sin órdenes completadas')];
   document.getElementById('statTasa').title = [
-    t('{rate}: precio ponderado de las órdenes completadas en las últimas 24 horas', { rate: CONFIG.rateName }), '', ...lines,
+    t('{rate}: precio ponderado de las órdenes completadas en las 24 horas hasta la última orden ({t})', { rate: CONFIG.rateName, t: fmtTime(to) }), '', ...lines,
     t('Solo información: la {rate} pondera todas juntas', { rate: CONFIG.rateName })].join('\n');
   const html = lines.map(l => `<li>${esc(l)}</li>`).join('');
   for (const el of document.querySelectorAll('.rate-breakdown')) el.innerHTML = html;

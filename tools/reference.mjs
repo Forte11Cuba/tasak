@@ -72,9 +72,11 @@ async function extract() {
       state.unit = unit;
       const trades = T.getTrades();
       const approximateUsd = state.btcApprox;
-      const k = rate.tasaK(trades, now);
+      // The Tasa K shown: that of the 24 h that end at the last completed order
+      const k = rate.lastTasaK(trades, now);
       const u = c.units[unit] = {
         approximateUsd,
+        rateTo: k.to,
         rate: k.rate,
         previousRate: k.previous,
         orders24h: k.count,

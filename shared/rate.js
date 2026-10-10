@@ -27,14 +27,15 @@ export function tasaK(trades, now) {
   };
 }
 
-// The Tasa K to show at `now`: that of the last 24 h or, without orders in them, the last one there was
-// (the window that ends at the last order), so the rate stays until there is a new order. Adds `to`,
-// the end of its window, and `emptySince`: when the 24 h became empty (null while they have orders)
+// The Tasa K to show at `now`: that of the 24 hours that end at the last completed order (up to `now`),
+// so it changes only when there is a new order, and each one is «the Tasa K after order X». Adds `to`,
+// the end of its window (that order), and `emptySince`: since when there have been no orders in the
+// last 24 hours (null while there are). Without orders, the window ends at `now` (and is empty)
 export function lastTasaK(trades, now) {
-  const k = tasaK(trades, now);
-  const last = trades.at(-1);
-  if (k.count || !last || last.ts > now) return { ...k, to: now, emptySince: null };
-  return { ...tasaK(trades, last.ts), to: last.ts, emptySince: last.ts + WINDOW };
+  let last = null;
+  for (const t of trades) if (t.ts <= now) last = t;   // trades are oldest first
+  if (!last) return { ...tasaK(trades, now), to: now, emptySince: null };
+  return { ...tasaK(trades, last.ts), to: last.ts, emptySince: last.ts <= now - WINDOW ? last.ts + WINDOW : null };
 }
 
 // How an order was priced: 'market', 'fixed' or null if unknown. The pending version says it; without

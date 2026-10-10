@@ -28,7 +28,8 @@ const ratePubkey = getPublicKey(key);
 // A Tasa K event as tasak publishes it (only the fields the site reads)
 const cup = expected.currencies.CUP.units;
 const round = x => Number(x.toFixed(2));
-function rateEvent({ usd = round(cup.usd.rate), emptySince = null, to = NOW, sk = key } = {}) {
+// Its window ends at the last order, as the site's (expected.json's rateTo)
+function rateEvent({ usd = round(cup.usd.rate), emptySince = null, to = cup.usd.rateTo, sk = key } = {}) {
   const tasak = {
     rules: 1, decimals: 2, fiat: 'CUP', from: to - 86400, to, empty_since: emptySince,
     rate: { btc: round(cup.btc.rate), usd }, previous: { btc: round(cup.btc.previousRate), usd: round(cup.usd.previousRate) },
@@ -98,7 +99,8 @@ try {
 
   // 4. Tampered after signing, or signed by another key: ignored, this browser's rate
   const tampered = rateEvent();
-  tampered.content = tampered.content.replace('"usd":1027.03', '"usd":2000');
+  tampered.content = tampered.content.replace(`"usd":${round(cup.usd.rate)}`, '"usd":2000');
+  check(tampered.content.includes('"usd":2000'), 'the test really tampers with the rate', null);
   for (const [name, ev] of [['tampered', tampered], ['another key', rateEvent({ sk: other })]]) {
     p = await page(snapshot({ rate: ev }));
     h = await header(p);
@@ -141,8 +143,9 @@ try {
   const recent = { ...nodeOrder, key: `${config.mostros[0]}:unsigned-2`, id: 'ev-recent', ts: NOW - 3600, takenAt: NOW - 3700 };
   p = await page(snapshot({ nodeOrders: [recent] }));
   h = await header(p);
-  const n = Number(expected.header.sTasaSub.split(' ')[0]);
-  check(h.sub.startsWith(`${n + 1} órdenes`), 'an unsigned order of the last 24 h counts in the rate', h);
+  // It is now the last order: the window ends at it and it is in it
+  const k = await p.evaluate(`import('/shared/rate.js').then(m => { const k = m.lastTasaK(tasak.getTrades(), Date.now() / 1000); return { to: k.to, count: k.count, ids: k.ids }; })`);
+  check(k.to === recent.ts && k.ids.includes(recent.id) && h.sub.startsWith(`${k.count} órdenes`), 'an unsigned order of the last 24 h counts in the rate', { h, k });
   check(await p.evaluate(`tasak.getTrades().some(o => o.key === ${JSON.stringify(recent.key)})`), 'it is a trade like the others', null);
   check(pageErrors(p).length === 0, 'no console errors', pageErrors(p));
   p.close();

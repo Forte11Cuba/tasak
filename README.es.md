@@ -11,15 +11,14 @@ Muchas tasas de referencia se calculan a partir de **anuncios o intenciones** de
 alguien dice que pagaría, no lo que realmente se pagó. tasaK parte de lo contrario:
 
 - **Solo órdenes completadas.** La tasa es el precio ponderado por volumen de las operaciones que de verdad
-  se ejecutaron en las últimas 24 horas, no de ofertas publicadas.
+  se ejecutaron en las 24 horas hasta la última, no de ofertas publicadas.
 - **Verificable por cualquiera.** Cada orden es un evento firmado por el nodo Mostro y publicado en Nostr.
   La página comprueba las firmas, y cualquier persona puede leer los mismos eventos de los relays y
   recalcular la misma tasa. Al hacer clic en una orden se ve su evento original.
 - **Precio, volumen y órdenes a la vista.** Además de la tasa se ven el volumen negociado, cada orden
   ejecutada, el libro de órdenes con las órdenes abiertas y la referencia del mercado para comparar.
-- **Verificable.** Los datos son los eventos firmados del nodo, leídos de los relays y comprobados en el
-  navegador. El servidor del sitio (opcional) la hace más rápida y guarda el historial que los relays
-  borran, pero lo que manda se comprueba igual, y la página funciona sin él.
+- **Con o sin servidor.** El servidor del sitio (opcional) la hace más rápida y guarda el historial que
+  los relays borran, pero lo que manda se comprueba igual, y la página funciona sin él.
 - **De cualquier nodo.** Cualquier comunidad puede apuntarla a su propio nodo Mostro y su moneda.
 
 ## Configurar
@@ -44,8 +43,8 @@ archivos al arrancar: vuelve a ejecutarlo tras cambiar `.env` o `shared/`. Dos f
 
 - **Con el servidor de tasaK:** deja `tasak` en marcha y pon delante un servidor web con HTTPS (nginx,
   Caddy…). Solo sirve archivos (GET y HEAD, nada que reciba datos) y escucha por defecto en
-  `127.0.0.1:8765` (`LISTEN`). También archiva los eventos del nodo (ver [Archivo](#archivo)); más
-  adelante publicará la Tasa K.
+  `127.0.0.1:8765` (`LISTEN`). También archiva los eventos del nodo (ver [Archivo](#archivo)) y
+  publica la Tasa K (ver [Tasa publicada](#tasa-publicada)).
 - **Como sitio estático:** ejecuta `tasak build` y publica la carpeta `web/`, que contiene todo lo que
   necesita el sitio, con cualquier servidor web o alojamiento estático. En GitHub Pages, publica `web/`
   con un flujo de GitHub Actions que compile `tasak` y ejecute antes `tasak build`: Pages solo publica
@@ -91,7 +90,8 @@ Si la URL cambia el nodo y no lleva `fiat`, la moneda del `.env` no se aplica: l
 
 ## Tasa K
 
-Precio ponderado por volumen de las órdenes completadas en las últimas 24 horas:
+Precio ponderado por volumen de las órdenes completadas en las 24 horas que terminan en la última orden
+completada:
 
 ```
 Tasa K = Σ(precio × monto) ÷ Σ monto
@@ -100,8 +100,11 @@ Tasa K = Σ(precio × monto) ÷ Σ monto
 Ejemplo (en CUP): 3 órdenes a 785 CUP/USD que suman 3000 CUP y una a 750 de 5000 CUP →
 (785×3000 + 750×5000) ÷ 8000 = **763,13**.
 
-Si en las últimas 24 horas no se completó ninguna orden, se mantiene la última Tasa K que hubo (la de las
-24 horas anteriores a la última orden) y la cabecera dice de cuándo es.
+Así la Tasa K de la cabecera solo cambia cuando se completa una orden nueva: no se mueve sola con el paso
+del tiempo (con una ventana que terminara «ahora», una orden antigua al salir de ella movería la tasa a
+cualquier hora), y cada valor es «la Tasa K tras tal orden». Si la última orden es de hace más de 24
+horas, la cabecera dice de cuándo es. Los puntos «Ponderado» de la gráfica por periodo son otra cosa: ver
+más abajo.
 
 ### Qué mide
 
@@ -119,7 +122,7 @@ con las que se opera. Las órdenes a precio fijo no dependen de ella.
 
 La Tasa K sigue siempre las mismas reglas, para que todos los visitantes vean la misma cifra:
 
-- **Cuentan** las órdenes completadas (`success`) en las últimas 24 horas, en la moneda elegida, de los
+- **Cuentan** las órdenes completadas (`success`) en las 24 horas hasta la última, en la moneda elegida, de los
   nodos del `.env`: firmadas por el nodo (comprobadas en el navegador) o, cuando su evento ya no está en
   los relays, de la base de datos del nodo (`tasak import-mostro`), sin firma y marcadas con ◌, confiando
   en quien publica el sitio.
@@ -131,7 +134,7 @@ La Tasa K sigue siempre las mismas reglas, para que todos los visitantes vean la
   precio fijo.
 
 Los visitantes pueden elegir otros métodos de pago o nodos: la gráfica y las tablas siguen su elección, y
-**Tu selección** muestra su precio ponderado de las últimas 24 horas junto a los filtros. La Tasa K de la
+**Tu selección** muestra su precio ponderado de las 24 horas hasta su última orden junto a los filtros. La Tasa K de la
 cabecera no cambia.
 
 ### La referencia del nodo
@@ -148,7 +151,7 @@ estima con la API de Yadio y lleva «≈», y si tampoco hay, la orden aparece s
 
 Las compras y las ventas de BTC se cierran a precios distintos, porque cada lado pone su prima; la Tasa K
 las pondera todas juntas. Solo como información, sin cambiar la tasa, al pasar el ratón sobre la Tasa K y
-en la FAQ se ven el precio ponderado de las compras y el de las ventas de las últimas 24 horas, y cuántas
+en la FAQ se ven el precio ponderado de las compras y el de las ventas de la ventana de la Tasa K, y cuántas
 órdenes fueron a precio de mercado (con su prima media) o a precio fijo. Mercado o fijo sale de la versión
 `pending` de la orden o, sin ella, de una prima distinta de 0 (Mostro no admite prima con precio fijo); las
 órdenes con prima 0 de las que no se vio la versión `pending` cuentan como «sin saber».
@@ -157,7 +160,7 @@ La gráfica tiene tres modos:
 
 - **Precio**: un punto por orden ejecutada, o por periodo (1h, 4h, 1D, 1W, 1M, 1Y) con el precio ponderado del periodo.
 - **Velas**: apertura, máximo, mínimo y cierre de cada periodo.
-- **Ponderado**: en cada punto, el precio ponderado por volumen de las 24 horas anteriores, `Σ(precio × monto) ÷ Σ monto` (tras cada orden, o al cierre de cada periodo). Es la Tasa K vista a lo largo del tiempo.
+- **Ponderado**: en cada punto, el precio ponderado por volumen de las 24 horas anteriores, `Σ(precio × monto) ÷ Σ monto`. Con un punto por orden, las 24 horas hasta esa orden: la Tasa K tras ella. Por periodo, las 24 horas hasta el cierre del periodo (o hasta ahora, en el actual): ese sí se mueve con el tiempo, y difiere de la Tasa K cuando el periodo cerró sin órdenes.
 
 El volumen va en la parte baja de la gráfica y, al pasar el ratón, la leyenda de arriba muestra los valores de ese punto. La gráfica se puede ampliar y desplazar (el zoom se mantiene aunque lleguen órdenes nuevas; doble clic para volver a verlo todo) y expandir a pantalla completa. El filtro por método de pago está en el menú «Método de pago».
 
@@ -256,7 +259,8 @@ solo los últimos 7 días (más si las órdenes del nodo duran más) y avisa si 
 orden completada que ellos sí. Sin el servidor, o si
 falla, funciona como antes, solo con los relays.
 
-Sin órdenes en las últimas 24 horas se mantiene la última tasa, marcada con `empty_since`. Los valores se
+Su ventana termina siempre en la última orden completada (`to`); `empty_since` dice desde cuándo no hay
+órdenes en las últimas 24 horas. Los valores se
 redondean a `RATE_DECIMALS` decimales, como `toFixed` de JavaScript.
 
 La clave debe ser solo para esto (ni la del nodo Mostro ni una personal) y estar fuera del repositorio:

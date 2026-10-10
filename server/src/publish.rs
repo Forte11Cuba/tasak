@@ -477,7 +477,7 @@ mod tests {
     }
 
     #[test]
-    fn the_rate_of_the_last_24h_with_the_site_rules() {
+    fn the_rate_of_the_24h_up_to_the_last_order_with_the_site_rules() {
         let rows = vec![
             // 1000 CUP for 100 000 sats = 1 000 000 CUP/BTC; at 100 000 USD/BTC, 10 CUP/USD
             row("a", NOW - 100, 1000.0, 100_000.0, Some(100_000.0), true, "EnZona"),
@@ -490,7 +490,11 @@ mod tests {
         ];
         let rate = compute(&rows, &rules(), NOW).unwrap();
         assert_eq!(rate.fiat, "CUP");
-        assert_eq!((rate.from, rate.to, rate.empty_since), (NOW - 86_400, NOW, None));
+        // The window ends at the last order that counts («b»; «c» is a hidden method), not now
+        assert_eq!(
+            (rate.from, rate.to, rate.empty_since),
+            (NOW - 50 - 86_400, NOW - 50, None)
+        );
         // Weighted by currency: (1e6×1000 + 3e6×3000) ÷ 4000 = 2 500 000; in USD only «a»: 10
         assert_eq!(
             rate.rate,
