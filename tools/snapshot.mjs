@@ -58,13 +58,14 @@ const check = (ok, what, got) => {
   if (!ok) failed++;
 };
 
-async function page(snap, now = NOW, relayEvents = []) {
+const READY = 'window.tasak && tasak.state.snapshotAt > 0 && tasak.state.orders.size > 0 && document.getElementById("sTasa").textContent !== "—"';
+async function page(snap, now = NOW, relayEvents = [], { query = '', ready = READY } = {}) {
   const p = await chrome.newPage();
   await p.cmd('Emulation.setTimezoneOverride', { timezoneId: expected.browserTimeZone });
   await p.cmd('Emulation.setDeviceMetricsOverride', { width: 1400, height: 900, deviceScaleFactor: 1, mobile: false });
   await p.cmd('Page.addScriptToEvaluateOnNewDocument', { source: `(${simulation})(${JSON.stringify({ ...FIX, events: relayEvents, now, snapshot: snap })});` });
-  await p.goto(`${server.url}/index.html?lang=es`);
-  await p.waitFor('window.tasak && tasak.state.snapshotAt > 0 && tasak.state.orders.size > 0 && document.getElementById("sTasa").textContent !== "—"');
+  await p.goto(`${server.url}/index.html?lang=es${query}`);
+  await p.waitFor(ready);
   await p.evaluate('tasak.rendering');
   await new Promise(r => setTimeout(r, 300));
   await p.evaluate('tasak.rendering');
@@ -188,6 +189,30 @@ try {
   p = await page(snapshot(), NOW + 3 * 86400);
   h = await header(p);
   check(h.tasa !== '—' && h.sub.startsWith('sin órdenes 24h · de hace 3 días') && h.oneLine, 'without a signed rate, an empty window keeps the last rate', h);
+  p.close();
+
+  // 11. The URL changes the node: the snapshot is about the .env node, so it isn't loaded (none of its
+  //     orders, signed or not) and the relays are asked for their whole history
+  const otherNode = getPublicKey(generateSecretKey());
+  p = await page(snapshot({ nodeOrders: [nodeOrder] }), NOW, events, {
+    query: `&mostro=${otherNode}`,
+    ready: 'window.tasak && window.tasakRequests?.some(f => f.kinds?.includes(38383))',
+  });
+  await new Promise(r => setTimeout(r, 500));
+  await p.evaluate('tasak.rendering');
+  const urlNode = await p.evaluate(`({ at: tasak.state.snapshotAt, orders: tasak.state.orders.size,
+    // The history pages (with limit), not the live subscription, which starts now
+    since: window.tasakRequests.filter(f => f.kinds?.includes(38383) && f.limit).map(f => f.since ?? null) })`);
+  check(urlNode.at === 0 && urlNode.orders === 0, 'another node in the URL: the snapshot isn\'t loaded', urlNode);
+  check(urlNode.since.length > 0 && urlNode.since.every(s => s === null), 'another node in the URL: the relays are asked for their whole history', urlNode.since);
+  check(pageErrors(p).length === 0, 'no console errors', pageErrors(p));
+  p.close();
+
+  // 12. An unsigned order of another node in the snapshot: not added
+  const foreign = { ...nodeOrder, key: `${otherNode}:unsigned-3`, node: otherNode, id: 'ev-foreign' };
+  p = await page(snapshot({ nodeOrders: [nodeOrder, foreign] }));
+  const keys = await p.evaluate(`[${JSON.stringify(nodeOrder.key)}, ${JSON.stringify(foreign.key)}].map(k => tasak.state.orders.has(k))`);
+  check(keys[0] && !keys[1], 'the snapshot adds only the unsigned orders of the page\'s nodes', keys);
   p.close();
 } finally {
   chrome.close();

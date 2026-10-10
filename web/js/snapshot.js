@@ -32,14 +32,15 @@ export function readRate(ev, pubkey, verify) {
 }
 
 // Adds the snapshot to the page. `accept(ev)` checks an event as those of the relays and `add(ev)`
-// stores it; `orders` is the store's map of orders and `pmList(fiat)` the payment methods of a currency.
-// Returns { btcUsd, rate, generated }: each order's BTC/USD (key -> { usd, source, at }), the signed
-// rate (or null) and when the server wrote it
-export function applySnapshot(snap, { accept, add, orders, pmList, ratePubkey, verify }) {
+// stores it; `nodes` are the page's nodes (hex), `orders` is the store's map of orders and `pmList(fiat)`
+// the payment methods of a currency. Returns { btcUsd, rate, generated }: each order's BTC/USD
+// (key -> { usd, source, at }), the signed rate (or null) and when the server wrote it
+export function applySnapshot(snap, { accept, add, nodes, orders, pmList, ratePubkey, verify }) {
   for (const ev of snap.events) if (accept(ev)) add(ev);
-  // Orders only in the node's database: unsigned, and only if no signed version of them arrived
+  // Orders only in the node's database: unsigned, only of the page's nodes, and only if no signed version
+  // of them arrived
   for (const n of snap.nodeOrders || []) {
-    if (!n?.key || orders.has(n.key) || !Array.isArray(n.pm)) continue;
+    if (!n?.key || !nodes.includes(n.node) || orders.has(n.key) || !Array.isArray(n.pm)) continue;
     const pm = n.pm.filter(Boolean);
     const keys = [...new Set(pm.map(raw => pmKey(raw, pmList(n.fiat))))];
     orders.set(n.key, {

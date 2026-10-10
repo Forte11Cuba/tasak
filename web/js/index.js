@@ -60,11 +60,13 @@ const successKeys = snap => new Set([
 ]);
 
 async function loadSnapshot() {
+  // The snapshot is about the .env nodes: with another node in the URL, the relays alone (all their history)
+  if (CONFIG.urlNodes) return;
   const snap = await fetchSnapshot();
   if (!snap) return;
   const got = applySnapshot(snap, {
     accept: acceptSnapshotEvent, add: ev => store.add(ev), orders: store.orders,
-    pmList: fiat => pmListFor(window.MOSTRO_PAYMENT_METHODS || {}, fiat), ratePubkey: CONFIG.ratePubkey, verify: verifyEvent,
+    nodes: CONFIG.mostros, pmList: fiat => pmListFor(window.MOSTRO_PAYMENT_METHODS || {}, fiat), ratePubkey: CONFIG.ratePubkey, verify: verifyEvent,
   });
   state.serverBtcUsd = got.btcUsd;
   state.signedRate = got.rate;

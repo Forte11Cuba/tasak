@@ -289,6 +289,8 @@ index.html?mostro=npub1…,npub1…&relays=wss://relay.mostro.network,wss://nos.
 ```
 
 Si la URL cambia el nodo y no lleva `fiat`, la moneda del `.env` no se aplica: la página elige la más usada en ese nodo.
+Tampoco el snapshot del servidor ni su Tasa K firmada, que son de los nodos del `.env`: ese nodo se lee solo de
+los relays, con todo el historial que guarden.
 
 ## Tasa K
 
@@ -479,7 +481,7 @@ firmada solo si la firmó `ratePubkey` (con un ⚠ si no coincide con la que cal
 marca las órdenes sin firma (◌) y dice la antigüedad de los datos del servidor. A los relays les pide
 solo los últimos 7 días (más si las órdenes del nodo duran más) y avisa si el servidor no tiene alguna
 orden completada que ellos sí. Sin el servidor, o si
-falla, funciona como antes, solo con los relays.
+falla, funciona como antes, solo con los relays; también si la URL cambia el nodo.
 
 Su ventana termina siempre en la última orden completada (`to`); `empty_since` dice desde cuándo no hay
 órdenes en las últimas 24 horas. Los valores se
