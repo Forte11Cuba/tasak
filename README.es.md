@@ -472,7 +472,9 @@ bloqueo del escrow. Importar otra vez no cambia nada.
 Con el archivo encendido, cada 5 minutos el servidor calcula la Tasa K oficial desde su tabla `orders`,
 con las mismas reglas que la cabecera (los nodos y la moneda del `.env`, los métodos de pago que no
 oculta, y también las órdenes que solo vienen de la base de datos del nodo, marcadas como sin firma), y
-la publica:
+la publica. La primera vez, cuando el archivo se ha puesto al día con todos los relays y `orders` con el
+archivo (o a los 3 minutos, si algún relay no responde), para que una orden firmada en los relays nunca
+salga como sin firma:
 
 - **`/api/tasa.json`**: la tasa en moneda/BTC, moneda/USD y moneda/sat, las 24 h anteriores, su volumen
   y sus órdenes, su ventana, cuándo se actualizó y el id del evento firmado. Para bots, hojas de cálculo
