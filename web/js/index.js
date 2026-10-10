@@ -277,6 +277,27 @@ document.getElementById('nodeForm').onsubmit = e => {
 // Frequently asked questions
 const faq = document.getElementById('faq');
 for (const el of document.querySelectorAll('.hidden-pms')) el.textContent = CONFIG.hiddenPaymentMethods.map(m => t(m)).join(', ') || '—';
+// The key that signs this site's Tasa K (config.js), as npub; also when the URL shows another node
+const siteKey = /^[0-9a-f]{64}$/.test(window.TASAK_CONFIG?.ratePubkey || '') ? window.TASAK_CONFIG.ratePubkey : '';
+const siteNpub = siteKey && window.NostrTools?.nip19 ? window.NostrTools.nip19.npubEncode(siteKey) : siteKey;
+for (const el of document.querySelectorAll('.rate-key-on')) el.hidden = !siteKey;
+for (const el of document.querySelectorAll('.rate-key-off')) el.hidden = !!siteKey;
+// Shortened (npub1fkgcd4…9fcqq), whole on hover and with ⧉ to copy it
+for (const el of document.querySelectorAll('.rate-npub')) {
+  el.textContent = siteNpub.length > 24 ? `${siteNpub.slice(0, 12)}…${siteNpub.slice(-6)}` : siteNpub;
+  el.title = siteNpub;
+}
+for (const b of document.querySelectorAll('.rate-copy')) b.onclick = async () => {
+  try { await navigator.clipboard.writeText(siteNpub); b.textContent = '✓'; } catch { b.textContent = '✗'; }
+  setTimeout(() => { b.textContent = '⧉'; }, 1500);
+};
+// Its rate on Nostr Inspect: the event's address (kind, key, d = tasak) always shows the newest one
+if (siteKey && window.NostrTools?.nip19) {
+  const href = 'https://nostrinspect.com/a/' + window.NostrTools.nip19.naddrEncode({
+    kind: 30078, pubkey: siteKey, identifier: 'tasak', relays: (window.TASAK_CONFIG.relays || []).slice(0, 2),
+  });
+  for (const a of document.querySelectorAll('.rate-inspect')) { a.href = href; a.hidden = false; }
+}
 document.getElementById('faqBtn').onclick = () => faq.showModal();
 document.getElementById('faqClose').onclick = () => faq.close();
 faq.addEventListener('click', e => { if (e.target === faq) faq.close(); });   // click outside the box

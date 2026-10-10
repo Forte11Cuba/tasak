@@ -230,6 +230,13 @@
       <p>Haz clic en una orden de la tabla «Órdenes ejecutadas», o en su punto de la gráfica en modo <strong>Orden</strong>. Se abre su evento Nostr firmado: el JSON completo, su id y si la firma se verificó. Puedes copiarlo o verificarlo en Nostr Inspect, otra web que lo busca directamente en los relays. En las órdenes abiertas, el enlace muestra siempre su versión actual.</p>
     </details>
     <details>
+      <summary>¿Quién firma la <span data-name="rate">Tasa K</span> y cómo lo compruebo?</summary>
+      <p class="rate-key-on">El servidor de este sitio la calcula cada 5 minutos con las reglas de «¿Qué órdenes cuentan?» y la publica en Nostr firmada con su propia clave, que solo sirve para esto (no es la del nodo):</p>
+      <p class="rate-key-on rate-key"><code class="rate-npub"></code><button class="icon-btn rate-copy" type="button" title="Copiar la npub" aria-label="Copiar la npub" data-i18n-title>⧉</button><a class="rate-inspect" target="_blank" rel="noopener" hidden data-i18n>Ver su último evento en Nostr Inspect ↗</a></p>
+      <p class="rate-key-on">Es un evento kind 30078 con <code>d = tasak</code> en los relays del sitio, y lleva cada orden de su ventana con sus montos y su BTC/USD para recalcularla sin depender de nadie. La cabecera solo muestra la tasa firmada si la firmó esta clave, y avisa con ⚠ si no coincide con la que calcula tu navegador con los mismos datos. Lo mismo, sin firma, en <code>api/tasa.json</code>.</p>
+      <p class="rate-key-off" hidden>Este sitio no publica su <span data-name="rate">Tasa K</span> firmada: la calcula tu navegador con las órdenes firmadas por el nodo.</p>
+    </details>
+    <details>
       <summary>¿Cuánto historial hay?</summary>
       <p>Los relays borran las órdenes a los 15 días (y algunos antes). Sin servidor, la página solo ve eso, y los periodos mensual y anual muestran solo lo que queda en los relays.</p>
       <p>Si el sitio tiene su servidor, este guarda todo lo que publica el nodo desde que se puso en marcha, y el operador del nodo puede añadir las órdenes anteriores desde la base de datos de Mostro: esas no tienen evento firmado y se marcan con ◌.</p>
@@ -306,6 +313,13 @@
     <details>
       <summary>How do I check an order?</summary>
       <p>Click an order in the «Executed orders» table or the order book, or its point on the chart in <strong>Order</strong> mode. Its signed Nostr event opens: the full JSON, its id and whether the signature was verified. You can copy it or verify it on Nostr Inspect, a separate site that fetches it straight from the relays. For open orders, the link always shows their current version.</p>
+    </details>
+    <details>
+      <summary>Who signs the <span data-name="rate">Tasa K</span> and how do I check it?</summary>
+      <p class="rate-key-on">This site's server calculates it every 5 minutes with the rules in «Which orders count?» and publishes it on Nostr signed with its own key, used only for this (not the node's):</p>
+      <p class="rate-key-on rate-key"><code class="rate-npub"></code><button class="icon-btn rate-copy" type="button" title="Copiar la npub" aria-label="Copiar la npub" data-i18n-title>⧉</button><a class="rate-inspect" target="_blank" rel="noopener" hidden data-i18n>Ver su último evento en Nostr Inspect ↗</a></p>
+      <p class="rate-key-on">It is a kind 30078 event with <code>d = tasak</code> on the site's relays, carrying every order of its window with its amounts and BTC/USD, to recalculate it without relying on anyone. The header shows the signed rate only if this key signed it, and warns with ⚠ if it doesn't match the one your browser calculates with the same data. The same, unsigned, in <code>api/tasa.json</code>.</p>
+      <p class="rate-key-off" hidden>This site doesn't publish its <span data-name="rate">Tasa K</span> signed: your browser calculates it from the orders signed by the node.</p>
     </details>
     <details>
       <summary>How much history is there?</summary>

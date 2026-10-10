@@ -285,6 +285,11 @@ dialog.faq::backdrop { background: var(--backdrop); }
 .faq details p, .faq details ul { margin: 8px 0 0; color: var(--muted); line-height: 1.55; }
 .faq details li { margin: 2px 0; }
 .faq code { color: var(--text); background: var(--bg); padding: 1px 5px; border-radius: 3px; font-size: 12px; }
+/* The site's signing key: shortened npub, ⧉ to copy it and the link to its newest rate */
+.faq .rate-key { display: flex; align-items: center; flex-wrap: wrap; gap: 8px; }
+.faq .rate-key .icon-btn { margin-left: 0; font-size: 13px; padding: 2px 7px; }
+.faq .rate-npub { cursor: help; }
+.faq .rate-inspect { color: var(--accent); }
 .faq strong { color: var(--text); }
 
 @media (max-width: 900px) {

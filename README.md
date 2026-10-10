@@ -479,7 +479,8 @@ and also the orders that only come from the node's database, marked as unsigned)
   newest signed rate. The open orders aren't in it: the order book comes live from the relays.
 
 When there is a key, its public key goes into `config.js` (`ratePubkey`), for the site to check who
-signed the rate.
+signed the rate, and the FAQ («Who signs the Tasa K and how do I check it?») shows it as npub, so that
+anyone can find and check the site's events on Nostr.
 
 The site served by `tasak` loads the snapshot first and draws at once; the relays then add what's new.
 It verifies the snapshot's events as those of the relays (author, kind, signature), shows the signed Tasa

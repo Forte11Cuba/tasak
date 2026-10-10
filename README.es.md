@@ -489,7 +489,8 @@ la publica:
   los relays.
 
 Si hay clave, su clave pública va en `config.js` (`ratePubkey`), para que el sitio compruebe quién firmó
-la tasa.
+la tasa, y la FAQ («¿Quién firma la Tasa K y cómo lo compruebo?») la muestra como npub, para que cualquiera
+pueda buscar y comprobar en Nostr los eventos del sitio.
 
 El sitio servido por `tasak` carga primero el snapshot y pinta al instante; después los relays añaden lo
 nuevo. Verifica los eventos del snapshot como los de los relays (autor, tipo, firma), muestra la Tasa K
