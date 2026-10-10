@@ -36,11 +36,12 @@ and `X.Y.Z` the latest [release](https://github.com/Forte11Cuba/tasak/releases).
 
 **1. Point the domain at the server.** In your DNS provider, add an `A` record with the server's IPv4
 (host `@` for the bare domain). Add `AAAA` only if the server has working IPv6: Let's Encrypt uses it
-when it exists. Remove the registrar's parking or redirect records for that name. Both lines must give
-the same IP:
+when it exists. Remove the registrar's parking or redirect records for that name. Each pair of lines must give
+the same IP (the first column of `getent`):
 
 ```sh
-getent hosts tasa.example.org; curl -4 ifconfig.me; echo
+getent ahostsv4 tasa.example.org | head -1; curl -4 ifconfig.me; echo   # the A record
+getent ahostsv6 tasa.example.org | head -1; curl -6 ifconfig.me; echo   # the AAAA record, if you added it
 ```
 
 If your users are in a country where services are blocked, check from there that the domain and the

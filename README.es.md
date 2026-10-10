@@ -37,10 +37,12 @@ dominio y `X.Y.Z` la última [versión publicada](https://github.com/Forte11Cuba
 **1. Apunta el dominio al servidor.** En tu proveedor de DNS, añade un registro `A` con la IPv4 del
 servidor (host `@` para el dominio sin subdominio). Añade `AAAA` solo si el servidor tiene IPv6 que
 funcione: Let's Encrypt la usa si existe. Borra los registros de aparcamiento o redirección del
-registrador para ese nombre. Las dos líneas deben dar la misma IP:
+registrador para ese nombre. Cada par de líneas debe dar la misma IP (la primera columna de
+`getent`):
 
 ```sh
-getent hosts tasa.ejemplo.org; curl -4 ifconfig.me; echo
+getent ahostsv4 tasa.ejemplo.org | head -1; curl -4 ifconfig.me; echo   # el registro A
+getent ahostsv6 tasa.ejemplo.org | head -1; curl -6 ifconfig.me; echo   # el AAAA, si lo añadiste
 ```
 
 Si tus usuarios están en un país donde hay servicios bloqueados, comprueba desde allí que abren el
