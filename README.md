@@ -41,7 +41,7 @@ The site needs a web server, also to try it locally: opened as a file (`file://`
 its ES modules and the page shows a warning instead. `tasak` generates the files when it starts: run it
 again after changing `.env` or `shared/`. Two ways to publish it:
 
-- **With the tasaK server:** run `tasak` all the time and put a web server with HTTPS (nginx, Caddy…)
+- **With the tasaK server:** with Docker (see [Docker](#docker)) or run `tasak` all the time and put a web server with HTTPS (nginx, Caddy…)
   in front of it. It only serves files (GET and HEAD, nothing that receives data) and listens on
   `127.0.0.1:8765` by default (`LISTEN`). It also archives the node's events (see [Archive](#archive))
   and publishes the Tasa K (see [Published rate](#published-rate)).
@@ -49,6 +49,46 @@ again after changing `.env` or `shared/`. Two ways to publish it:
   needs, with any static web server or hosting. On GitHub Pages, publish `web/` with a GitHub Actions
   workflow that builds `tasak` and runs `tasak build` first: Pages can only publish the root or `/docs`
   of a branch, and `web/config.js` isn't in the repository.
+
+### Docker
+
+The image has `tasak`, `web/` and `shared/`; you only need Docker and your `.env`:
+
+```sh
+cp .env.example .env                  # your node, relays, currency and community
+docker compose up -d --build          # serves the site at http://127.0.0.1:8765/ and archives
+DOMAIN=tasa.example.org docker compose --profile https up -d --build   # the same, with Caddy and HTTPS
+docker compose logs -f tasak
+```
+
+- `.env` is mounted read-only and read by `tasak` as without Docker (`docker compose restart tasak`
+  after changing it). Inside the container `LISTEN` is `0.0.0.0:8765`, published only on the host's
+  `127.0.0.1`: the HTTPS proxy is what faces the internet.
+- The archive lives in the `tasak-data` volume (`/data`): keep it, it is the history the relays forget.
+- `--profile https` adds Caddy (`Caddyfile`), with an automatic certificate for `DOMAIN` (which must
+  point to the machine; ports 80 and 443) and compression. Without `DOMAIN`, `https://localhost`. With
+  your own proxy, leave it out and point it at `127.0.0.1:8765`.
+- Logo or icon files (`LOGO`, `FAVICON`) go in `web/` before building the image.
+- After updating the repository: `docker compose up -d --build`.
+
+To import the node's history, mount the copy of the Mostro database read-only (see [Archive](#archive)):
+
+```sh
+sqlite3 /path/to/mostro.db ".backup /tmp/mostro-copy.db"
+docker compose run --rm -v /tmp/mostro-copy.db:/import/mostro.db:ro tasak import-mostro /import/mostro.db
+```
+
+To publish the signed Tasa K, create the key in a `secrets/` folder outside `web/` (as root inside the
+container, and then hand it to its user, uid 10001), then uncomment `SIGNING_KEY_FILE` and the
+`secrets` lines in `docker-compose.yml`:
+
+```sh
+mkdir -p secrets
+docker compose run --rm --no-deps --user root -v "$PWD/secrets:/secrets" tasak keygen /secrets/nsec
+docker compose run --rm --no-deps --user root -v "$PWD/secrets:/secrets" --entrypoint chown tasak 10001:10001 /secrets/nsec
+```
+
+Keep a backup of that file (`sudo cp secrets/nsec …`): without it, a new key means a new npub.
 
 `.env` variables:
 
@@ -227,7 +267,8 @@ tasak import-jsonl indexer/data/eventos/*.jsonl indexer/data/yadio/*.jsonl
 ```
 
 The history from before the archive can be recovered by the node's operator from the Mostro
-database. On a copy (`sqlite3 mostro.db ".backup mostro-copy.db"`), run:
+database. On a copy (`sqlite3 mostro.db ".backup mostro-copy.db"`; a `cp` of the running database is
+refused if its `-wal` file has changes not yet in it), run (with Docker, see [Docker](#docker)):
 
 ```sh
 tasak import-mostro mostro-copy.db        # add the node's pubkey if .env has several nodes
@@ -300,6 +341,7 @@ itself through the premiums.
 | `shared/` | pure logic of the rate (ES modules: payment methods, orders, the node's prices (`mostro-rates`), time zones and periods, units, Tasa K and candles), used by the pages (`tasak` copies it to `web/shared/`) |
 | `shared/test/` | tests of `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), fixed real data (`fixtures/`), the reference values the code must reproduce (`expected.json`) and hand-written cases (`cases.json`): the vectors that the Rust version of this logic (`server/src/logic/`) passes too |
 | `server/` | the tasaK server in Rust (`tasak`): reads `.env`, generates `web/config.js`, serves `web/` and archives the node's events; its systemd service is `server/tasak.service`. `src/logic/` is the logic of `shared/` in Rust, checked with the same vectors (`server/tests/shared_vectors.rs`); `server/tests/config-cases.json` is the `web/config.js` each `.env` must give (`cargo test`) |
+| `Dockerfile`, `docker-compose.yml`, `Caddyfile` | the Docker image (`tasak` with `web/` and `shared/`) and an example deployment, with Caddy for HTTPS (see [Docker](#docker)) |
 | `tools/` | development checks in headless Chrome (Node, no dependencies); `node tools/reference.mjs` checks that `web/` computes the values in `shared/test/expected.json` from fixed data, without the server; `node tools/snapshot.mjs`, with a server's snapshot and a signed rate |
 
 ## Languages

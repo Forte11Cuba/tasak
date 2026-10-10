@@ -81,7 +81,21 @@ pub async fn import(archive: &SqlitePool, file: &Path, node: &str, now: i64) -> 
     if !file.is_file() {
         return Err(format!("{}: no such file", file.display()));
     }
-    let options = SqliteConnectOptions::new().filename(file).read_only(true);
+    // A copy nobody writes: immutable, so SQLite creates nothing next to it (a WAL database would need
+    // its -shm, and the copy may be mounted read-only, as in Docker). Immutable ignores a -wal file, so
+    // one with changes means a copy taken with cp of a live database: refused, it would miss orders
+    let mut wal = file.as_os_str().to_owned();
+    wal.push("-wal");
+    if std::fs::metadata(&wal).is_ok_and(|m| m.len() > 0) {
+        return Err(format!(
+            "{}: it has a -wal file with changes not yet in it; copy the database with sqlite3 mostro.db \".backup copy.db\"",
+            file.display()
+        ));
+    }
+    let options = SqliteConnectOptions::new()
+        .filename(file)
+        .read_only(true)
+        .immutable(true);
     let source = SqlitePoolOptions::new()
         .max_connections(1)
         .connect_with(options)
@@ -341,6 +355,39 @@ mod tests {
         // Without price_from_api: market or fixed is unknown
         assert!(orders(store.pool()).await.iter().all(|r| r.5.is_none()));
         let _ = std::fs::remove_file(file);
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn a_wal_copy_in_a_read_only_folder_and_a_copy_with_pending_wal() {
+        use std::os::unix::fs::PermissionsExt;
+        let node = Keys::generate();
+        let store = memory_store(&[node.public_key()]).await;
+        let file = mostro_db("wal", true).await;
+        // As sqlite3 mostro.db ".backup copy.db" leaves the copy of a live (WAL) database
+        let pool = SqlitePoolOptions::new()
+            .connect_with(SqliteConnectOptions::new().filename(&file))
+            .await
+            .unwrap();
+        sqlx::query("PRAGMA journal_mode = WAL").execute(&pool).await.unwrap();
+        pool.close().await;
+        let dir = std::env::temp_dir().join(format!("tasak-test-ro-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let copy = dir.join("copy.db");
+        std::fs::rename(&file, &copy).unwrap();
+        // Read-only, like a Docker mount: SQLite can't create its -shm there
+        std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o555)).unwrap();
+        let imported = import(store.pool(), &copy, &node.public_key().to_hex(), 1).await;
+        std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o755)).unwrap();
+        assert_eq!(imported.unwrap().success, 2);
+        // A -wal with changes (a cp of a live database): refused, not imported without them
+        std::fs::write(dir.join("copy.db-wal"), b"changes").unwrap();
+        let err = import(store.pool(), &copy, &node.public_key().to_hex(), 1)
+            .await
+            .unwrap_err();
+        assert!(err.contains(".backup"), "{err}");
+        let _ = std::fs::remove_dir_all(dir);
     }
 
     #[tokio::test]

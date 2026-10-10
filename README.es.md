@@ -41,7 +41,7 @@ El sitio necesita un servidor web, también para probarlo en local: abierto como
 navegadores no cargan sus módulos ES y la página muestra un aviso en su lugar. `tasak` genera los
 archivos al arrancar: vuelve a ejecutarlo tras cambiar `.env` o `shared/`. Dos formas de publicarlo:
 
-- **Con el servidor de tasaK:** deja `tasak` en marcha y pon delante un servidor web con HTTPS (nginx,
+- **Con el servidor de tasaK:** con Docker (ver [Docker](#docker)) o deja `tasak` en marcha y pon delante un servidor web con HTTPS (nginx,
   Caddy…). Solo sirve archivos (GET y HEAD, nada que reciba datos) y escucha por defecto en
   `127.0.0.1:8765` (`LISTEN`). También archiva los eventos del nodo (ver [Archivo](#archivo)) y
   publica la Tasa K (ver [Tasa publicada](#tasa-publicada)).
@@ -49,6 +49,47 @@ archivos al arrancar: vuelve a ejecutarlo tras cambiar `.env` o `shared/`. Dos f
   necesita el sitio, con cualquier servidor web o alojamiento estático. En GitHub Pages, publica `web/`
   con un flujo de GitHub Actions que compile `tasak` y ejecute antes `tasak build`: Pages solo publica
   la raíz o `/docs` de una rama, y `web/config.js` no está en el repositorio.
+
+### Docker
+
+La imagen lleva `tasak`, `web/` y `shared/`; solo hacen falta Docker y tu `.env`:
+
+```sh
+cp .env.example .env                  # tu nodo, relays, moneda y comunidad
+docker compose up -d --build          # sirve el sitio en http://127.0.0.1:8765/ y archiva
+DOMAIN=tasa.ejemplo.org docker compose --profile https up -d --build   # lo mismo, con Caddy y HTTPS
+docker compose logs -f tasak
+```
+
+- El `.env` se monta de solo lectura y `tasak` lo lee como sin Docker (`docker compose restart tasak`
+  tras cambiarlo). Dentro del contenedor `LISTEN` es `0.0.0.0:8765`, publicado solo en el `127.0.0.1`
+  de la máquina: lo que da a internet es el proxy con HTTPS.
+- El archivo vive en el volumen `tasak-data` (`/data`): consérvalo, es el historial que los relays olvidan.
+- `--profile https` añade Caddy (`Caddyfile`), con certificado automático para `DOMAIN` (que debe
+  apuntar a la máquina; puertos 80 y 443) y compresión. Sin `DOMAIN`, `https://localhost`. Con tu propio
+  proxy, no lo uses y apúntalo a `127.0.0.1:8765`.
+- Los archivos del logo o del icono (`LOGO`, `FAVICON`) van en `web/` antes de construir la imagen.
+- Tras actualizar el repositorio: `docker compose up -d --build`.
+
+Para importar el historial del nodo, monta la copia de la base de datos de Mostro de solo lectura (ver
+[Archivo](#archivo)):
+
+```sh
+sqlite3 /ruta/a/mostro.db ".backup /tmp/mostro-copia.db"
+docker compose run --rm -v /tmp/mostro-copia.db:/import/mostro.db:ro tasak import-mostro /import/mostro.db
+```
+
+Para publicar la Tasa K firmada, crea la clave en una carpeta `secrets/` fuera de `web/` (como root
+dentro del contenedor, y luego dásela a su usuario, uid 10001) y descomenta `SIGNING_KEY_FILE` y las
+líneas de `secrets` en `docker-compose.yml`:
+
+```sh
+mkdir -p secrets
+docker compose run --rm --no-deps --user root -v "$PWD/secrets:/secrets" tasak keygen /secrets/nsec
+docker compose run --rm --no-deps --user root -v "$PWD/secrets:/secrets" --entrypoint chown tasak 10001:10001 /secrets/nsec
+```
+
+Guarda una copia de ese archivo (`sudo cp secrets/nsec …`): sin ella, una clave nueva es una npub nueva.
 
 Variables de `.env` (en inglés, para que sirvan a cualquier operador de nodo):
 
@@ -228,7 +269,9 @@ tasak import-jsonl indexer/data/eventos/*.jsonl indexer/data/yadio/*.jsonl
 ```
 
 El historial anterior al archivo lo puede recuperar el operador del nodo desde la base de datos de
-Mostro. Sobre una copia (`sqlite3 mostro.db ".backup mostro-copia.db"`):
+Mostro. Sobre una copia (`sqlite3 mostro.db ".backup mostro-copia.db"`; un `cp` de la base de datos en
+marcha se rechaza si su archivo `-wal` tiene cambios que aún no están en ella; con Docker, ver
+[Docker](#docker)):
 
 ```sh
 tasak import-mostro mostro-copia.db       # añade la clave pública del nodo si el .env tiene varios
@@ -304,6 +347,7 @@ se la devolvería a sí mismo a través de las primas.
 | `shared/` | lógica pura de la tasa (módulos ES: métodos de pago, órdenes, precios del nodo (`mostro-rates`), zonas horarias y periodos, unidades, Tasa K y velas), que usan las páginas (`tasak` la copia a `web/shared/`) |
 | `shared/test/` | pruebas de `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), datos reales fijos (`fixtures/`), los valores de referencia que el código debe reproducir (`expected.json`) y casos escritos a mano (`cases.json`): los vectores que también pasa la versión en Rust de esta lógica (`server/src/logic/`) |
 | `server/` | el servidor de tasaK en Rust (`tasak`): lee el `.env`, genera `web/config.js`, sirve `web/` y archiva los eventos del nodo; su servicio de systemd es `server/tasak.service`. `src/logic/` es la lógica de `shared/` en Rust, comprobada con los mismos vectores (`server/tests/shared_vectors.rs`); `server/tests/config-cases.json` es el `web/config.js` que debe salir de cada `.env` (`cargo test`) |
+| `Dockerfile`, `docker-compose.yml`, `Caddyfile` | la imagen de Docker (`tasak` con `web/` y `shared/`) y un despliegue de ejemplo, con Caddy para HTTPS (ver [Docker](#docker)) |
 | `tools/` | comprobaciones de desarrollo en Chrome headless (Node, sin dependencias); `node tools/reference.mjs` comprueba que `web/` calcula con datos fijos los valores de `shared/test/expected.json`, sin el servidor; `node tools/snapshot.mjs`, con el snapshot de un servidor y una tasa firmada |
 
 ## Idiomas
