@@ -197,7 +197,9 @@
     </details>
     <details>
       <summary>¿Cómo se calcula el precio de cada orden?</summary>
-      <p><code>precio = moneda pagada ÷ BTC recibidos ÷ BTC/USD</code>, con el BTC/USD de la hora en que se tomó la orden, que es cuando Mostro fija los sats (si no se vio ese momento, la hora en que se completó). Sale de las velas horarias de Coinbase; si no responde, del precio actual de Yadio, y se avisa de que el USD es aproximado.</p>
+      <p><code>precio = moneda pagada ÷ BTC recibidos ÷ BTC/USD</code>, con el BTC/USD del momento en que se tomó la orden, que es cuando Mostro fija los sats (si no se vio ese momento, el de cuando se completó).</p>
+      <p>Si el sitio tiene su servidor, cada orden trae el BTC/USD que este le asignó y guardó: el que publicaba su nodo en ese momento (su <code>mostro-rates</code> firmado) o, si no lo hay (órdenes de antes de que el servidor las archivara, o un nodo que no publica sus precios), el de Coinbase en ese minuto, y si falla, el de Yadio. Sin servidor, la página usa la vela horaria de Coinbase y, si no responde, el BTC/USD actual, y avisa de que el USD es aproximado.</p>
+      <p>Por eso entre las órdenes con el BTC/USD de Coinbase y las que llevan el del nodo puede verse un pequeño salto en <span class="fiat-name">CUP</span>/USD: el nodo combina sus propias fuentes de precio y Coinbase es un solo mercado, aunque suelen diferir menos de un 0,1 %. No es un movimiento del mercado: <span class="fiat-name">CUP</span>/BTC y <span class="fiat-name">CUP</span>/sat no cambian, porque salen solo del evento de la orden.</p>
     </details>
     <details>
       <summary>¿Qué es <span class="fiat-name">CUP</span>/sat?</summary>
@@ -222,8 +224,9 @@
       <p>Haz clic en una orden de la tabla «Órdenes ejecutadas», o en su punto de la gráfica en modo <strong>Orden</strong>. Se abre su evento Nostr firmado: el JSON completo, su id y si la firma se verificó. Puedes copiarlo o verificarlo en Nostr Inspect, otra web que lo busca directamente en los relays. En las órdenes abiertas, el enlace muestra siempre su versión actual.</p>
     </details>
     <details>
-      <summary>¿Por qué solo hay unos 15 días de historial?</summary>
-      <p>Los relays borran las órdenes a los 15 días (y algunos antes). Por eso los periodos mensual y anual todavía muestran solo lo que queda en los relays.</p>
+      <summary>¿Cuánto historial hay?</summary>
+      <p>Los relays borran las órdenes a los 15 días (y algunos antes). Sin servidor, la página solo ve eso, y los periodos mensual y anual muestran solo lo que queda en los relays.</p>
+      <p>Si el sitio tiene su servidor, este guarda todo lo que publica el nodo desde que se puso en marcha, y el operador del nodo puede añadir las órdenes anteriores desde la base de datos de Mostro: esas no tienen evento firmado y se marcan con ◌.</p>
     </details>
     <details>
       <summary>¿Qué es el libro de órdenes?</summary>
@@ -271,7 +274,9 @@
     </details>
     <details>
       <summary>How is the price of each order calculated?</summary>
-      <p><code>price = currency paid ÷ BTC received ÷ BTC/USD</code>, using the BTC/USD of the hour the order was taken, which is when Mostro fixes the sats (if that moment wasn't seen, the hour it was completed). It comes from Coinbase hourly candles; if they don't respond, from the current Yadio price, and the page warns that USD is approximate.</p>
+      <p><code>price = currency paid ÷ BTC received ÷ BTC/USD</code>, using the BTC/USD of the moment the order was taken, which is when Mostro fixes the sats (if that moment wasn't seen, the moment it was completed).</p>
+      <p>If the site has its server, each order comes with the BTC/USD the server gave it and stored: the one its node published at that moment (its signed <code>mostro-rates</code>) or, without it (orders from before the server archived them, or a node that doesn't publish its prices), Coinbase's for that minute, and if that fails, Yadio's. Without a server, the page uses Coinbase's hourly candle and, if it doesn't respond, the current BTC/USD, and warns that USD is approximate.</p>
+      <p>So between the orders with Coinbase's BTC/USD and those with the node's there may be a small jump in <span class="fiat-name">CUP</span>/USD: the node combines its own price sources and Coinbase is a single market, although they usually differ by less than 0.1%. It is not a market move: <span class="fiat-name">CUP</span>/BTC and <span class="fiat-name">CUP</span>/sat don't change, because they come only from the order's event.</p>
     </details>
     <details>
       <summary>What is <span class="fiat-name">CUP</span>/sat?</summary>
@@ -296,8 +301,9 @@
       <p>Click an order in the «Executed orders» table or the order book, or its point on the chart in <strong>Order</strong> mode. Its signed Nostr event opens: the full JSON, its id and whether the signature was verified. You can copy it or verify it on Nostr Inspect, a separate site that fetches it straight from the relays. For open orders, the link always shows their current version.</p>
     </details>
     <details>
-      <summary>Why is there only about 15 days of history?</summary>
-      <p>Relays delete orders after 15 days (some sooner). That is why the monthly and yearly periods still only show what is left on the relays.</p>
+      <summary>How much history is there?</summary>
+      <p>Relays delete orders after 15 days (some sooner). Without a server, the page only sees that, and the monthly and yearly periods only show what is left on the relays.</p>
+      <p>If the site has its server, it keeps everything the node publishes since it was started, and the node's operator can add the earlier orders from the Mostro database: those have no signed event and are marked with ◌.</p>
     </details>
     <details>
       <summary>What is the order book?</summary>

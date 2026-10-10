@@ -233,7 +233,7 @@ External services it uses and what happens if they are blocked:
 |---|---|---|
 | Nostr relays | the orders, and the current prices the node publishes (`mostro-rates`: BTC/USD, the currency's USD reference, market-price order book) | no data without them (one responding is enough) |
 | Yadio | only if a node doesn't publish valid `mostro-rates`: an estimate of the current prices | currency/USD can't be calculated; currency/BTC and currency/sat keep working |
-| Coinbase | hourly historical BTC/USD, for currency/USD (the hour each order was taken or, if unknown, completed) | it's calculated with the current BTC/USD (the node's or Yadio's) and marked as approximate |
+| Coinbase | hourly historical BTC/USD, for currency/USD (the hour each order was taken or, if unknown, completed); not needed when the site's server gives each order its BTC/USD | it's calculated with the current BTC/USD (the node's or Yadio's) and marked as approximate |
 
 ## Archive
 
@@ -252,6 +252,9 @@ publishes, verified (signature, author and kind), in a SQLite database, `data/ta
   Open ones are read live from the relays, and canceled or expired ones never count. Each has its current
   version, whether it was at market or fixed price, when it was taken, and its BTC/USD at that moment
   with where it came from: the node's `mostro-rates` or, without it, Coinbase (1-minute candles) or Yadio.
+  So the orders from before the archive (or imported from the node's database) carry Coinbase's BTC/USD
+  and the later ones the node's: currency/USD may jump slightly between them (they usually differ by less
+  than 0.1%), while currency/BTC and currency/sat don't change, as they come only from the events.
 - `btc_prices`: Coinbase's 1-minute BTC/USD closes, each asked for once and kept.
 
 It must run all the time: whatever happens while it is off is lost, except the latest version of each
