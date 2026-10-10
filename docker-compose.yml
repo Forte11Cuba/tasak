@@ -10,6 +10,8 @@ services:
   tasak:
     build: .
     image: tasak
+    # Without building, the published image instead of the two lines above:
+    # image: ghcr.io/forte11cuba/tasak:latest
     restart: unless-stopped
     # Only on this machine: the HTTPS proxy (Caddy below, or your own) is what faces the internet
     ports:
