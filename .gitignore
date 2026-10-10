@@ -2,6 +2,7 @@
 web/config.js
 web/shared/
 web/api/
+web/favicon.svg
 data/
 indexer/data/
 server/target/

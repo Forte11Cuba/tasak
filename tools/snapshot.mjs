@@ -84,6 +84,16 @@ try {
   check(pageErrors(p).length === 0, 'no console errors', pageErrors(p));
   p.close();
 
+  // 1b. The Content Security Policy of the page is in force: an injected inline script doesn't run
+  p = await page(snapshot());
+  const blocked = await p.evaluate(`new Promise(ok => {
+    document.addEventListener('securitypolicyviolation', e => ok(e.violatedDirective), { once: true });
+    const s = document.createElement('script'); s.textContent = 'window.injected = 1'; document.body.append(s);
+    setTimeout(() => ok(window.injected ? 'ran' : 'no event'), 500);
+  })`);
+  check(/^script-src/.test(blocked), 'the Content Security Policy blocks an injected inline script', blocked);
+  p.close();
+
   // 2. The signed rate, matching this browser's: shown, no warning
   p = await page(snapshot({ rate: rateEvent() }));
   h = await header(p);

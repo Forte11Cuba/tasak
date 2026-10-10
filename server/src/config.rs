@@ -57,6 +57,8 @@ pub struct Config {
     pub rate_name: String,
     pub logo: String,
     pub logo_light: String,
+    /// The browser tab's icon: a file in web/ (svg, png or ico); empty = the one tasak generates
+    pub favicon: String,
     /// Default theme (light | dark); empty = the system's
     pub theme: String,
     /// Default language (es | en); empty = the browser's
@@ -99,6 +101,7 @@ pub fn build_config(get: impl Fn(&str) -> Option<String>, web: &Path) -> (Config
         rate_name: or_default("RATE_NAME", "Tasa K"),
         logo: or_empty("LOGO"),
         logo_light: or_empty("LOGO_LIGHT"),
+        favicon: or_empty("FAVICON"),
         theme: one_of("THEME", &["light", "dark"]),
         language: one_of("LANGUAGE", &["es", "en"]),
         mostros: list(get("MOSTRO_PUBKEYS")),
@@ -157,8 +160,23 @@ pub fn build_config(get: impl Fn(&str) -> Option<String>, web: &Path) -> (Config
         }
         if !is_https(v) && !is_image_path(v) {
             errors.push(format!("invalid {k} (.svg/.png/.jpg/.webp file or https link): {v}"));
-        } else if strip_prefix_ci(v, "https://").is_none() && !resolve(web, v).exists() {
-            errors.push(format!("{k} file not found in web/: {v}"));
+        } else if strip_prefix_ci(v, "https://").is_none() {
+            check_web_file(web, k, v, &mut errors);
+        }
+    }
+    // Only a file of the site: an icon from another server could fail or be blocked (and the Content
+    // Security Policy only allows the site's own images besides https ones)
+    let favicon = &config.favicon;
+    if !favicon.is_empty() {
+        if !is_icon_path(favicon) {
+            errors.push(format!("invalid FAVICON (.svg/.png/.ico file in web/): {favicon}"));
+        } else if resolve(web, favicon) == web.join("favicon.svg") {
+            // tasak writes its own icon there on every build
+            errors.push(format!(
+                "FAVICON can't be favicon.svg, the icon tasak generates: rename yours ({favicon})"
+            ));
+        } else {
+            check_web_file(web, "FAVICON", favicon, &mut errors);
         }
     }
     (config, errors)
@@ -230,7 +248,26 @@ fn is_image_path(v: &str) -> bool {
             .any(|e| lower.len() > e.len() && lower.ends_with(e))
 }
 
+/// /^[\w./-]+\.(svg|png|ico)$/i
+fn is_icon_path(v: &str) -> bool {
+    let lower = v.to_ascii_lowercase();
+    v.bytes().all(|b| b.is_ascii_alphanumeric() || b"_./-".contains(&b))
+        && [".svg", ".png", ".ico"]
+            .iter()
+            .any(|e| lower.len() > e.len() && lower.ends_with(e))
+}
+
 /// Like JavaScript's `new URL(v, web)`: `.` and `..` resolved by name, not through the file system
+/// A file of the site must exist and be inside web/ (also through symlinks): only web/ is served
+fn check_web_file(web: &Path, k: &str, v: &str, errors: &mut Vec<String>) {
+    let file = resolve(web, v).canonicalize().ok().filter(|f| f.is_file());
+    match (file, web.canonicalize()) {
+        (Some(file), Ok(root)) if file.starts_with(&root) => {}
+        (Some(_), _) => errors.push(format!("{k} must be a file inside web/: {v}")),
+        (None, _) => errors.push(format!("{k} file not found in web/: {v}")),
+    }
+}
+
 fn resolve(web: &Path, v: &str) -> PathBuf {
     let mut path = if v.starts_with('/') {
         PathBuf::from("/")
@@ -282,6 +319,34 @@ mod tests {
                 assert_eq!(render_config(&config), case["configJs"].as_str().unwrap(), "{name}");
             }
         }
+    }
+
+    #[cfg(unix)]
+    #[test]
+    fn site_files_stay_inside_web() {
+        let dir = std::env::temp_dir().join(format!("tasak-config-{}", std::process::id()));
+        let web = dir.join("web");
+        std::fs::create_dir_all(&web).unwrap();
+        std::fs::write(dir.join("outside.svg"), "<svg/>").unwrap();
+        std::fs::write(web.join("inside.svg"), "<svg/>").unwrap();
+        std::os::unix::fs::symlink(dir.join("outside.svg"), web.join("link.svg")).unwrap();
+        let errors_for = |v: &str| {
+            let mut errors = vec![];
+            check_web_file(&web, "FAVICON", v, &mut errors);
+            errors
+        };
+        assert!(errors_for("inside.svg").is_empty());
+        assert!(errors_for("./sub/../inside.svg").is_empty());
+        let outside = dir.join("outside.svg").to_string_lossy().into_owned();
+        for v in ["../outside.svg", outside.as_str(), "link.svg"] {
+            assert_eq!(
+                errors_for(v),
+                [format!("FAVICON must be a file inside web/: {v}")],
+                "{v}"
+            );
+        }
+        assert_eq!(errors_for("."), ["FAVICON file not found in web/: ."]);
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 
     #[test]
