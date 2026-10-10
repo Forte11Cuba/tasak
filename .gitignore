@@ -4,5 +4,6 @@ web/shared/
 web/api/
 web/favicon.svg
 data/
+secrets/
 indexer/data/
 server/target/

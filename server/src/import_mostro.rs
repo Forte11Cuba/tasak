@@ -12,10 +12,11 @@
 //! taken_at lies between the take and the escrow lock (invoice_held_at); each completed slice of a
 //! range order is its own row.
 
-use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions};
+use sqlx::sqlite::{SqliteConnectOptions, SqlitePoolOptions, SqliteRow};
 use sqlx::{Row, SqlitePool};
 use std::collections::HashSet;
 use std::path::Path;
+use std::time::SystemTime;
 
 /// A UUID column as the d tag of the events writes it: Mostro keeps it as a 16-byte BLOB
 macro_rules! uuid {
@@ -78,21 +79,84 @@ pub struct Imported {
 
 /// Imports the completed orders of `file` (a copy of a Mostro database) as orders of `node`
 pub async fn import(archive: &SqlitePool, file: &Path, node: &str, now: i64) -> Result<Imported, String> {
+    import_with(archive, file, node, now, || {}).await
+}
+
+/// `import`, with `after_read` run between reading the copy and checking it didn't change (for the tests)
+async fn import_with(
+    archive: &SqlitePool,
+    file: &Path,
+    node: &str,
+    now: i64,
+    after_read: impl FnOnce(),
+) -> Result<Imported, String> {
     if !file.is_file() {
         return Err(format!("{}: no such file", file.display()));
     }
-    let options = SqliteConnectOptions::new().filename(file).read_only(true);
+    // A copy nobody writes: immutable, so SQLite creates nothing next to it (a WAL database would need
+    // its -shm, and the copy may be mounted read-only, as in Docker). Immutable ignores a -wal file and
+    // takes no locks, so: a -wal with changes means a copy taken with cp of a live database, refused;
+    // and if the database or its -wal change while it is read (a live database, not a copy), nothing is
+    // stored
+    let mut wal = file.as_os_str().to_owned();
+    wal.push("-wal");
+    let wal = Path::new(&wal);
+    let before = Stamp::take(file, wal);
+    if before.wal.is_some_and(|(len, _)| len > 0) {
+        return Err(format!(
+            "{}: it has a -wal file with changes not yet in it; copy the database with sqlite3 mostro.db \".backup copy.db\"",
+            file.display()
+        ));
+    }
+    let options = SqliteConnectOptions::new()
+        .filename(file)
+        .read_only(true)
+        .immutable(true);
     let source = SqlitePoolOptions::new()
         .max_connections(1)
         .connect_with(options)
         .await
         .map_err(|e| format!("cannot open {}: {e}", file.display()))?;
-    let result = read_and_store(&source, archive, node, now).await;
+    let read = read(&source).await;
     source.close().await;
-    result.map_err(|e| format!("{}: {e}", file.display()))
+    let read = read.map_err(|e| format!("{}: {e}", file.display()))?;
+    after_read();
+    if Stamp::take(file, wal) != before {
+        return Err(format!(
+            "{}: it changed while it was being read, nothing imported; import a finished copy (sqlite3 mostro.db \".backup copy.db\")",
+            file.display()
+        ));
+    }
+    store(archive, node, now, read)
+        .await
+        .map_err(|e| format!("{}: {e}", file.display()))
 }
 
-async fn read_and_store(source: &SqlitePool, archive: &SqlitePool, node: &str, now: i64) -> Result<Imported, String> {
+/// Size and modification time of the database and of its -wal (None if it doesn't exist)
+#[derive(Debug, PartialEq, Eq)]
+struct Stamp {
+    db: Option<(u64, Option<SystemTime>)>,
+    wal: Option<(u64, Option<SystemTime>)>,
+}
+
+impl Stamp {
+    fn take(db: &Path, wal: &Path) -> Self {
+        let stat = |p: &Path| std::fs::metadata(p).ok().map(|m| (m.len(), m.modified().ok()));
+        Stamp {
+            db: stat(db),
+            wal: stat(wal),
+        }
+    }
+}
+
+/// What the copy has: its completed orders and what the import reports
+struct Read {
+    rows: Vec<SqliteRow>,
+    other: Vec<(String, i64)>,
+    missing: Vec<String>,
+}
+
+async fn read(source: &SqlitePool) -> Result<Read, String> {
     let existing: HashSet<String> = sqlx::query("PRAGMA table_info(orders)")
         .fetch_all(source)
         .await
@@ -125,7 +189,26 @@ async fn read_and_store(source: &SqlitePool, archive: &SqlitePool, node: &str, n
         .fetch_all(source)
         .await
         .map_err(|e| e.to_string())?;
+    let other: Vec<(String, i64)> =
+        sqlx::query_as("SELECT status, count(*) FROM orders WHERE status IN (?, ?, ?) GROUP BY status ORDER BY status")
+            .bind(NOT_SUCCESS[0])
+            .bind(NOT_SUCCESS[1])
+            .bind(NOT_SUCCESS[2])
+            .fetch_all(source)
+            .await
+            .map_err(|e| e.to_string())?;
+    let missing = COLUMNS
+        .iter()
+        .map(|c| c.0)
+        .filter(|c| !existing.contains(*c))
+        .map(String::from)
+        .collect();
+    Ok(Read { rows, other, missing })
+}
 
+/// Writes the completed orders read into node_orders, in one transaction
+async fn store(archive: &SqlitePool, node: &str, now: i64, read: Read) -> Result<Imported, String> {
+    let Read { rows, other, missing } = read;
     let mut tx = archive.begin().await.map_err(|e| e.to_string())?;
     for r in &rows {
         sqlx::query(
@@ -154,21 +237,6 @@ async fn read_and_store(source: &SqlitePool, archive: &SqlitePool, node: &str, n
         .map_err(|e| e.to_string())?;
     }
     tx.commit().await.map_err(|e| e.to_string())?;
-
-    let other: Vec<(String, i64)> =
-        sqlx::query_as("SELECT status, count(*) FROM orders WHERE status IN (?, ?, ?) GROUP BY status ORDER BY status")
-            .bind(NOT_SUCCESS[0])
-            .bind(NOT_SUCCESS[1])
-            .bind(NOT_SUCCESS[2])
-            .fetch_all(source)
-            .await
-            .map_err(|e| e.to_string())?;
-    let missing = COLUMNS
-        .iter()
-        .map(|c| c.0)
-        .filter(|c| !existing.contains(*c))
-        .map(String::from)
-        .collect();
     Ok(Imported {
         success: rows.len(),
         other,
@@ -340,6 +408,62 @@ mod tests {
         sync(store.pool(), &lists(), Cursor::default()).await.unwrap();
         // Without price_from_api: market or fixed is unknown
         assert!(orders(store.pool()).await.iter().all(|r| r.5.is_none()));
+        let _ = std::fs::remove_file(file);
+    }
+
+    #[cfg(unix)]
+    #[tokio::test]
+    async fn a_wal_copy_in_a_read_only_folder_and_a_copy_with_pending_wal() {
+        use std::os::unix::fs::PermissionsExt;
+        let node = Keys::generate();
+        let store = memory_store(&[node.public_key()]).await;
+        let file = mostro_db("wal", true).await;
+        // As sqlite3 mostro.db ".backup copy.db" leaves the copy of a live (WAL) database
+        let pool = SqlitePoolOptions::new()
+            .connect_with(SqliteConnectOptions::new().filename(&file))
+            .await
+            .unwrap();
+        sqlx::query("PRAGMA journal_mode = WAL").execute(&pool).await.unwrap();
+        pool.close().await;
+        let dir = std::env::temp_dir().join(format!("tasak-test-ro-{}", std::process::id()));
+        let _ = std::fs::remove_dir_all(&dir);
+        std::fs::create_dir_all(&dir).unwrap();
+        let copy = dir.join("copy.db");
+        std::fs::rename(&file, &copy).unwrap();
+        // Read-only, like a Docker mount: SQLite can't create its -shm there
+        std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o555)).unwrap();
+        let imported = import(store.pool(), &copy, &node.public_key().to_hex(), 1).await;
+        std::fs::set_permissions(&dir, std::fs::Permissions::from_mode(0o755)).unwrap();
+        assert_eq!(imported.unwrap().success, 2);
+        // A -wal with changes (a cp of a live database): refused, not imported without them
+        std::fs::write(dir.join("copy.db-wal"), b"changes").unwrap();
+        let err = import(store.pool(), &copy, &node.public_key().to_hex(), 1)
+            .await
+            .unwrap_err();
+        assert!(err.contains(".backup"), "{err}");
+        let _ = std::fs::remove_dir_all(dir);
+    }
+
+    #[tokio::test]
+    async fn a_database_that_changes_while_it_is_read_imports_nothing() {
+        let node = Keys::generate();
+        let store = memory_store(&[node.public_key()]).await;
+        let file = mostro_db("live", true).await;
+        let mut wal = file.as_os_str().to_owned();
+        wal.push("-wal");
+        // A live database: its writer starts a WAL while the copy is being read
+        let err = import_with(store.pool(), &file, &node.public_key().to_hex(), 1, || {
+            std::fs::write(&wal, b"changes").unwrap()
+        })
+        .await
+        .unwrap_err();
+        assert!(err.contains("changed while it was being read"), "{err}");
+        let stored: i64 = sqlx::query_scalar("SELECT count(*) FROM node_orders")
+            .fetch_one(store.pool())
+            .await
+            .unwrap();
+        assert_eq!(stored, 0);
+        let _ = std::fs::remove_file(wal);
         let _ = std::fs::remove_file(file);
     }
 

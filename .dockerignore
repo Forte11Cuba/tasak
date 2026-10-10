@@ -1,0 +1,16 @@
+# Only what the image needs: server/ to build tasak, web/ and shared/ to serve
+.git
+.github
+.env
+data/
+secrets/
+indexer/
+tools/
+shared/test/
+server/target/
+web/config.js
+web/favicon.svg
+web/shared/
+web/api/
+*.db
+*.sqlite*

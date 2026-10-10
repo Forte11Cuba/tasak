@@ -1,0 +1,57 @@
+# tasaK with Docker: the site, the archive and the published Tasa K. See «Docker» in the README.
+#
+#   cp .env.example .env                        # your node, relays, currency…
+#   docker compose up -d --build                # http://127.0.0.1:8765/ on this machine
+#   DOMAIN=tasa.example.org docker compose --profile https up -d --build   # with Caddy and HTTPS
+#
+# Logs: docker compose logs -f tasak
+
+services:
+  tasak:
+    build: .
+    image: tasak
+    restart: unless-stopped
+    # Only on this machine: the HTTPS proxy (Caddy below, or your own) is what faces the internet
+    ports:
+      - "127.0.0.1:8765:8765"
+    volumes:
+      # The same .env as without Docker, read by tasak (fails if it is missing instead of creating it)
+      - type: bind
+        source: ./.env
+        target: /app/.env
+        read_only: true
+        bind:
+          create_host_path: false
+      # The archive (tasak.sqlite): keep this volume, it is the history the relays forget
+      - tasak-data:/data
+    # To publish the signed Tasa K, uncomment these lines and the «secrets» block at the end. The key
+    # file must belong to the container's user: sudo chown 10001:10001 secrets/nsec && chmod 600 it
+    # environment:
+    #   SIGNING_KEY_FILE: /run/secrets/tasak-key
+    # secrets:
+    #   - tasak-key
+
+  # HTTPS with an automatic certificate: docker compose --profile https up -d (DOMAIN must point here)
+  caddy:
+    image: caddy:2.10.2
+    profiles: [https]
+    restart: unless-stopped
+    depends_on: [tasak]
+    ports:
+      - "80:80"
+      - "443:443"
+    environment:
+      DOMAIN: ${DOMAIN:-localhost}
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - caddy-data:/data
+      - caddy-config:/config
+
+volumes:
+  tasak-data:
+  caddy-data:
+  caddy-config:
+
+# secrets:
+#   tasak-key:
+#     file: ./secrets/nsec

@@ -1,0 +1,7 @@
+# Caddy in front of tasak (docker compose --profile https): HTTPS with an automatic certificate and
+# compression (tasak doesn't compress). DOMAIN comes from docker-compose.yml;
+# without it, https://localhost with a local certificate (to try it).
+{$DOMAIN} {
+	encode zstd gzip
+	reverse_proxy tasak:8765
+}
