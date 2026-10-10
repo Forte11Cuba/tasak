@@ -96,3 +96,42 @@ export function createRelayPool({ urls, authors, kinds, metaFilters, verify, has
 
   return pool;
 }
+
+// The profiles (kind 0) of some pubkeys: pubkey -> { name, picture }, the newest of each. Only for the
+// names in the node selector: one query per relay, closed at its end or after `ms`; checked like the
+// rest (author, kind, signature)
+export function fetchProfiles({ urls, authors, verify, ms = 8000 }) {
+  return new Promise(done => {
+    const found = new Map(), newest = new Map(), sockets = [];
+    let left = urls.length;
+    const finish = () => { clearTimeout(timer); sockets.forEach(ws => { try { ws.close(); } catch {} }); done(found); };
+    const timer = setTimeout(finish, ms);
+    if (!left || !authors.length) return finish();
+    for (const url of urls) {
+      let ws;
+      try { ws = new WebSocket(url); } catch { if (--left === 0) finish(); continue; }
+      sockets.push(ws);
+      let ended = false;
+      const end = () => { if (ended) return; ended = true; try { ws.close(); } catch {} if (--left === 0) finish(); };
+      ws.onopen = () => ws.send(JSON.stringify(['REQ', 'profiles', { kinds: [0], authors }]));
+      ws.onmessage = msg => {
+        let d;
+        try { d = JSON.parse(msg.data); } catch { return; }
+        if (d[0] === 'EVENT' && d[1] === 'profiles') {
+          const ev = d[2];
+          if (ev?.kind !== 0 || !authors.includes(ev.pubkey) || (newest.get(ev.pubkey) || 0) >= ev.created_at) return;
+          if (verify && !verify(ev)) return;
+          let c;
+          try { c = JSON.parse(ev.content); } catch { return; }
+          newest.set(ev.pubkey, ev.created_at);
+          found.set(ev.pubkey, {
+            name: typeof c?.name === 'string' ? c.name : '',
+            picture: typeof c?.picture === 'string' ? c.picture : '',
+          });
+        } else if (d[0] === 'EOSE' || d[0] === 'CLOSED') end();
+      };
+      ws.onerror = end;
+      ws.onclose = end;
+    }
+  });
+}

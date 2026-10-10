@@ -62,7 +62,7 @@ const READY = 'window.tasak && tasak.state.snapshotAt > 0 && tasak.state.orders.
 async function page(snap, now = NOW, relayEvents = [], { query = '', ready = READY } = {}) {
   const p = await chrome.newPage();
   await p.cmd('Emulation.setTimezoneOverride', { timezoneId: expected.browserTimeZone });
-  await p.cmd('Emulation.setDeviceMetricsOverride', { width: 1400, height: 900, deviceScaleFactor: 1, mobile: false });
+  await p.cmd('Emulation.setDeviceMetricsOverride', { width: 1500, height: 900, deviceScaleFactor: 1, mobile: false });
   await p.cmd('Page.addScriptToEvaluateOnNewDocument', { source: `(${simulation})(${JSON.stringify({ ...FIX, events: relayEvents, now, snapshot: snap })});` });
   await p.goto(`${server.url}/index.html?lang=es${query}`);
   await p.waitFor(ready);
@@ -73,7 +73,7 @@ async function page(snap, now = NOW, relayEvents = [], { query = '', ready = REA
 }
 const header = p => p.evaluate(`({ tasa: document.getElementById('sTasa').textContent, sub: document.getElementById('sTasaSub').innerText,
   status: document.getElementById('status').innerText, warn: !!document.querySelector('#sTasaSub .warn'),
-  // The header must fit in one line at 1400 px
+  // The header must fit in one line at 1500 px
   oneLine: (() => { const t = [...document.querySelector('header').children].map(e => e.getBoundingClientRect().top); return Math.max(...t) - Math.min(...t) < 30; })() })`);
 
 try {
@@ -205,6 +205,12 @@ try {
     since: window.tasakRequests.filter(f => f.kinds?.includes(38383) && f.limit).map(f => f.since ?? null) })`);
   check(urlNode.at === 0 && urlNode.orders === 0, 'another node in the URL: the snapshot isn\'t loaded', urlNode);
   check(urlNode.since.length > 0 && urlNode.since.every(s => s === null), 'another node in the URL: the relays are asked for their whole history', urlNode.since);
+  // The node selector: the site's node (back to the site) and the node of the URL (the current one)
+  const rows = await p.evaluate(`[...document.querySelectorAll('#nodes .node-row')].map(r => ({ href: r.getAttribute('href'), on: r.classList.contains('on') }))`);
+  check(rows.length === 2 && !rows[0].on && !/mostro=/.test(rows[0].href) && rows[1].on && rows[1].href.includes(otherNode),
+    'another node in the URL: the selector has the site\'s node and the current one', rows);
+  // Its Tasa K counts every method but the test orders: the .env's hidden ones are the site's rules
+  check(JSON.stringify(await p.evaluate('CONFIG.hiddenPaymentMethods')) === '["Pruebas"]', 'another node in the URL: only the test orders are hidden', null);
   check(pageErrors(p).length === 0, 'no console errors', pageErrors(p));
   p.close();
 
@@ -213,6 +219,17 @@ try {
   p = await page(snapshot({ nodeOrders: [nodeOrder, foreign] }));
   const keys = await p.evaluate(`[${JSON.stringify(nodeOrder.key)}, ${JSON.stringify(foreign.key)}].map(k => tasak.state.orders.has(k))`);
   check(keys[0] && !keys[1], 'the snapshot adds only the unsigned orders of the page\'s nodes', keys);
+  p.close();
+
+  // 13. The node selector with the site's node: its row is the node filter, marked, and an invalid npub
+  //     is refused without leaving the page
+  p = await page(snapshot());
+  const site = await p.evaluate(`[...document.querySelectorAll('#nodes .node-row')].map(r => ({ node: r.dataset.node, on: r.classList.contains('on') }))`);
+  check(site.length === 1 && site[0].node === config.mostros[0] && site[0].on, 'the selector: the site\'s node, selected', site);
+  const bad = await p.evaluate(`(() => { const i = document.getElementById('nodeInput'); i.value = 'npub1nope';
+    document.getElementById('nodeForm').requestSubmit(); return i.classList.contains('bad') && location.search === '?lang=es'; })()`);
+  check(bad, 'the selector refuses an invalid npub', null);
+  check(pageErrors(p).length === 0, 'no console errors', pageErrors(p));
   p.close();
 } finally {
   chrome.close();

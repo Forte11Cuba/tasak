@@ -13,25 +13,16 @@ header {
   padding: 10px 16px; border-bottom: 1px solid var(--line); background: var(--panel);
 }
 .brand-box { display: flex; flex-direction: column; justify-content: center; padding-right: 14px; }
-.pair { color: var(--muted); font-size: 12px; }
-.node-btn {
-  display: inline-flex; align-items: center; gap: 6px; background: none; border: 0; padding: 0;
-  color: var(--text); font: inherit; font-size: 13px; cursor: pointer;
-}
-.node-btn:hover { color: var(--text); }
-.node-btn img { width: 16px; height: 16px; border-radius: 50%; }
-.node-btn .i {
-  border: 1px solid currentColor; border-radius: 50%; width: 13px; height: 13px; font-size: 9px;
-  display: inline-flex; align-items: center; justify-content: center; font-weight: 700;
-}
 .stat {
   display: flex; flex-direction: column; justify-content: center; gap: 2px;
-  padding: 0 11px; border-left: 1px solid var(--line); min-width: 0;
+  padding: 0 9px; border-left: 1px solid var(--line); min-width: 0;
 }
 .stat .label { color: var(--muted); font-size: 10px; letter-spacing: .06em; text-transform: uppercase; }
 .stat .value { font-size: 16px; font-weight: 600; white-space: nowrap; }
 .stat .sub { color: var(--muted); font-size: 11px; white-space: nowrap; }
 .stat .unit { color: var(--muted); font-size: 11px; font-weight: 400; margin-left: 4px; }
+/* The volume in sats, next to the currency's: second, smaller */
+.stat .vol-sats { color: var(--muted); font-size: 12px; font-weight: 400; }
 .stat.big .value { font-size: 24px; font-weight: 700; color: var(--avg); line-height: 1.15; }
 /* Blink when the Tasa K changes: a moment in green or red and back to blue */
 .stat.big .value.tick-up { animation: tick-up 1.6s ease-out; }
@@ -41,6 +32,55 @@ header {
 .stat.big .value { border-radius: 4px; margin: 0 -4px; padding: 0 4px; }
 @media (prefers-reduced-motion: reduce) { .stat.big .value.tick-up, .stat.big .value.tick-down { animation: none; } }
 .value-row { display: flex; align-items: baseline; gap: 10px; }
+/* Node selector, a block of its own before the Tasa K: the rate is that node's */
+.menu.node-menu { margin-left: 0; }
+/* ⓘ next to «NODE»: the node's page */
+.node-info { color: var(--accent); text-decoration: none; font-size: 12px; letter-spacing: 0; margin-left: 2px; }
+.node-info:hover { color: var(--text); }
+#rateLabel.guest { cursor: help; }
+.menu.node-menu > summary {
+  display: inline-flex; align-items: center; gap: 8px; padding: 2px 8px 2px 2px; margin-left: -2px;
+  border: 0; border-radius: 999px; white-space: nowrap; color: var(--text);
+  font-size: 16px; font-weight: 600;
+}
+.menu.node-menu > summary .name { max-width: 140px; overflow: hidden; text-overflow: ellipsis; }
+.menu.node-menu > summary .caret { color: var(--muted); font-size: 11px; font-weight: 400; }
+.menu.node-menu > summary:hover, .menu.node-menu[open] > summary { background: var(--accent-bg); }
+.menu.node-menu > summary.filtered .caret { color: var(--accent); }
+/* The node's picture, the size of two lines: the block reads as «this node» at a glance */
+.menu.node-menu > summary img, .menu.node-menu > summary .no-pic { width: 30px; height: 30px; border-radius: 50%; flex: none; }
+.menu.node-menu > summary .no-pic { background: var(--line); }
+.menu.node-menu .pop {
+  left: 0; right: auto; width: 270px; padding: 6px 0;
+  font-size: 13px; letter-spacing: 0; text-transform: none; white-space: normal;
+}
+.node-row {
+  display: flex; align-items: center; gap: 8px; width: 100%; padding: 6px 12px;
+  background: none; border: 0; color: var(--text); font: inherit; text-align: left; text-decoration: none; cursor: pointer;
+}
+.node-row:hover { background: var(--accent-bg); }
+.node-row img, .node-row .no-pic { width: 18px; height: 18px; border-radius: 50%; flex: none; }
+.node-row .no-pic { background: var(--line); }
+.node-row .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.node-row .check { color: var(--accent); }
+.node-pop hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
+.node-form { display: flex; gap: 6px; padding: 8px 12px 4px; margin-top: 4px; border-top: 1px solid var(--line); }
+.node-form input {
+  flex: 1; min-width: 0; background: var(--bg); color: var(--text); border: 1px solid var(--line);
+  border-radius: 4px; padding: 4px 6px; font: inherit; font-size: 12px;
+}
+.node-form input.bad { border-color: var(--down); }
+.node-form button {
+  background: none; border: 1px solid var(--line); color: var(--text); border-radius: 4px;
+  font: inherit; font-size: 12px; padding: 3px 10px; cursor: pointer;
+}
+.node-form button:hover { border-color: var(--accent); }
+/* Phones: the header's whole width, with the page's margin, under its button */
+@media (max-width: 520px) {
+  header { position: relative; }
+  .menu.node-menu { position: static; }
+  .menu.node-menu .pop { top: auto; left: 16px; right: 16px; width: auto; margin-top: 6px; }
+}
 .chg {
   font-size: 12px; font-weight: 600; padding: 1px 6px; border-radius: 4px; white-space: nowrap;
 }
@@ -206,7 +246,6 @@ tr.new td { animation: flash 1.5s; }
 .book .none td, .trades .none td { color: var(--muted); text-align: center; padding: 10px; }
 
 .head-btn { margin-left: 8px; font-size: 12px; padding: 5px 10px; white-space: nowrap; }
-.node-filter { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 /* «Your selection»: the rate with the visitor's methods and nodes, apart from the official one */
 .selection {
   margin-left: auto; display: inline-flex; align-items: center; gap: 6px; white-space: nowrap;
@@ -229,7 +268,7 @@ tr.new td { animation: flash 1.5s; }
 /* Links to the node information and the FAQ, in the accent colour so they stand out */
 .info-nav .head-btn { color: var(--accent); border-color: var(--accent-line); background: var(--accent-bg); }
 .info-nav .head-btn:hover { color: var(--bg); background: var(--accent); border-color: var(--accent); }
-a.head-btn, a.node-btn { text-decoration: none; }
+a.head-btn { text-decoration: none; }
 dialog.faq {
   background: var(--panel); color: var(--text); border: 1px solid var(--line); border-radius: 8px;
   padding: 0; width: min(680px, calc(100vw - 32px)); max-height: calc(100vh - 48px);

@@ -32,6 +32,9 @@ export const state = {
   tf: 0,               // chart period in seconds; 0 = one point per order
   pmSel: null,         // Set of active methods; null = defaults
   nodeSel: new Set(CONFIG.mostros),
+  // Profiles of the selector's nodes that aren't shown (pubkey -> { name, picture }), asked for once
+  profiles: new Map(),
+  profilesAsked: false,
   sigs: 'cargando',
   // From the server's snapshot (api/snapshot.json), if there is one
   serverBtcUsd: new Map(),   // order key -> { usd, source, at }: the BTC/USD the server gave it
@@ -53,4 +56,9 @@ try {
 export const saveView = () => { try { localStorage.setItem('tasak.view', JSON.stringify({ mode: state.mode, tf: state.tf })); } catch {} };
 
 export const shortKey = k => k.slice(0, 8) + '…';
-export const nodeName = k => state.nodeNames.get(k) || shortKey(k);
+export const nodeName = k => state.nodeNames.get(k) || state.profiles.get(k)?.name || shortKey(k);
+// The node's picture, if it has an https one
+export const nodePicture = k => {
+  const pic = state.nodeMeta.get(k)?.profile?.picture || state.profiles.get(k)?.picture;
+  return pic && /^https:\/\//.test(pic) ? pic : '';
+};

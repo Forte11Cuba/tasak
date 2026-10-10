@@ -5,7 +5,7 @@ import { mostUsedFiat } from '../shared/orders.js';
 import { UNITS } from '../shared/units.js';
 import { WEEK, MONTH, YEAR } from '../shared/time.js';
 import { WINDOW, tasaK, lastTasaK, rateBreakdown } from '../shared/rate.js';
-import { state, HIDDEN_PM, nodeName } from './state.js';
+import { state, HIDDEN_PM, nodeName, nodePicture } from './state.js';
 import { fmtPrice, fmtPct, fmtAgo } from './format.js';
 import { btcSpot, yadioFiatPerUsd, unitName, currentPrices } from './prices.js';
 import { isYadioOnly } from '../shared/rates.js';
@@ -82,8 +82,15 @@ export function renderStats(official, trades) {
   // Volume of what the table shows: everything in Order mode, or the timeframe's range
   const shown = state.tf ? trades.filter(t => t.ts > now - state.tf) : trades;
   const shownVol = shown.reduce((a, t) => a + t.size, 0);
+  // And in sats, straight from the events (amt): the same for every currency
+  const shownSats = shown.reduce((a, t) => a + t.amt, 0);
   document.getElementById('lblVol').textContent = state.tf ? t('Volumen · {range}', { range: rangeTitle(state.tf) }) : t('Volumen total');
-  document.getElementById('sVol').textContent = `${fmtInt(shownVol)} ${state.fiat}`;
+  // Compact from a million (1,96 M), so that the header still fits in one line; exact on hover
+  const sats = shownSats >= 1e6
+    ? new Intl.NumberFormat(LOCALE, { notation: 'compact', maximumFractionDigits: 2 }).format(shownSats) : fmtInt(shownSats);
+  const sVol = document.getElementById('sVol');
+  sVol.innerHTML = `${fmtInt(shownVol)} ${esc(state.fiat)}<span class="vol-sats"> / ${sats} sats</span>`;
+  sVol.title = `${fmtInt(shownVol)} ${state.fiat} / ${fmtInt(shownSats)} sats`;
   const first = shown[0] && new Date(shown[0].ts * 1000).toLocaleDateString(LOCALE, { timeZone: CONFIG.tz, day: 'numeric', month: 'numeric' });
   document.getElementById('sVolSub').textContent =
     nOrders(shown.length) + (!state.tf && first ? ' · ' + t('desde {d}', { d: first }) : '');
@@ -299,11 +306,7 @@ export function renderFilters() {
   const html = fiats.map(f => `<option${f === state.fiat ? ' selected' : ''}>${esc(f)}</option>`).join('');
   if (sel.innerHTML !== html) sel.innerHTML = html;
 
-  // Nodes (only if there is more than one)
-  document.getElementById('nodesBox').hidden = CONFIG.mostros.length < 2;
-  document.getElementById('nodes').innerHTML = CONFIG.mostros.map(k =>
-    `<button class="chip${state.nodeSel.has(k) ? ' on' : ''}" data-node="${k}" title="${k}">${esc(nodeName(k))}</button>`
-  ).join(' ');
+  renderNodeMenu();
 
   // Payment methods of that currency, with its completed and open orders (pending and not
   // expired, those in the order book); new methods that aren't hidden join the selection
@@ -324,15 +327,51 @@ export function renderFilters() {
   ).join(' ');
 }
 
+// The page for a node of the selector: the site's own (no node in the URL) or another one, keeping only
+// the language of the URL
+export function nodeUrl(k) {
+  const q = new URLSearchParams();
+  if (k) q.set('mostro', k);
+  const lang = new URLSearchParams(location.search).get('lang');
+  if (lang) q.set('lang', lang);
+  return location.pathname + (q.size ? '?' + q : '');
+}
+
+// The node selector, next to the Tasa K: the nodes shown (with their picture), and in its menu the
+// site's nodes (.env), its guests and the node of the URL, in that order, then a field for any npub.
+// With the site's nodes, those rows are the node filter (at least one stays selected); every other row
+// opens that node's page
+function renderNodeMenu() {
+  const sel = CONFIG.mostros.filter(k => state.nodeSel.has(k));
+  const pic = nodePicture(sel[0]);
+  const summary = document.getElementById('nodeSummary');
+  const html = (pic ? `<img alt="" src="${esc(pic)}" data-hide-broken>` : '<span class="no-pic"></span>')
+    + `<span class="name">${esc(nodeName(sel[0] || ''))}</span>${sel.length > 1 ? `<span>+${sel.length - 1}</span>` : ''}<span class="caret">▾</span>`;
+  if (summary.dataset.html !== html) { summary.innerHTML = html; summary.dataset.html = html; }
+  summary.title = `${sel.map(nodeName).join(', ')}\n${t('Elegir nodo Mostro')}`;
+  summary.classList.toggle('filtered', sel.length < CONFIG.mostros.length);
+
+  const row = (k, { on, href }) => {
+    const p = nodePicture(k);
+    const inner = (p ? `<img alt="" src="${esc(p)}" data-hide-broken>` : '<span class="no-pic"></span>')
+      + `<span class="name">${esc(nodeName(k))}</span>${on ? '<span class="check">✓</span>' : ''}`;
+    return href
+      ? `<a class="node-row${on ? ' on' : ''}" href="${esc(href)}" title="${k}">${inner}</a>`
+      : `<button class="node-row${on ? ' on' : ''}" type="button" data-node="${k}" title="${k}">${inner}</button>`;
+  };
+  const guests = [...CONFIG.otherMostros];
+  // A node of the URL that is neither the site's nor a guest (a pasted npub): with the guests, first
+  if (CONFIG.urlNodes) for (const k of CONFIG.mostros) if (!CONFIG.siteMostros.includes(k) && !guests.includes(k)) guests.unshift(k);
+  const groups = [
+    CONFIG.siteMostros.map(k => CONFIG.urlNodes ? row(k, { href: nodeUrl('') }) : row(k, { on: state.nodeSel.has(k) })),
+    guests.map(k => row(k, { on: CONFIG.urlNodes && CONFIG.mostros.includes(k), href: nodeUrl(k) })),
+  ].filter(g => g.length).map(g => g.join(''));
+  const list = groups.join('<hr>');
+  const box = document.getElementById('nodes');
+  if (box.dataset.html !== list) { box.innerHTML = list; box.dataset.html = list; }
+}
+
 export function updatePair() {
-  const nodes = CONFIG.mostros.length === 1 ? nodeName(CONFIG.mostros[0]) : t('{n} nodos Mostro', { n: CONFIG.mostros.length });
-  const pic = CONFIG.mostros.length === 1 && state.nodeMeta.get(CONFIG.mostros[0])?.profile?.picture;
-  const btn = document.getElementById('nodeBtn');
-  const img = btn.querySelector('img');
-  if (pic && /^https:\/\//.test(pic)) {
-    if (!img) btn.insertAdjacentHTML('afterbegin', `<img alt="" src="${esc(pic)}" data-hide-broken>`);
-  } else img?.remove();
-  document.getElementById('pair').textContent = nodes;
   document.querySelectorAll('[data-unit]').forEach(b => b.textContent = `${state.fiat || '…'}/${UNITS[b.dataset.unit]}`);
   // Texts that name the currency or the node (/sat help and FAQ)
   const fiat = state.fiat || t('la moneda local');

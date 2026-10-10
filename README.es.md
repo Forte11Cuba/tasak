@@ -74,7 +74,7 @@ EOF
 docker compose pull tasak
 ```
 
-**4. Configura tu nodo.** `cp .env.example .env` y edítalo: `MOSTRO_PUBKEYS`, `RELAYS`, `FIAT`,
+**4. Configura tu nodo.** `cp .env.example .env` y edítalo: `MOSTRO_PUBKEYS`, `OTHER_MOSTRO_PUBKEYS`, `RELAYS`, `FIAT`,
 `TIMEZONE`, `HIDDEN_PAYMENT_METHODS`, tu comunidad… (ver las [variables](#docker)). Deja vacíos
 `ARCHIVE_DIR`, `LISTEN` y `SIGNING_KEY_FILE`: los pone Docker. La imagen lleva el `web/` del repositorio;
 para tu propio logo, pon el archivo junto a `docker-compose.yml`, móntalo bajo `tasak:` en el override y
@@ -251,7 +251,17 @@ docker compose run --rm --no-deps --user root -v "$PWD/secrets:/secrets" --entry
 
 Guarda una copia de ese archivo (`sudo cp secrets/nsec …`): sin ella, una clave nueva es una npub nueva.
 
-Variables de `.env` (en inglés, para que sirvan a cualquier operador de nodo):
+Variables de `.env` (en inglés, para que sirvan a cualquier operador de nodo). Las listas van separadas por coma
+en una línea, o una por línea entre comillas dobles, donde `#` empieza un comentario (un nombre, o `#` delante
+para dejar un elemento fuera):
+
+```sh
+OTHER_MOSTRO_PUBKEYS="
+  npub1…   # un nodo
+# npub1…   # uno que se deja fuera
+"
+```
+
 
 | Variable | Qué es |
 |---|---|
@@ -262,7 +272,8 @@ Variables de `.env` (en inglés, para que sirvan a cualquier operador de nodo):
 | `FAVICON` | Icono de la pestaña del navegador: un archivo en `web/` (svg, png o ico), no un enlace, y que no se llame `favicon.svg` (es el generado). Vacío = lo genera `tasak`: las mayúsculas del final de `SITE_NAME` (o su primera letra) |
 | `THEME` | Tema por defecto, `light` o `dark` (vacío = el del sistema). Cada visitante puede cambiarlo con ☀ / ☾ |
 | `LANGUAGE` | Idioma por defecto, `es` o `en` (vacío = el del navegador). Cada visitante puede cambiarlo con ES · EN |
-| `MOSTRO_PUBKEYS` | Nodos a visualizar, en hex o npub, separados por coma (obligatorio) |
+| `MOSTRO_PUBKEYS` | Nodos a visualizar, en hex o npub, separados por coma (obligatorio): los del sitio, archivados y parte de su Tasa K |
+| `OTHER_MOSTRO_PUBKEYS` | Otros nodos que los visitantes pueden elegir en el selector de nodos, en este orden, en hex o npub (opcional): se leen en vivo de los relays, sin archivarlos ni contarlos en la Tasa K del sitio. El ejemplo trae los demás nodos de confianza de la app de Mostro |
 | `RELAYS` | Relays a los que conectarse, separados por coma (obligatorio; `wss://`) |
 | `FIAT` | Moneda que se muestra al abrir (vacío = la más usada en el nodo) |
 | `TIMEZONE` | Zona horaria de fechas y velas, p. ej. `America/Caracas` (vacío = la del navegador) |
@@ -280,9 +291,13 @@ agrupa como «Otros». En `HIDDEN_PAYMENT_METHODS` conviene añadir los que en t
 otra tasa o se usan por error (en el ejemplo de Cuba, «Saldo móvil» y «Tarjeta Clásica»), con su nombre
 completo, como en la lista de la app.
 
-La información del nodo (nombre, descripción, web, comisión, montos, versión, nodo Lightning, relays) se lee de sus propios eventos Nostr (kind 0, 38385 y 10002). Está en su propia página, `node.html`, a la que se llega con el botón «Nodo Mostro» o haciendo clic en el nombre del nodo en la barra de moneda (conserva los parámetros de la URL). La comunidad y las redes solo se muestran con los nodos del `.env`.
+La información del nodo (nombre, descripción, web, comisión, montos, versión, nodo Lightning, relays) se lee de sus propios eventos Nostr (kind 0, 38385 y 10002). Está en su propia página, `node.html`, a la que se llega con la ⓘ junto al selector de nodos (conserva los parámetros de la URL). La comunidad y las redes solo se muestran con los nodos del `.env`.
 
-Cualquier visitante puede ver otro nodo sin desplegar nada, sobrescribiendo el `.env` desde la URL:
+El selector de nodos, un bloque propio antes de la Tasa K en la cabecera («NODO», con ⓘ para su información), muestra los nodos
+del `.env`, después los de `OTHER_MOSTRO_PUBKEYS`, y tiene un campo para pegar la npub de cualquier nodo. Con
+varios nodos en el `.env`, sus filas son un filtro (ver «Tu selección»); las demás abren la página de ese
+nodo, que es lo mismo que sobrescribir el `.env` desde la URL, algo que cualquier visitante puede hacer sin
+desplegar nada:
 
 ```
 index.html?mostro=npub1…,npub1…&relays=wss://relay.mostro.network,wss://nos.lol&fiat=VES&lang=en
@@ -290,7 +305,8 @@ index.html?mostro=npub1…,npub1…&relays=wss://relay.mostro.network,wss://nos.
 
 Si la URL cambia el nodo y no lleva `fiat`, la moneda del `.env` no se aplica: la página elige la más usada en ese nodo.
 Tampoco el snapshot del servidor ni su Tasa K firmada, que son de los nodos del `.env`: ese nodo se lee solo de
-los relays, con todo el historial que guarden.
+los relays, con todo el historial que guarden. Ni `HIDDEN_PAYMENT_METHODS`, las reglas del sitio para su propio
+mercado: su Tasa K cuenta todos los métodos de pago salvo las órdenes de prueba, calculada en el navegador.
 
 ## Tasa K
 
