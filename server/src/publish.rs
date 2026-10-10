@@ -19,6 +19,9 @@ use tasak::logic::rate::{TasaK, WINDOW, last_tasa_k, tasa_k};
 pub const RULES: u32 = 1;
 pub const D_TAG: &str = "tasak";
 pub const EVERY: Duration = Duration::from_secs(5 * 60);
+/// The first publication waits for `orders` to have what the relays had, at most this long: a relay
+/// stuck in its first catch-up mustn't leave the site without tasa.json and snapshot.json
+pub const FIRST_WAIT: Duration = Duration::from_secs(3 * 60);
 /// The event expires after two intervals: a stale one disappears from the relays
 pub const EXPIRES: i64 = 10 * 60;
 
@@ -327,13 +330,16 @@ fn write_atomic(path: &Path, text: &str) -> std::io::Result<()> {
 }
 
 /// Every 5 minutes: computes the rate, publishes the event (with `keys`) and writes `tasa.json` and
-/// `snapshot.json` into `api_dir`. Runs until the task is dropped
+/// `snapshot.json` into `api_dir`. The first time, once `ready` (`orders` has what the relays had when
+/// tasak started) or after `first_wait`. Runs until the task is dropped
 pub async fn run(
     pool: SqlitePool,
     rules: Rules,
     relays: Vec<String>,
     keys: Option<nostr_sdk::prelude::Keys>,
     api_dir: PathBuf,
+    mut ready: tokio::sync::watch::Receiver<bool>,
+    first_wait: Duration,
 ) {
     use nostr_sdk::prelude::*;
     let client = Client::default();
@@ -348,8 +354,12 @@ pub async fn run(
     let pubkey = keys.as_ref().and_then(|k| k.public_key().to_bech32().ok());
     // The newest signed rate, for the snapshot
     let mut last_event: Option<serde_json::Value> = None;
-    // Let the first sync and pricing of `orders` run first
-    tokio::time::sleep(Duration::from_secs(30)).await;
+    // Not before the archive has caught up with the relays and `orders` with the archive: else orders
+    // that are signed on the relays would go out as the node's database's (unsigned), or be missing
+    match tokio::time::timeout(first_wait, ready.wait_for(|v| *v)).await {
+        Ok(Ok(_)) => {}
+        _ => tracing::warn!("publish: the archive hasn't caught up with every relay yet; publishing anyway"),
+    }
     loop {
         let t = now();
         match load_rows(&pool).await {
@@ -564,5 +574,42 @@ mod tests {
         assert_eq!(a.sat, Some(0.0000076313));
         r.decimals = 0;
         assert_eq!(compute(&rows, &r, NOW).unwrap().rate.btc, Some(763.0));
+    }
+
+    #[tokio::test]
+    async fn the_first_publication_waits_for_orders_but_not_forever() {
+        let store = crate::store::tests::memory_store(&[]).await;
+        let dir = std::env::temp_dir().join(format!("tasak-first-{}", std::process::id()));
+        let snapshot = |d: &std::path::Path| d.join("snapshot.json").exists();
+        // Ready at once: published at once, though it could wait a minute
+        let ready_dir = dir.join("ready");
+        std::fs::create_dir_all(&ready_dir).unwrap();
+        let (_ready, rx) = tokio::sync::watch::channel(true);
+        let pool = store.pool().clone();
+        let d = ready_dir.clone();
+        let task = tokio::spawn(run(pool, rules(), vec![], None, d, rx, Duration::from_secs(60)));
+        tokio::time::sleep(Duration::from_millis(500)).await;
+        assert!(snapshot(&ready_dir), "ready: published at once");
+        task.abort();
+        // Never ready: not before `first_wait`, but then yes
+        let late_dir = dir.join("late");
+        std::fs::create_dir_all(&late_dir).unwrap();
+        let (_never, rx) = tokio::sync::watch::channel(false);
+        let d = late_dir.clone();
+        let task = tokio::spawn(run(
+            store.pool().clone(),
+            rules(),
+            vec![],
+            None,
+            d,
+            rx,
+            Duration::from_millis(800),
+        ));
+        tokio::time::sleep(Duration::from_millis(300)).await;
+        assert!(!snapshot(&late_dir), "not ready: it waits");
+        tokio::time::sleep(Duration::from_millis(1200)).await;
+        assert!(snapshot(&late_dir), "not ready: published after first_wait");
+        task.abort();
+        std::fs::remove_dir_all(&dir).unwrap();
     }
 }

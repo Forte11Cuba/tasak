@@ -463,7 +463,9 @@ database has no completion time: for those, the escrow lock is used. Importing a
 
 With the archive on, every 5 minutes the server computes the official Tasa K from its `orders` table,
 with the same rules as the header (the `.env`'s nodes and currency, the payment methods it doesn't hide,
-and also the orders that only come from the node's database, marked as unsigned), and publishes it:
+and also the orders that only come from the node's database, marked as unsigned), and publishes it. The
+first time, once the archive has caught up with every relay and `orders` with the archive (or after 3
+minutes, if a relay doesn't answer), so that an order signed on the relays never goes out as unsigned:
 
 - **`/api/tasa.json`**: the rate in currency/BTC, currency/USD and currency/sat, the previous 24 h, its
   volume and orders, its window, when it was updated and the id of the signed event. For bots,

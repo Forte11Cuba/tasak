@@ -381,15 +381,27 @@ fn main() -> ExitCode {
                                 hidden: config.hidden_payment_methods.clone(),
                                 decimals,
                             };
-                            tasks.push(tokio::spawn(orders::run(store.pool().clone(), lists, coinbase)));
+                            // The archive caught up with the relays -> `orders` with the archive -> the first
+                            // publication
+                            let (caught_up, caught_up_rx) = tokio::sync::watch::channel(false);
+                            let (synced, synced_rx) = tokio::sync::watch::channel(false);
+                            tasks.push(tokio::spawn(orders::run(
+                                store.pool().clone(),
+                                lists,
+                                coinbase,
+                                caught_up_rx,
+                                synced,
+                            )));
                             tasks.push(tokio::spawn(publish::run(
                                 store.pool().clone(),
                                 rules,
                                 config.relays.clone(),
                                 keys.clone(),
                                 root.join("web/api"),
+                                synced_rx,
+                                publish::FIRST_WAIT,
                             )));
-                            tasks.push(tokio::spawn(archive::run(store, nodes, config.relays.clone())));
+                            tasks.push(tokio::spawn(archive::run(store, nodes, config.relays.clone(), caught_up)));
                         }
                         Err(e) => {
                             error!("{e} (ARCHIVE=false serves without archiving)");

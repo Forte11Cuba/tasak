@@ -13,6 +13,7 @@ use std::collections::HashSet;
 use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, Ordering};
 use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use tokio::sync::{mpsc, watch};
 use tracing::{info, warn};
 
 /// Events per query when paging history
@@ -58,7 +59,9 @@ pub fn filters(nodes: &[PublicKey]) -> Vec<Filter> {
 }
 
 /// Runs until the task is dropped
-pub async fn run(store: Arc<Store>, nodes: Vec<PublicKey>, relays: Vec<String>) {
+/// `caught_up` turns true once every relay's first catch-up has ended, well or not (a relay that doesn't
+/// answer doesn't hold it back): what the relays had when tasak started is then in the archive
+pub async fn run(store: Arc<Store>, nodes: Vec<PublicKey>, relays: Vec<String>, caught_up: watch::Sender<bool>) {
     let client = Client::default();
     let mut urls = Vec::new();
     for r in &relays {
@@ -78,6 +81,8 @@ pub async fn run(store: Arc<Store>, nodes: Vec<PublicKey>, relays: Vec<String>) 
     let filters = filters(&nodes);
     // Taken before any REQ: the stream only carries what arrives after it is opened
     let mut notifications = client.notifications();
+    let (first_tx, mut first_rx) = mpsc::channel(urls.len().max(1));
+    let relays_count = urls.len();
     for url in urls {
         tokio::spawn(relay_task(
             client.clone(),
@@ -85,8 +90,19 @@ pub async fn run(store: Arc<Store>, nodes: Vec<PublicKey>, relays: Vec<String>) 
             url,
             filters.clone(),
             outage.clone(),
+            first_tx.clone(),
         ));
     }
+    drop(first_tx);
+    tokio::spawn(async move {
+        for _ in 0..relays_count {
+            if first_rx.recv().await.is_none() {
+                break;
+            }
+        }
+        info!("archive: first catch-up of every relay done");
+        caught_up.send_replace(true);
+    });
     tokio::spawn(yadio_task(store.clone(), outage));
 
     use futures::StreamExt as _;
@@ -110,8 +126,21 @@ pub async fn run(store: Arc<Store>, nodes: Vec<PublicKey>, relays: Vec<String>) 
 }
 
 /// One relay: subscribe live (again until it works: the sdk forgets a subscription it could not send)
-/// and catch up every few minutes
-async fn relay_task(client: Client, store: Arc<Store>, url: RelayUrl, filters: Vec<Filter>, outage: Arc<AtomicBool>) {
+/// and catch up every few minutes. `first` is told when the first catch-up has ended, well or not
+async fn relay_task(
+    client: Client,
+    store: Arc<Store>,
+    url: RelayUrl,
+    filters: Vec<Filter>,
+    outage: Arc<AtomicBool>,
+    first: mpsc::Sender<()>,
+) {
+    let mut first = Some(first);
+    let mut first_done = || {
+        if let Some(f) = first.take() {
+            let _ = f.try_send(());
+        }
+    };
     let relay = url.to_string();
     let mut live = false;
     let mut last_ok: Option<i64> = None;
@@ -135,6 +164,7 @@ async fn relay_task(client: Client, store: Arc<Store>, url: RelayUrl, filters: V
                 Ok(t) => t.map(|t| t - RESTART_MARGIN),
                 Err(e) => {
                     warn!("archive: {e}");
+                    first_done();
                     tokio::time::sleep(CATCH_UP_EVERY).await;
                     continue;
                 }
@@ -161,6 +191,7 @@ async fn relay_task(client: Client, store: Arc<Store>, url: RelayUrl, filters: V
                 }
             }
         }
+        first_done();
         tokio::time::sleep(CATCH_UP_EVERY).await;
     }
 }
@@ -352,7 +383,13 @@ mod tests {
         publish(&url, &[old]).await;
 
         let store = Arc::new(memory_store(&[node.public_key()]).await);
-        let task = tokio::spawn(run(store.clone(), vec![node.public_key()], vec![url.to_string()]));
+        let (caught_up, mut caught_up_rx) = watch::channel(false);
+        let task = tokio::spawn(run(
+            store.clone(),
+            vec![node.public_key()],
+            vec![url.to_string()],
+            caught_up,
+        ));
         let wait_for = |n: i64| {
             let store = store.clone();
             async move {
@@ -365,7 +402,16 @@ mod tests {
                 false
             }
         };
-        assert!(wait_for(1).await, "history");
+        // It says it caught up only once the history is stored
+        tokio::time::timeout(Duration::from_secs(20), caught_up_rx.wait_for(|v| *v))
+            .await
+            .expect("caught up")
+            .unwrap();
+        assert_eq!(
+            count(&store, "SELECT count(*) FROM events").await,
+            1,
+            "history before caught up"
+        );
         // A pending that the relay replaces right away: only the live subscription sees it
         publish(
             &url,
@@ -376,6 +422,18 @@ mod tests {
         )
         .await;
         assert!(wait_for(3).await, "live");
+        task.abort();
+    }
+
+    #[tokio::test]
+    async fn a_relay_that_doesnt_answer_doesnt_hold_back_the_catch_up() {
+        let store = Arc::new(memory_store(&[]).await);
+        let (caught_up, mut caught_up_rx) = watch::channel(false);
+        let task = tokio::spawn(run(store, vec![], vec!["ws://127.0.0.1:1".to_string()], caught_up));
+        tokio::time::timeout(Duration::from_secs(60), caught_up_rx.wait_for(|v| *v))
+            .await
+            .expect("caught up despite the relay")
+            .unwrap();
         task.abort();
     }
 }

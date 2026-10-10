@@ -11,14 +11,25 @@ use std::time::Duration;
 use tasak::logic::RawEvent;
 use tasak::logic::orders::{Order, Origin, current_order, is_trade, parse_order, priced_at};
 use tasak::logic::payment_methods::{NO_METHOD, PmLists, pm_key, pm_list_for};
+use tokio::sync::watch;
 use tracing::{info, warn};
 
 /// Every minute: brings `orders` up to date with both sources and prices the orders without BTC/USD.
-/// Runs until the task is dropped
-pub async fn run(pool: SqlitePool, lists: PmLists, candles: impl Candles) {
+/// When the archive has `caught_up` with the relays it runs at once, and `synced` turns true after that
+/// run: `orders` then has what the relays had (the first publication waits for it). Runs until the
+/// task is dropped
+pub async fn run(
+    pool: SqlitePool,
+    lists: PmLists,
+    candles: impl Candles,
+    mut caught_up: watch::Receiver<bool>,
+    synced: watch::Sender<bool>,
+) {
     let (mut cursor, mut first) = (Cursor::default(), true);
     let mut asked = Asked::new();
     loop {
+        // Before this run: if the archive had caught up, this run has what it brought
+        let archived = *caught_up.borrow_and_update();
         match sync(&pool, &lists, cursor).await {
             Ok((synced, next)) => {
                 if first || synced.completed > 0 {
@@ -33,7 +44,23 @@ pub async fn run(pool: SqlitePool, lists: PmLists, candles: impl Candles) {
             Ok(n) => info!("orders: {n} priced in USD"),
             Err(e) => warn!("orders: cannot price: {e}"),
         }
-        tokio::time::sleep(Duration::from_secs(60)).await;
+        if archived && !*synced.borrow() {
+            synced.send_replace(true);
+        }
+        if *synced.borrow() {
+            tokio::time::sleep(Duration::from_secs(60)).await;
+        } else {
+            // Until then, also when the archive catches up (if it is gone, only the minute)
+            let caught = async {
+                if caught_up.wait_for(|v| *v).await.is_err() {
+                    std::future::pending::<()>().await;
+                }
+            };
+            tokio::select! {
+                _ = tokio::time::sleep(Duration::from_secs(60)) => {}
+                _ = caught => {}
+            }
+        }
     }
 }
 
@@ -373,5 +400,37 @@ pub mod tests {
         sync(store.pool(), &lists(), last).await.unwrap();
         assert_eq!(price().await, None);
         assert_eq!(rows(store.pool()).await[0].3, 1100);
+    }
+
+    /// No BTC/USD source: pricing fails, which is not what these tests look at
+    struct NoCandles;
+    impl Candles for NoCandles {
+        async fn candles(&self, _: i64, _: i64) -> Result<Vec<(i64, f64)>, String> {
+            Err("none".into())
+        }
+    }
+
+    #[tokio::test]
+    async fn syncs_at_once_when_the_archive_catches_up_and_only_then_says_so() {
+        let node = Keys::generate();
+        let store = memory_store(&[node.public_key()]).await;
+        let (caught_up, caught_up_rx) = watch::channel(false);
+        let (synced, mut synced_rx) = watch::channel(false);
+        let task = tokio::spawn(run(store.pool().clone(), lists(), NoCandles, caught_up_rx, synced));
+        // Its first run, with the archive still empty: not synced
+        tokio::time::sleep(Duration::from_millis(500)).await;
+        assert!(!*synced_rx.borrow());
+        // The archive brings an order and catches up: synced at once (not after a minute), with it
+        store
+            .store("wss://a", &version(&node, "a", "success", 1200, "5000", "3"), 1)
+            .await
+            .unwrap();
+        caught_up.send_replace(true);
+        tokio::time::timeout(Duration::from_secs(5), synced_rx.wait_for(|v| *v))
+            .await
+            .expect("synced")
+            .unwrap();
+        assert_eq!(rows(store.pool()).await.len(), 1);
+        task.abort();
     }
 }
