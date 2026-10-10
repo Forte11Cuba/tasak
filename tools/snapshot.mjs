@@ -82,6 +82,15 @@ try {
   let h = await header(p);
   check(h.tasa === expected.header.sTasa && h.sub === expected.header.sTasaSub, 'the snapshot alone draws the expected header', h);
   check(/· \d+ min/.test(h.status), 'the status says how old the server data is', h.status);
+  // The FAQ shows the key of config.js that signs the site's rate, as npub
+  const faqKey = await p.evaluate(`({ npub: document.querySelector('.rate-npub').title, short: document.querySelector('.rate-npub').textContent,
+    inspect: document.querySelector('.rate-inspect').href,
+    on: !document.querySelector('.rate-key-on').hidden, off: !document.querySelector('.rate-key-off').hidden })`);
+  const npub = globalThis.NostrTools.nip19.npubEncode(ratePubkey);
+  const addr = globalThis.NostrTools.nip19.decode(faqKey.inspect.split('/a/')[1]).data;
+  check(faqKey.npub === npub && faqKey.short === `${npub.slice(0, 12)}…${npub.slice(-6)}` && faqKey.on && !faqKey.off,
+    'the FAQ shows the site\'s signing npub, shortened', faqKey);
+  check(addr.pubkey === ratePubkey && addr.kind === 30078 && addr.identifier === 'tasak', 'and links its newest rate on Nostr Inspect', addr);
   check(pageErrors(p).length === 0, 'no console errors', pageErrors(p));
   p.close();
 

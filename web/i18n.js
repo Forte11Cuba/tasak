@@ -183,6 +183,8 @@ const EN = {
   // Nostr event
   'Evento Nostr de la orden': 'Nostr event of the order',
   'Cerrar': 'Close',
+  'Copiar la npub': 'Copy the npub',
+  'Ver su último evento en Nostr Inspect ↗': 'See its latest event on Nostr Inspect ↗',
   'Copiar JSON': 'Copy JSON',
   'Copiado ✓': 'Copied ✓',
   'No se pudo copiar': 'Could not copy',
