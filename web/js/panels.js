@@ -26,6 +26,10 @@ export function setStatus(error) {
     short.push(`<span class="muted">· ${esc(ago)}</span>`);
     full.push(t('Datos del servidor de hace {t}: órdenes completadas, precios y {rate} firmada; lo nuevo llega de los relays', { t: ago, rate: CONFIG.rateName }));
   }
+  if (state.snapshotMissing) {
+    short.push(`<span class="warn">${t('⚠ faltan {n}', { n: state.snapshotMissing })}</span>`);
+    full.push(t('El servidor no tiene {n} órdenes completadas de los últimos días que sí están en los relays: se muestran igualmente', { n: state.snapshotMissing }));
+  }
   const rejected = state.rejected + state.snapshotRejected;
   if (rejected) { short.push(`<span class="warn">${t('⚠ {n} rechazados', { n: rejected })}</span>`); full.push(t('{n} eventos rechazados por firma no válida', { n: rejected })); }
   if (state.btcApprox && state.unit === 'usd') { short.push(`<span class="warn">${t('⚠ USD aprox.')}</span>`); full.push(t('USD aproximado: sin precio histórico de Coinbase, se usa el BTC/USD actual de Yadio')); }
@@ -58,9 +62,13 @@ export function renderStats(official, trades) {
   }
   state.tick = { key: viewKey, value: tasa };
   const sub = document.getElementById('sTasaSub');
+  // Short, as the header has to fit in one line; the whole explanation on hover
   sub.textContent = head.emptySince
-    ? t('sin órdenes en 24 h · {rate} de hace {t}', { rate: CONFIG.rateName, t: fmtAgo(now - head.to) })
+    ? t('sin órdenes 24h · de hace {t}', { t: fmtAgo(now - head.to) })
     : count ? `${nOrders(count)} · ${fmtInt(vol)} ${state.fiat}` : t('sin órdenes en las últimas 24h');
+  sub.title = head.emptySince
+    ? t('Sin órdenes completadas en las últimas 24 horas: es la última {rate}, la de las 24 horas anteriores a la última orden, de hace {t}', { rate: CONFIG.rateName, t: fmtAgo(now - head.to) })
+    : '';
   if (signed?.mismatch) {
     sub.insertAdjacentHTML('beforeend', ` <span class="warn" title="${esc(t('La {rate} firmada por el servidor ({s}) no coincide con la calculada en este navegador con los mismos datos ({l})', { rate: CONFIG.rateName, s: fmtPrice(signed.rate), l: fmtPrice(signed.local) }))}">⚠</span>`);
   }

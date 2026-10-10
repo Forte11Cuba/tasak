@@ -57,11 +57,11 @@ const check = (ok, what, got) => {
   if (!ok) failed++;
 };
 
-async function page(snap, now = NOW) {
+async function page(snap, now = NOW, relayEvents = []) {
   const p = await chrome.newPage();
   await p.cmd('Emulation.setTimezoneOverride', { timezoneId: expected.browserTimeZone });
   await p.cmd('Emulation.setDeviceMetricsOverride', { width: 1400, height: 900, deviceScaleFactor: 1, mobile: false });
-  await p.cmd('Page.addScriptToEvaluateOnNewDocument', { source: `(${simulation})(${JSON.stringify({ ...FIX, now, snapshot: snap })});` });
+  await p.cmd('Page.addScriptToEvaluateOnNewDocument', { source: `(${simulation})(${JSON.stringify({ ...FIX, events: relayEvents, now, snapshot: snap })});` });
   await p.goto(`${server.url}/index.html?lang=es`);
   await p.waitFor('window.tasak && tasak.state.snapshotAt > 0 && tasak.state.orders.size > 0 && document.getElementById("sTasa").textContent !== "—"');
   await p.evaluate('tasak.rendering');
@@ -70,7 +70,9 @@ async function page(snap, now = NOW) {
   return p;
 }
 const header = p => p.evaluate(`({ tasa: document.getElementById('sTasa').textContent, sub: document.getElementById('sTasaSub').innerText,
-  status: document.getElementById('status').innerText, warn: !!document.querySelector('#sTasaSub .warn') })`);
+  status: document.getElementById('status').innerText, warn: !!document.querySelector('#sTasaSub .warn'),
+  // The header must fit in one line at 1400 px
+  oneLine: (() => { const t = [...document.querySelector('header').children].map(e => e.getBoundingClientRect().top); return Math.max(...t) - Math.min(...t) < 30; })() })`);
 
 try {
   // 1. The snapshot alone (relays with nothing): the same header as expected.json
@@ -107,7 +109,7 @@ try {
   // 5. Without orders in the last 24 h: the last rate, saying how old it is
   p = await page(snapshot({ rate: rateEvent({ to: NOW - 2 * 86400, emptySince: NOW - 86400 }) }));
   h = await header(p);
-  check(h.sub.startsWith('sin órdenes en 24 h · Tasa K de hace 2 días'), 'an empty window says how old the rate is', h);
+  check(h.sub.startsWith('sin órdenes 24h · de hace 2 días') && h.oneLine, 'an empty window says how old the rate is, in one line', h);
   p.close();
 
   // 6. An event with a bad signature in the snapshot: rejected and counted; an unsigned order: marked;
@@ -145,10 +147,34 @@ try {
   check(pageErrors(p).length === 0, 'no console errors', pageErrors(p));
   p.close();
 
+  // 9. Relays with every event and a complete snapshot: the same header, no warning, and the relays are
+  //    asked only for the last 7 days
+  p = await page(snapshot(), NOW, events);
+  await p.waitFor('tasak.state.live > 0');
+  await p.evaluate('tasak.scheduleRender(), tasak.rendering');
+  await new Promise(r => setTimeout(r, 300));
+  h = await header(p);
+  check(h.tasa === expected.header.sTasa && !/faltan/.test(h.status), 'relays and a complete snapshot: no warning', h);
+  const since = await p.evaluate('Math.min(...tasak.state.relaysFrom ? window.tasakRequests.filter(f => f.kinds?.includes(38383)).map(f => f.since ?? 0) : [0])');
+  check(since >= NOW - 7 * 86400 - 3600 && since <= NOW - 7 * 86400 + 60, 'the relays are asked for the last 7 days only', since);
+  p.close();
+
+  // 10. A snapshot that misses a completed order of those days: the warning
+  const isSuccess = e => e.kind === 38383 && e.tags.some(t => t[0] === 's' && t[1] === 'success');
+  const dOf = e => e.tags.find(t => t[0] === 'd')[1];
+  const missingOne = events.find(e => isSuccess(e) && e.created_at > NOW - 6 * 86400 && e.created_at < NOW - 3600);
+  p = await page(snapshot({ events: events.filter(e => e.kind !== 38383 || dOf(e) !== dOf(missingOne)) }), NOW, events);
+  await p.waitFor('tasak.state.live > 0');
+  await p.evaluate('tasak.scheduleRender(), tasak.rendering');
+  await new Promise(r => setTimeout(r, 300));
+  h = await header(p);
+  check(/faltan 1/.test(h.status), 'a snapshot missing a completed order of the last days: warned', h.status);
+  p.close();
+
   // 8. No signed rate and no orders in the last 24 h: the last rate there was, saying how old it is
   p = await page(snapshot(), NOW + 3 * 86400);
   h = await header(p);
-  check(h.tasa !== '—' && h.sub.startsWith('sin órdenes en 24 h · Tasa K de hace 3 días'), 'without a signed rate, an empty window keeps the last rate', h);
+  check(h.tasa !== '—' && h.sub.startsWith('sin órdenes 24h · de hace 3 días') && h.oneLine, 'without a signed rate, an empty window keeps the last rate', h);
   p.close();
 } finally {
   chrome.close();

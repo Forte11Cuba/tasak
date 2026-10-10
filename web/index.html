@@ -208,6 +208,7 @@
     <details>
       <summary>¿De dónde salen los datos?</summary>
       <p>De los nodos Mostro configurados en este sitio (<span class="node-names"></span>). Cada orden es un evento Nostr (NIP-69, kind 38383) que se lee directamente de los relays y se comprueba su firma, así que cualquiera puede recalcular la misma tasa.</p>
+      <p>Si el sitio tiene su servidor, la página carga primero lo que este ha guardado (el historial que los relays ya borraron, los precios de cada orden y la <span data-name="rate">Tasa K</span> firmada) y comprueba sus eventos igual que los de los relays; a estos les pide solo los últimos días, y avisa si el servidor no tiene alguna orden que ellos sí. Sin servidor, todo sale de los relays.</p>
     </details>
     <details>
       <summary>¿Cómo compruebo una orden?</summary>
@@ -225,7 +226,7 @@
       <summary>¿Qué órdenes cuentan en la <span data-name="rate">Tasa K</span>?</summary>
       <p>La <span data-name="rate">Tasa K</span> sigue siempre las mismas reglas, para que todos vean la misma cifra:</p>
       <ul>
-        <li><strong>Cuentan</strong> las órdenes completadas en las últimas 24 horas, en la moneda elegida, de los nodos configurados en este sitio y con la firma del nodo verificada.</li>
+        <li><strong>Cuentan</strong> las órdenes completadas en las últimas 24 horas, en la moneda elegida, de los nodos configurados en este sitio: firmadas por el nodo (la firma se comprueba en este navegador) o, si su evento ya no está en los relays, de la base de datos del nodo, sin firma y marcadas con ◌ (ahí se confía en quien publica este sitio).</li>
         <li><strong>No cuentan</strong> las que no llegaron a completarse (abiertas, tomadas, canceladas, caducadas o en disputa): no hubo intercambio.</li>
         <li>Ni las de los métodos de pago que quien publica este sitio oculta; aquí: <strong class="hidden-pms"></strong>. Suelen ocultarse los que se negocian a otra tasa en ese mercado o los que se usan por error. Los métodos de cada moneda son los de la app de Mostro: lo que alguien escribe a mano y no está en esa lista es «Otros», y «Pruebas» son las órdenes de prueba («prueba», «test», «no tomar»).</li>
         <li>Ni las que no tienen un monto en moneda y en sats mayor que cero.</li>
@@ -281,6 +282,7 @@
     <details>
       <summary>Where does the data come from?</summary>
       <p>From the Mostro nodes configured on this site (<span class="node-names"></span>). Each order is a Nostr event (NIP-69, kind 38383) read directly from relays with its signature checked, so anyone can recompute the same rate.</p>
+      <p>If the site has its server, the page first loads what it has kept (the history the relays already deleted, each order's prices and the signed <span data-name="rate">Tasa K</span>) and checks its events as those of the relays; it asks these only for the last days, and warns if the server lacks an order they have. Without a server, everything comes from the relays.</p>
     </details>
     <details>
       <summary>How do I check an order?</summary>
@@ -298,7 +300,7 @@
       <summary>Which orders count in the <span data-name="rate">Tasa K</span>?</summary>
       <p>The <span data-name="rate">Tasa K</span> always follows the same rules, so everyone sees the same figure:</p>
       <ul>
-        <li><strong>They count</strong>: orders completed in the last 24 hours, in the chosen currency, from the nodes configured on this site, with the node's signature verified.</li>
+        <li><strong>They count</strong>: orders completed in the last 24 hours, in the chosen currency, from the nodes configured on this site: signed by the node (the signature is checked in this browser) or, if their event is no longer on the relays, from the node's database, unsigned and marked ◌ (there you rely on whoever publishes this site).</li>
         <li><strong>They don't count</strong>: orders that were never completed (open, taken, canceled, expired or in dispute): no exchange took place.</li>
         <li>Nor those with payment methods hidden by whoever publishes this site; here: <strong class="hidden-pms"></strong>. Usually hidden are the ones that trade at a different rate in that market or are used by mistake. Each currency's methods are the ones in the Mostro app: anything typed by hand that isn't on that list is «Other», and «Tests» are test orders («prueba», «test», «no tomar»).</li>
         <li>Nor those without an amount in currency and in sats greater than zero.</li>

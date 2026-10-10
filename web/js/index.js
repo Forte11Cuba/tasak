@@ -45,6 +45,20 @@ function acceptSnapshotEvent(ev) {
   if (verifyEvent && !verifyEvent(ev)) { state.snapshotRejected++; return false; }
   return true;
 }
+// With a snapshot, the relays are asked only for the last 7 days, or for longer if the node's orders
+// last longer (expiration_hours): open orders and what's new, and to check the snapshot misses nothing
+const RELAY_DAYS = 7;
+function relaysFrom(now) {
+  const hours = Math.max(0, ...CONFIG.mostros.map(n => Number(state.nodeMeta.get(n)?.info?.expiration_hours) || 0));
+  return Math.floor(now - Math.max(RELAY_DAYS * 86400, (hours + 1) * 3600));
+}
+// Completed orders (pubkey:d) the server knew, to check it doesn't miss any the relays have
+const successKeys = snap => new Set([
+  ...snap.events.filter(e => e?.kind === 38383 && e.tags?.some(t => t[0] === 's' && t[1] === 'success'))
+    .map(e => e.pubkey + ':' + e.tags.find(t => t[0] === 'd')?.[1]),
+  ...(snap.nodeOrders || []).map(n => n?.key),
+]);
+
 async function loadSnapshot() {
   const snap = await fetchSnapshot();
   if (!snap) return;
@@ -55,7 +69,20 @@ async function loadSnapshot() {
   state.serverBtcUsd = got.btcUsd;
   state.signedRate = got.rate;
   state.snapshotAt = got.generated;
+  state.snapshotKeys = successKeys(snap);
+  relays.historyFrom = state.relaysFrom = relaysFrom(Date.now() / 1000);
   scheduleRender();
+}
+
+// Completed orders of the relays' period that the snapshot doesn't have (verifying its signatures doesn't
+// prove it has them all). Not those completed in the last minutes before it: the server hadn't seen them yet
+function snapshotMissing() {
+  if (!state.snapshotKeys) return 0;
+  let n = 0;
+  for (const o of state.orders.values()) {
+    if (o.status === 'success' && o.ts > state.relaysFrom && o.ts < state.snapshotAt - 120 && !state.snapshotKeys.has(o.key)) n++;
+  }
+  return n;
 }
 
 // An order completed while the page is open: highlighted in the table
@@ -113,6 +140,7 @@ function scheduleRender() {
       renderSelection(trades, tasa);
       renderTrades(trades);
       renderBook(tasa, getBook());
+      state.snapshotMissing = snapshotMissing();
       setStatus();
     })
     .catch(e => console.error(e));
@@ -265,8 +293,9 @@ if (!CONFIG.mostros.length || !CONFIG.relays.length) {
   setEmpty(chartC, true, msg);
 } else {
   setStatus();
-  loadSnapshot();
-  relays.start();
+  // The snapshot first (same server: usually milliseconds; it gives up after 8 s): with it, the relays
+  // are asked only for the last days
+  loadSnapshot().finally(() => relays.start());
   scheduleRender();
   // If no relay answers, Yadio's API is asked after 15 s (see ensurePrices)
   setTimeout(scheduleRender, 15 * 1000);

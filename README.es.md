@@ -17,8 +17,9 @@ alguien dice que pagaría, no lo que realmente se pagó. tasaK parte de lo contr
   recalcular la misma tasa. Al hacer clic en una orden se ve su evento original.
 - **Precio, volumen y órdenes a la vista.** Además de la tasa se ven el volumen negociado, cada orden
   ejecutada, el libro de órdenes con las órdenes abiertas y la referencia del mercado para comparar.
-- **Sin intermediario.** Los datos salen directamente de los relays; la página no depende de un servidor
-  propio ni de una base de datos a la que haya que creer.
+- **Verificable.** Los datos son los eventos firmados del nodo, leídos de los relays y comprobados en el
+  navegador. El servidor del sitio (opcional) la hace más rápida y guarda el historial que los relays
+  borran, pero lo que manda se comprueba igual, y la página funciona sin él.
 - **De cualquier nodo.** Cualquier comunidad puede apuntarla a su propio nodo Mostro y su moneda.
 
 ## Configurar
@@ -119,7 +120,9 @@ con las que se opera. Las órdenes a precio fijo no dependen de ella.
 La Tasa K sigue siempre las mismas reglas, para que todos los visitantes vean la misma cifra:
 
 - **Cuentan** las órdenes completadas (`success`) en las últimas 24 horas, en la moneda elegida, de los
-  nodos del `.env` y con la firma del nodo verificada.
+  nodos del `.env`: firmadas por el nodo (comprobadas en el navegador) o, cuando su evento ya no está en
+  los relays, de la base de datos del nodo (`tasak import-mostro`), sin firma y marcadas con ◌, confiando
+  en quien publica el sitio.
 - **No cuentan** las que no llegaron a completarse (abiertas, tomadas, canceladas, caducadas, en
   disputa); las de un método de pago de `HIDDEN_PAYMENT_METHODS` (con «Otros», texto que no está en la
   lista de la app de Mostro, y «Pruebas», órdenes de prueba: «prueba», «test», «no tomar»); ni las que no
@@ -248,7 +251,9 @@ la tasa.
 El sitio servido por `tasak` carga primero el snapshot y pinta al instante; después los relays añaden lo
 nuevo. Verifica los eventos del snapshot como los de los relays (autor, tipo, firma), muestra la Tasa K
 firmada solo si la firmó `ratePubkey` (con un ⚠ si no coincide con la que calcula con los mismos datos),
-marca las órdenes sin firma (◌) y dice la antigüedad de los datos del servidor. Sin el servidor, o si
+marca las órdenes sin firma (◌) y dice la antigüedad de los datos del servidor. A los relays les pide
+solo los últimos 7 días (más si las órdenes del nodo duran más) y avisa si el servidor no tiene alguna
+orden completada que ellos sí. Sin el servidor, o si
 falla, funciona como antes, solo con los relays.
 
 Sin órdenes en las últimas 24 horas se mantiene la última tasa, marcada con `empty_since`. Los valores se
