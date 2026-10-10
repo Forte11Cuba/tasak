@@ -21,6 +21,149 @@ pay, not what was actually paid. tasaK starts from the opposite:
   relays delete, but what it sends is checked the same way, and the page works without it.
 - **Any node.** Any community can point it at its own Mostro node and currency.
 
+## Step by step on a server
+
+Your own tasaK with its archive and the signed Tasa K, on a Linux server with Docker, the published
+image and Caddy for HTTPS. You need:
+
+- a server (VPS) with Debian or Ubuntu, amd64 or arm64, with ports 80 and 443 open; a small one is enough;
+- a domain or subdomain whose DNS you manage;
+- the Mostro node's pubkey and relays (and, to recover its history, a copy of its database: only the
+  node's operator has it).
+
+The commands run on the server as root, unless they say otherwise. `tasa.example.org` is your domain
+and `X.Y.Z` the latest [release](https://github.com/Forte11Cuba/tasak/releases).
+
+**1. Point the domain at the server.** In your DNS provider, add an `A` record with the server's IPv4
+(host `@` for the bare domain). Add `AAAA` only if the server has working IPv6: Let's Encrypt uses it
+when it exists. Remove the registrar's parking or redirect records for that name. Both lines must give
+the same IP:
+
+```sh
+getent hosts tasa.example.org; curl -4 ifconfig.me; echo
+```
+
+If your users are in a country where services are blocked, check from there that the domain and the
+server's IP open: the block can be the hosting provider's, not the domain's.
+
+**2. Install Docker and git** (Docker Compose 2.24 or newer, which the official script installs):
+
+```sh
+apt update && apt install -y git curl sqlite3      # sqlite3, for the backups
+curl -fsSL https://get.docker.com | sh
+docker compose version
+```
+
+**3. Get tasaK and use the published image.** Your changes go in `docker-compose.override.yml`, which
+Docker Compose merges with `docker-compose.yml`: the repository's files stay untouched and updating is
+changing the version.
+
+```sh
+git clone --branch vX.Y.Z https://github.com/Forte11Cuba/tasak.git && cd tasak
+cat > docker-compose.override.yml <<'EOF'
+services:
+  tasak:
+    image: ghcr.io/forte11cuba/tasak:X.Y.Z   # the same version as the clone
+    build: !reset null                       # don't build: use the published image
+  caddy:
+    environment:
+      DOMAIN: tasa.example.org
+EOF
+docker compose pull tasak
+```
+
+**4. Configure your node.** `cp .env.example .env` and edit it: `MOSTRO_PUBKEYS`, `RELAYS`, `FIAT`,
+`TIMEZONE`, `HIDDEN_PAYMENT_METHODS`, your community… (see the [variables](#docker)). Leave `ARCHIVE_DIR`,
+`LISTEN` and `SIGNING_KEY_FILE` empty: Docker sets them. The image carries the repository's `web/`; for
+your own logo, put the file next to `docker-compose.yml`, mount it under `tasak:` in the override and
+set `LOGO=my-logo.svg`:
+
+```yaml
+    volumes:
+      - ./my-logo.svg:/app/web/my-logo.svg:ro
+```
+
+**5. Create the signing key** (to publish the signed Tasa K; without it, the site and the archive work the
+same). Generated on the server, for this only (not the node's key, not a personal one):
+
+```sh
+mkdir -m 700 secrets
+docker compose run --rm --no-deps --user root -v "$PWD/secrets:/secrets" tasak keygen /secrets/nsec
+docker compose run --rm --no-deps --user root -v "$PWD/secrets:/secrets" --entrypoint chown tasak 10001:10001 /secrets/nsec
+```
+
+It shows the key's npub: that is what you share. The nsec never goes in a chat nor in the repository.
+Then give it to `tasak` in the override, which ends up like this:
+
+```yaml
+services:
+  tasak:
+    image: ghcr.io/forte11cuba/tasak:X.Y.Z
+    build: !reset null
+    environment:
+      SIGNING_KEY_FILE: /run/secrets/tasak-key
+    secrets:
+      - tasak-key
+  caddy:
+    environment:
+      DOMAIN: tasa.example.org
+
+secrets:
+  tasak-key:
+    file: ./secrets/nsec
+```
+
+Keep a copy of `secrets/nsec` off the server, somewhere encrypted (from your computer, `scp
+root@SERVER:tasak/secrets/nsec .`): without it, a new key means a new npub.
+
+**6. Import the node's history** (optional, only for the node's operator; before the first start). The
+relays only keep about 15 days; the Mostro database has everything (see [Archive](#archive)). On the
+node's machine, make a copy and send it straight to the server (it has private data: not through git or
+a chat):
+
+```sh
+sqlite3 /path/to/mostro.db ".backup /tmp/mostro-copy.db"
+scp /tmp/mostro-copy.db root@SERVER:/root/mostro-copy.db
+```
+
+On the server, import it and delete the copy:
+
+```sh
+docker compose run --rm -v /root/mostro-copy.db:/import/mostro.db:ro tasak import-mostro /import/mostro.db
+rm /root/mostro-copy.db
+```
+
+**7. Start.** If the provider has a firewall in its panel, open ports 80 and 443 (TCP).
+
+```sh
+docker compose --profile https up -d
+docker compose logs tasak | grep npub                       # signing the Tasa K as npub1…
+docker compose logs caddy | grep "certificate obtained"     # the HTTPS certificate
+```
+
+**8. Check.** Open `https://tasa.example.org`. `https://tasa.example.org/api/tasa.json` gives the Tasa K
+and, in `event`, the id of the signed event, published every 5 minutes on the `.env` relays: look it up
+in `https://nostrinspect.com/e/` followed by that id: it must be signed by your npub.
+
+**9. Back up** the archive (it is the history the relays forget) and the key. `.backup` is safe while
+`tasak` runs; copying the file isn't. The volume is called `tasak_tasak-data` with the repository in a
+folder named `tasak`:
+
+```sh
+sqlite3 "$(docker volume inspect -f '{{.Mountpoint}}' tasak_tasak-data)/tasak.sqlite" ".backup /root/tasak-backup.sqlite"
+```
+
+Copy it off the server, for example every day with cron.
+
+**10. Day to day.** After changing `.env`: `docker compose restart tasak`. Logs: `docker compose logs -f
+tasak`. To update to a new version:
+
+```sh
+git fetch --tags && git checkout vX.Y.Z          # the new one
+# change the version in docker-compose.override.yml (image:)
+docker compose pull tasak && docker compose --profile https up -d
+```
+
 ## Setup
 
 Requirements: Rust (`cargo`), to build `tasak`, the program that reads `.env`, generates
@@ -51,7 +194,7 @@ The site needs a web server, also to try it locally: opened as a file (`file://`
 its ES modules and the page shows a warning instead. `tasak` generates the files when it starts: run it
 again after changing `.env` or `shared/`. Two ways to publish it:
 
-- **With the tasaK server:** with Docker (see [Docker](#docker)) or run `tasak` all the time and put a web server with HTTPS (nginx, Caddy…)
+- **With the tasaK server:** with Docker (see [Docker](#docker) and the [step by step](#step-by-step-on-a-server)) or run `tasak` all the time and put a web server with HTTPS (nginx, Caddy…)
   in front of it. It only serves files (GET and HEAD, nothing that receives data) and listens on
   `127.0.0.1:8765` by default (`LISTEN`). It also archives the node's events (see [Archive](#archive))
   and publishes the Tasa K (see [Published rate](#published-rate)).
@@ -81,8 +224,9 @@ docker compose logs -f tasak
 - Logo or icon files (`LOGO`, `FAVICON`) go in `web/` before building the image.
 - After updating the repository: `docker compose up -d --build`.
 - Without building: each release also publishes the image, `ghcr.io/forte11cuba/tasak:X.Y.Z` (and
-  `:latest`), for amd64 and arm64. In `docker-compose.yml`, replace `build: .` with that `image:` and run
-  `docker compose up -d`. It carries the repository's `web/`: mount your own logo files into `/app/web/`.
+  `:latest`), for amd64 and arm64. Use it from a `docker-compose.override.yml`, as in the
+  [step by step](#step-by-step-on-a-server). It carries the repository's `web/`: mount your own logo
+  files into `/app/web/`.
 
 To import the node's history, mount the copy of the Mostro database read-only (see [Archive](#archive)):
 
@@ -93,7 +237,8 @@ docker compose run --rm -v /tmp/mostro-copy.db:/import/mostro.db:ro tasak import
 
 To publish the signed Tasa K, create the key in a `secrets/` folder outside `web/` (as root inside the
 container, and then hand it to its user, uid 10001), then uncomment `SIGNING_KEY_FILE` and the
-`secrets` lines in `docker-compose.yml`:
+`secrets` lines in `docker-compose.yml` (or add them to the override, as in the
+[step by step](#step-by-step-on-a-server)):
 
 ```sh
 mkdir -p secrets
