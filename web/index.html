@@ -29,8 +29,21 @@
   <div class="brand-box">
     <div class="brand" data-name="site">tasa<span>K</span></div>
   </div>
+  <div class="stat node-stat">
+    <span class="label node-label"><span data-i18n>Nodo</span> <a class="node-info" id="nodeBtn2" href="node.html" title="Información del nodo Mostro: comisión, condiciones, comunidad y redes" aria-label="Información del nodo Mostro: comisión, condiciones, comunidad y redes" data-i18n-title>ⓘ</a></span>
+    <details class="menu node-menu" id="nodeMenu">
+      <summary id="nodeSummary" title="Elegir nodo Mostro" data-i18n-title>—</summary>
+      <div class="pop node-pop">
+        <div id="nodes"></div>
+        <form class="node-form" id="nodeForm">
+          <input id="nodeInput" type="text" autocomplete="off" spellcheck="false">
+          <button type="submit" data-i18n>Ver</button>
+        </form>
+      </div>
+    </details>
+  </div>
   <div class="stat big" id="statTasa">
-    <span class="label"><span data-name="rate">Tasa K</span> · 24h</span>
+    <span class="label" id="rateLabel"><span data-name="rate">Tasa K</span> · 24h</span>
     <span class="value-row">
       <span class="value num" id="sTasa">—</span>
       <span class="chg num" id="sChg" title="Cambio respecto a las 24 horas anteriores" data-i18n-title></span>
@@ -57,7 +70,6 @@
     <nav class="info-nav">
       <button class="theme-btn" type="button"></button>
       <span class="lang-switch" aria-label="Idioma"></span>
-      <a class="icon-btn head-btn" id="nodeBtn2" href="node.html" title="Información del nodo Mostro: comisión, condiciones, comunidad y redes" data-i18n-title data-i18n>ⓘ Nodo Mostro</a>
       <button class="icon-btn head-btn" id="faqBtn" title="Preguntas frecuentes" data-i18n-title data-i18n>? Ayuda</button>
     </nav>
   </div>
@@ -70,12 +82,6 @@
     <button data-unit="usd" class="on">/USD</button>
     <button data-unit="btc">/BTC</button>
     <button data-unit="sat">/sat</button>
-  </span>
-  <span class="node-filter">
-    <span class="sep"></span>
-    <span class="label" data-i18n>Nodo</span>
-    <span id="nodesBox" hidden><span id="nodes"></span></span>
-    <a class="node-btn" id="nodeBtn" href="node.html" title="Información del nodo Mostro" data-i18n-title><span id="pair">—</span><span class="i">i</span></a>
   </span>
   <span class="selection" id="selection" hidden>
     <span class="label" data-i18n>Tu selección</span>
@@ -242,7 +248,7 @@
         <li>Ni las que no tienen un monto en moneda y en sats mayor que cero.</li>
       </ul>
       <p>Sí cuentan los precios extremos (no se descarta ninguno: la tasa muestra lo que pasa en el mercado) y tanto las órdenes a precio de mercado como las de precio fijo.</p>
-      <p>Para calcular con otros métodos de pago o nodos, cámbialos en el menú «Método de pago» de la gráfica o en la barra de nodos: aparece <strong>Tu selección</strong>, el precio ponderado de las 24 horas hasta su última orden con lo que elegiste. La gráfica y las tablas también la siguen; la <span data-name="rate">Tasa K</span> de la cabecera no cambia. ✕ vuelve a los de por defecto.</p>
+      <p>Para calcular con otros métodos de pago o nodos, cámbialos en el menú «Método de pago» de la gráfica o en el selector de nodos, junto a la <span data-name="rate">Tasa K</span>: aparece <strong>Tu selección</strong>, el precio ponderado de las 24 horas hasta su última orden con lo que elegiste. La gráfica y las tablas también la siguen; la <span data-name="rate">Tasa K</span> de la cabecera no cambia. ✕ vuelve a los de por defecto.</p>
     </details>
     <details>
       <summary>¿Qué es la «Referencia Yadio»?</summary>
@@ -252,9 +258,9 @@
     </details>
     <details>
       <summary>¿Puedo ver mi propio nodo Mostro?</summary>
-      <p>Sí. Quien despliega el sitio lo configura en el archivo <code>.env</code>, y cualquier visitante puede cambiarlo en la URL:</p>
+      <p>Sí. Quien despliega el sitio configura sus nodos en el archivo <code>.env</code>, y también otros nodos que ofrece en el selector de nodos, junto a la <span data-name="rate">Tasa K</span>. Ahí mismo se puede pegar la npub de cualquier nodo, o cambiarlo en la URL:</p>
       <p><code>?mostro=npub…,npub…&amp;relays=wss://…&amp;fiat=…&amp;lang=es</code></p>
-      <p>Ese nodo se lee solo de los relays, con el historial que guarden: el archivo de este sitio y su Tasa K firmada son de los nodos del sitio.</p>
+      <p>Un nodo que no es de este sitio se lee solo de los relays, con el historial que guarden: el archivo de este sitio y su <span data-name="rate">Tasa K</span> firmada son de los nodos del sitio. Su <span data-name="rate">Tasa K</span> la calcula tu navegador con todos los métodos de pago salvo las órdenes de prueba: los métodos que este sitio excluye son las reglas de su propio mercado.</p>
     </details>
   </div>
 <div class="faq-body" data-lang="en">
@@ -320,7 +326,7 @@
         <li>Nor those without an amount in currency and in sats greater than zero.</li>
       </ul>
       <p>Extreme prices do count (none is discarded: the rate shows what happens in the market), and so do both market-price and fixed-price orders.</p>
-      <p>To calculate with other payment methods or nodes, change them in the chart's «Payment method» menu or in the nodes bar: <strong>Your selection</strong> appears, the weighted price of the 24 hours up to its last order with what you chose. The chart and the tables follow it too; the <span data-name="rate">Tasa K</span> in the header doesn't change. ✕ goes back to the default ones.</p>
+      <p>To calculate with other payment methods or nodes, change them in the chart's «Payment method» menu or in the node selector, next to the <span data-name="rate">Tasa K</span>: <strong>Your selection</strong> appears, the weighted price of the 24 hours up to its last order with what you chose. The chart and the tables follow it too; the <span data-name="rate">Tasa K</span> in the header doesn't change. ✕ goes back to the default ones.</p>
     </details>
     <details>
       <summary>What is the «Yadio reference»?</summary>
@@ -330,9 +336,9 @@
     </details>
     <details>
       <summary>Can I see my own Mostro node?</summary>
-      <p>Yes. Whoever deploys the site configures it in the <code>.env</code> file, and any visitor can change it in the URL:</p>
+      <p>Yes. Whoever deploys the site configures its nodes in the <code>.env</code> file, and also other nodes it offers in the node selector, next to the <span data-name="rate">Tasa K</span>. There you can also paste any node's npub, or change it in the URL:</p>
       <p><code>?mostro=npub…,npub…&amp;relays=wss://…&amp;fiat=…&amp;lang=en</code></p>
-      <p>That node is read from the relays alone, with the history they keep: this site's archive and its signed Tasa K are about the site's nodes.</p>
+      <p>A node that isn't this site's is read from the relays alone, with the history they keep: this site's archive and its signed <span data-name="rate">Tasa K</span> are about the site's nodes. Its <span data-name="rate">Tasa K</span> is calculated by your browser with every payment method but the test orders: the methods this site leaves out are the rules of its own market.</p>
     </details>
   </div>
 </dialog>

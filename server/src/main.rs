@@ -131,7 +131,7 @@ fn main() -> ExitCode {
     };
 
     let env_file = root.join(".env");
-    let file_env = match fs::read_to_string(&env_file) {
+    let (file_env, env_errors) = match fs::read_to_string(&env_file) {
         Ok(text) => config::parse_env(&text),
         Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
             warn!("no .env file; using environment variables only (see .env.example)");
@@ -150,6 +150,7 @@ fn main() -> ExitCode {
     };
 
     let (mut config, mut errors) = config::build_config(get, &root.join("web"));
+    errors.splice(0..0, env_errors);
     let listen = get("LISTEN")
         .filter(|v| !v.is_empty())
         .unwrap_or_else(|| DEFAULT_LISTEN.to_string());
@@ -192,6 +193,14 @@ fn main() -> ExitCode {
             Err(e) => errors.push(format!("invalid pubkey: {k} ({e})")),
         }
     }
+    // The guests too, though only the browser uses them
+    for k in &config.other_mostros {
+        if let Err(e) = PublicKey::parse(k)
+            && !errors.iter().any(|e| e.contains(k.as_str()))
+        {
+            errors.push(format!("invalid pubkey: {k} ({e})"));
+        }
+    }
     if !errors.is_empty() {
         eprintln!("Configuration error:\n  {}", errors.join("\n  "));
         return ExitCode::FAILURE;
@@ -218,8 +227,9 @@ fn main() -> ExitCode {
     if !matches!(command, Command::Import(_) | Command::ImportMostro(..)) {
         match site::write(&root, &config) {
             Ok(modules) => info!(
-                "web/config.js generated: {} node(s), {} relay(s), currency {}; {modules} modules copied to web/shared/",
+                "web/config.js generated: {} node(s), {} guest node(s), {} relay(s), currency {}; {modules} modules copied to web/shared/",
                 config.mostros.len(),
+                config.other_mostros.len(),
                 config.relays.len(),
                 if config.fiat.is_empty() { "auto" } else { &config.fiat },
             ),

@@ -3,10 +3,10 @@
 import { getTrades as tradesOf, getBook as bookOf, pricedAt } from '../shared/orders.js';
 import { pmStats, defaultPmSelection } from '../shared/payment-methods.js';
 import { state, store, saveView, HIDDEN_PM } from './state.js';
-import { createRelayPool } from './nostr-client.js';
+import { createRelayPool, fetchProfiles } from './nostr-client.js';
 import { ensurePrices, loadBtcHistory, marketFor, unitPrice } from './prices.js';
 import { chartC, view, renderChart, setEmpty, applyChartTheme } from './chart.js';
-import { setStatus, renderStats, renderSelection, renderTrades, renderBook, renderFilters, updatePair } from './panels.js';
+import { setStatus, renderStats, renderSelection, renderTrades, renderBook, renderFilters, updatePair, nodeUrl } from './panels.js';
 import { openEvent } from './event-dialog.js';
 import { fetchSnapshot, applySnapshot } from './snapshot.js';
 import { pmListFor } from '../shared/payment-methods.js';
@@ -243,7 +243,36 @@ applyBookFrac();
 
 
 // The node page keeps the URL parameters (same node and relays)
-for (const id of ['nodeBtn', 'nodeBtn2']) document.getElementById(id).href = 'node.html' + location.search;
+document.getElementById('nodeBtn2').href = 'node.html' + location.search;
+
+// Node selector: the names and pictures of the nodes not shown, asked for the first time it opens
+const nodeMenu = document.getElementById('nodeMenu');
+nodeMenu.addEventListener('toggle', () => {
+  if (!nodeMenu.open || state.profilesAsked) return;
+  state.profilesAsked = true;
+  const authors = [...CONFIG.siteMostros, ...CONFIG.otherMostros].filter(k => !CONFIG.mostros.includes(k));
+  fetchProfiles({ urls: CONFIG.relays, authors, verify: verifyEvent }).then(found => {
+    for (const [k, p] of found) state.profiles.set(k, p);
+    if (found.size) scheduleRender();
+  });
+});
+// Another node than the site's: its rate isn't the site's (other methods, not signed), on hover
+if (CONFIG.urlNodes) {
+  const label = document.getElementById('rateLabel');
+  label.classList.add('guest');
+  label.title = t('Nodo que no es de este sitio: la {rate} se calcula en este navegador con sus órdenes de los relays, con todos los métodos de pago salvo las pruebas, y este sitio no la firma', { rate: CONFIG.rateName });
+}
+// Any node, by its npub (or hex public key): its page
+const nodeInput = document.getElementById('nodeInput');
+nodeInput.placeholder = t('Pegar npub…');
+nodeInput.setAttribute('aria-label', t('npub de un nodo Mostro'));
+nodeInput.oninput = () => { nodeInput.classList.remove('bad'); nodeInput.title = ''; };
+document.getElementById('nodeForm').onsubmit = e => {
+  e.preventDefault();
+  const k = toHex(nodeInput.value);
+  if (!k) { nodeInput.classList.add('bad'); nodeInput.title = t('No es una npub ni una clave pública válida'); return; }
+  location.href = nodeUrl(CONFIG.siteMostros.length === 1 && CONFIG.siteMostros[0] === k ? '' : k);
+};
 
 // Frequently asked questions
 const faq = document.getElementById('faq');

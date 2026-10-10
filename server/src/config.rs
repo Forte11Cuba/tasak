@@ -16,19 +16,60 @@ fn js_trim(s: &str) -> &str {
     s.trim_matches(is_js_space)
 }
 
+/// The variables that are lists: comma separated on one line, or one item per line between double
+/// quotes, where # starts a comment (to name an item, or to leave it out):
+///
+/// ```text
+/// OTHER_MOSTRO_PUBKEYS="
+///   npub1…   # a node
+/// # npub1…   # one left out
+/// "
+/// ```
+const LISTS: [&str; 5] = [
+    "MOSTRO_PUBKEYS",
+    "OTHER_MOSTRO_PUBKEYS",
+    "RELAYS",
+    "SOCIAL_LINKS",
+    "HIDDEN_PAYMENT_METHODS",
+];
+
 /// The .env format: KEY=value lines, # comments, optional quotes around the value; later lines win.
-pub fn parse_env(text: &str) -> HashMap<String, String> {
-    let mut env = HashMap::new();
-    for line in text.split('\n') {
-        let line = line.strip_suffix('\r').unwrap_or(line);
+/// A list can span several lines (see LISTS). The errors: a list whose closing quote is missing
+pub fn parse_env(text: &str) -> (HashMap<String, String>, Vec<String>) {
+    let (mut env, mut errors) = (HashMap::new(), Vec::new());
+    let mut lines = text.split('\n').map(|l| l.strip_suffix('\r').unwrap_or(l));
+    while let Some(line) = lines.next() {
         if js_trim(line).starts_with('#') {
             continue;
         }
-        if let Some((key, value)) = parse_line(line) {
-            env.insert(key.to_string(), value.to_string());
-        }
+        let Some((key, value)) = parse_line(line) else { continue };
+        // A list that opens a quote and doesn't close it on the same line: until the line that does
+        let value = match value.strip_prefix('"') {
+            Some(first) if LISTS.contains(&key) => {
+                let mut items = vec![first];
+                let mut closed = false;
+                for next in lines.by_ref() {
+                    if let Some(i) = next.find('"') {
+                        items.push(&next[..i]);
+                        closed = true;
+                        break;
+                    }
+                    items.push(next);
+                }
+                if !closed {
+                    errors.push(format!("{key}: the list's closing quote (\") is missing"));
+                }
+                let items: Vec<&str> = items
+                    .iter()
+                    .map(|l| js_trim(l.split('#').next().unwrap_or("")))
+                    .collect();
+                items.join(",")
+            }
+            _ => value.to_string(),
+        };
+        env.insert(key.to_string(), value);
     }
-    env
+    (env, errors)
 }
 
 /// Like /^\s*([A-Za-z0-9_]+)\s*=\s*(.*?)\s*$/ in JavaScript, then /^(["']).*\1$/ removes the quotes
@@ -64,6 +105,8 @@ pub struct Config {
     /// Default language (es | en); empty = the browser's
     pub language: String,
     pub mostros: Vec<String>,
+    /// Guest nodes: offered in the site's node selector, not archived nor part of the Tasa K
+    pub other_mostros: Vec<String>,
     pub relays: Vec<String>,
     /// Empty: the most traded currency on the node and the visitor's browser time zone
     pub fiat: String,
@@ -105,6 +148,7 @@ pub fn build_config(get: impl Fn(&str) -> Option<String>, web: &Path) -> (Config
         theme: one_of("THEME", &["light", "dark"]),
         language: one_of("LANGUAGE", &["es", "en"]),
         mostros: list(get("MOSTRO_PUBKEYS")),
+        other_mostros: list(get("OTHER_MOSTRO_PUBKEYS")),
         relays: list(get("RELAYS")),
         fiat: or_empty("FIAT").to_uppercase(),
         time_zone: or_empty("TIMEZONE"),
@@ -130,7 +174,7 @@ pub fn build_config(get: impl Fn(&str) -> Option<String>, web: &Path) -> (Config
     if config.mostros.is_empty() {
         errors.push("MOSTRO_PUBKEYS is empty".to_string());
     }
-    for k in &config.mostros {
+    for k in config.mostros.iter().chain(&config.other_mostros) {
         if !valid_pubkey(k) {
             errors.push(format!("invalid pubkey: {k}"));
         }
@@ -297,7 +341,7 @@ mod tests {
         let web = dir.join("web");
         for case in vectors["cases"].as_array().unwrap() {
             let name = case["name"].as_str().unwrap();
-            let file_env = case["env"].as_str().map(parse_env).unwrap_or_default();
+            let (file_env, env_errors) = case["env"].as_str().map(parse_env).unwrap_or_default();
             let process_env = case["processEnv"].as_object().unwrap();
             let get = |k: &str| {
                 process_env
@@ -305,7 +349,8 @@ mod tests {
                     .map(|v| v.as_str().unwrap().to_string())
                     .or_else(|| file_env.get(k).cloned())
             };
-            let (config, errors) = build_config(get, &web);
+            let (config, mut errors) = build_config(get, &web);
+            errors.splice(0..0, env_errors);
             let want: Vec<&str> = case["errors"]
                 .as_array()
                 .unwrap()
@@ -349,7 +394,7 @@ mod tests {
 
     #[test]
     fn env_lines() {
-        let env = parse_env("\u{FEFF}A = 'x' \r\nB=\"y\nC=a\u{2028}b\n#D=1\nE\u{85}=1");
+        let (env, _) = parse_env("\u{FEFF}A = 'x' \r\nB=\"y\nC=a\u{2028}b\n#D=1\nE\u{85}=1");
         let want = HashMap::from([("A".to_string(), "x".to_string()), ("B".to_string(), "\"y".to_string())]);
         assert_eq!(env, want);
     }
