@@ -233,7 +233,7 @@ Servicios externos que usa y qué pasa si están bloqueados:
 |---|---|---|
 | Relays Nostr | las órdenes, y los precios actuales que publica el nodo (`mostro-rates`: BTC/USD, referencia de la moneda frente al USD, libro de órdenes a precio de mercado) | sin ellos no hay datos (basta con que responda uno) |
 | Yadio | solo si un nodo no publica `mostro-rates` válidos: una estimación de los precios actuales | la moneda/USD no se puede calcular; moneda/BTC y moneda/sat siguen funcionando |
-| Coinbase | BTC/USD histórico por hora, para la moneda/USD (la hora en que se tomó cada orden o, si no se sabe, en que se completó) | se calcula con el BTC/USD actual (el del nodo o el de Yadio) y se avisa de que es aproximado |
+| Coinbase | BTC/USD histórico por hora, para la moneda/USD (la hora en que se tomó cada orden o, si no se sabe, en que se completó); no hace falta si el servidor del sitio da a cada orden su BTC/USD | se calcula con el BTC/USD actual (el del nodo o el de Yadio) y se avisa de que es aproximado |
 
 ## Archivo
 
@@ -253,6 +253,10 @@ que publica el nodo, verificado (firma, autor y tipo), en una base de datos SQLi
   Las abiertas se leen en vivo de los relays, y las canceladas o caducadas nunca cuentan. Cada una tiene
   su versión vigente, si fue a precio de mercado o fijo, cuándo se tomó y su BTC/USD de ese momento con
   su origen: el `mostro-rates` del nodo o, si no lo hay, Coinbase (velas de 1 minuto) o Yadio.
+  Así, las órdenes de antes del archivo (o importadas de la base de datos del nodo) llevan el BTC/USD de
+  Coinbase y las posteriores el del nodo: la moneda/USD puede dar un pequeño salto entre unas y otras
+  (suelen diferir menos de un 0,1 %), mientras que la moneda/BTC y la moneda/sat no cambian, porque salen
+  solo de los eventos.
 - `btc_prices`: los cierres de BTC/USD de 1 minuto de Coinbase, cada uno pedido una vez y guardado.
 
 Debe estar siempre encendido: lo que pase mientras está apagado se pierde, salvo la última versión de
