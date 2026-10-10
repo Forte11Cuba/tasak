@@ -58,6 +58,7 @@ Variables de `.env` (en inglés, para que sirvan a cualquier operador de nodo):
 | `RATE_NAME` | Nombre de la tasa en toda la página (por defecto `Tasa K`) |
 | `LOGO` | Logo del sitio: archivo en `web/`, junto a `index.html` (svg, png, jpg, webp), o enlace https. Vacío = el nombre en texto |
 | `LOGO_LIGHT` | Logo para el tema claro (opcional; si falta, se usa `LOGO`) |
+| `FAVICON` | Icono de la pestaña del navegador: un archivo en `web/` (svg, png o ico), no un enlace. Vacío = lo genera `tasak`: las mayúsculas del final de `SITE_NAME` (o su primera letra) |
 | `THEME` | Tema por defecto, `light` o `dark` (vacío = el del sistema). Cada visitante puede cambiarlo con ☀ / ☾ |
 | `LANGUAGE` | Idioma por defecto, `es` o `en` (vacío = el del navegador). Cada visitante puede cambiarlo con ES · EN |
 | `MOSTRO_PUBKEYS` | Nodos a visualizar, en hex o npub, separados por coma (obligatorio) |
@@ -176,7 +177,8 @@ página (por ejemplo, con el texto de un evento), el navegador no lo ejecutaría
 fuera. El único estilo en línea permitido, por su hash, es el que añade lightweight-charts para el logo
 de atribución de TradingView. `tasak` envía además `frame-ancestors 'none'` (ningún otro sitio puede
 mostrar este en un marco), que solo funciona como cabecera, y genera el icono (`favicon.svg`, la letra de
-`SITE_NAME`) como archivo, porque la política no admite imágenes `data:`.
+`SITE_NAME`; o `FAVICON`, un archivo del sitio) como archivo, porque la política no admite imágenes
+`data:`.
 
 ## Funcionar aunque haya servicios bloqueados
 
