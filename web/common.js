@@ -28,13 +28,17 @@ const CONFIG = (() => {
   const base = window.TASAK_CONFIG || {};
   const qs = new URLSearchParams(location.search);
   const list = k => (qs.get(k) || '').split(/[\s,]+/).filter(Boolean);
-  const mostros = list('mostro').length ? list('mostro') : base.mostros || [];
+  const urlNodes = list('mostro').length > 0;
+  const mostros = urlNodes ? list('mostro') : base.mostros || [];
   const relays = list('relays').length ? list('relays') : base.relays || [];
   return {
     fromEnv: !!window.TASAK_CONFIG,
+    // The URL changes the node: what describes the .env nodes doesn't apply (community, currency, signed
+    // rate, the server's snapshot)
+    urlNodes,
     // The community and its links describe the .env nodes; not shown if the URL changes the node
-    community: list('mostro').length ? null : base.community,
-    socialLinks: list('mostro').length ? [] : (base.socialLinks || []).filter(u => /^https:\/\//i.test(u)),
+    community: urlNodes ? null : base.community,
+    socialLinks: urlNodes ? [] : (base.socialLinks || []).filter(u => /^https:\/\//i.test(u)),
     mostros: [...new Set(mostros.map(toHex).filter(Boolean))],
     relays: [...new Set(relays.filter(validRelay))],
     siteName: base.siteName || 'tasaK',
@@ -47,11 +51,11 @@ const CONFIG = (() => {
     hiddenPaymentMethods: base.hiddenPaymentMethods || ['Pruebas', 'Otros'],
     // Without a configured currency, the page picks the most traded one on the node; the .env one
     // belongs to the .env nodes, so it doesn't apply if the URL changes the node
-    fiat: (qs.get('fiat') || (list('mostro').length ? '' : base.fiat) || '').toUpperCase(),
+    fiat: (qs.get('fiat') || (urlNodes ? '' : base.fiat) || '').toUpperCase(),
     tz: base.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
     // The key that signs the site's Tasa K (hex): its rate is about the .env's nodes, so it doesn't
     // apply if the URL changes the node
-    ratePubkey: !list('mostro').length && /^[0-9a-f]{64}$/.test(base.ratePubkey || '') ? base.ratePubkey : '',
+    ratePubkey: !urlNodes && /^[0-9a-f]{64}$/.test(base.ratePubkey || '') ? base.ratePubkey : '',
   };
 })();
 

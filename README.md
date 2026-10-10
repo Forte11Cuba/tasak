@@ -290,6 +290,8 @@ index.html?mostro=npub1…,npub1…&relays=wss://relay.mostro.network,wss://nos.
 ```
 
 If the URL changes the node and has no `fiat`, the `.env` currency doesn't apply: the page picks the most traded one on that node.
+Nor do the server's snapshot and signed Tasa K, which are about the `.env` nodes: that node is read from the
+relays alone, with all the history they keep.
 
 ## Tasa K
 
@@ -471,7 +473,7 @@ K only if `ratePubkey` signed it (with a ⚠ if it doesn't match the one it comp
 marks the unsigned orders (◌) and says how old the server's data is. It asks the relays only for the
 last 7 days (longer if the node's orders last longer) and warns if the server lacks a completed order
 they have. Without the server, or if it fails,
-it works as before, with the relays alone.
+it works as before, with the relays alone; also when the URL changes the node.
 
 Its window always ends at the last completed order (`to`); `empty_since` says since when there have been
 no orders in the last 24 hours. Values are rounded to
