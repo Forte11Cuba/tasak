@@ -490,6 +490,13 @@ salga como sin firma:
   su origen y la última tasa firmada. No lleva las órdenes abiertas: el libro de órdenes sale en vivo de
   los relays.
 
+- **`/api/history.json`**: cada orden completada de la moneda del sitio, de toda su historia y de más
+  antigua a más reciente, con su momento (segundos Unix), su moneda por BTC y la moneda que movió. Las
+  mismas reglas que la Tasa K (los nodos del `.env`, la moneda del sitio y los métodos de pago que no
+  oculta). Es lo que lee `price-chart-proxy` para dibujar el gráfico en CUP de la billetera Arkade
+  (`{when, from, data}` con `data[].{time, value, size}`); sin órdenes da `{"data": []}`. Como la tasa,
+  no es una fuente de precio de mercado, solo para dibujar gráficos.
+
 Si hay clave, su clave pública va en `config.js` (`ratePubkey`), para que el sitio compruebe quién firmó
 la tasa, y la FAQ («¿Quién firma la Tasa K y cómo lo compruebo?») la muestra como npub, para que cualquiera
 pueda buscar y comprobar en Nostr los eventos del sitio.

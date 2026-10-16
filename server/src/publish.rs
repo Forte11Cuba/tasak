@@ -2,7 +2,9 @@
 //! rules (the .env's nodes and currency, the payment methods it doesn't hide). Every 5 minutes it writes
 //! `web/api/tasa.json` and, with a signing key, publishes it as a signed Nostr event (kind 30078,
 //! d = tasak) with everything needed to recompute it: each order with its amounts, moment and BTC/USD.
-//! Not meant as a price source for Mostro: hence `d = tasak`, not `mostro-rates`.
+//! It also writes `web/api/history.json`, every completed trade of the site's currency over all time
+//! with those same rules, for price charts (price-chart-proxy). Not meant as a price source for Mostro:
+//! hence `d = tasak`, not `mostro-rates`.
 
 use crate::archive::now;
 use serde::Serialize;
@@ -136,16 +138,17 @@ pub struct Rate {
     pub orders: Vec<AuditOrder>,
 }
 
-/// The rate at `now`, or None if there has never been a completed order (in that currency)
-pub fn compute(rows: &[Row], rules: &Rules, now: i64) -> Option<Rate> {
-    let orders: Vec<Order> = rows.iter().map(Row::order).collect();
+/// The site's currency and filters: the `.env`'s nodes, its currency (`FIAT`, or the one with most
+/// completed orders) and the payment methods it doesn't hide. None if there is no completed order to
+/// pick the currency from
+fn site_filters(orders: &[Order], rules: &Rules, now: i64) -> Option<(String, Filters)> {
     let fiat = if rules.fiat.is_empty() {
-        most_used_fiat(&orders)?
+        most_used_fiat(orders)?
     } else {
         rules.fiat.clone()
     };
     let nodes: HashSet<String> = rules.nodes.iter().cloned().collect();
-    let keys: Vec<String> = pm_stats(&orders, &fiat, &nodes, now as f64)
+    let keys: Vec<String> = pm_stats(orders, &fiat, &nodes, now as f64)
         .into_iter()
         .map(|s| s.key)
         .collect();
@@ -154,6 +157,13 @@ pub fn compute(rows: &[Row], rules: &Rules, now: i64) -> Option<Rate> {
         nodes,
         pm_sel: default_pm_selection(&keys, &hidden_set(&rules.hidden)),
     };
+    Some((fiat, filters))
+}
+
+/// The rate at `now`, or None if there has never been a completed order (in that currency)
+pub fn compute(rows: &[Row], rules: &Rules, now: i64) -> Option<Rate> {
+    let orders: Vec<Order> = rows.iter().map(Row::order).collect();
+    let (fiat, filters) = site_filters(&orders, rules, now)?;
     let by_key: HashMap<&str, &Row> = rows.iter().map(|r| (r.key.as_str(), r)).collect();
     let btc = get_trades(&orders, &filters, |p, _| Some(p));
     let usd = get_trades(&orders, &filters, |p, o| by_key[o.key.as_str()].btc_usd.map(|b| p / b));
@@ -215,6 +225,47 @@ pub fn compute(rows: &[Row], rules: &Rules, now: i64) -> Option<Rate> {
         unsigned: orders.iter().filter(|o| !o.signed).count(),
         orders,
     })
+}
+
+/// A completed trade as `/api/history.json` serves it: `time` = when it completed (unix seconds),
+/// `value` = currency per BTC at that moment, `size` = currency it moved
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct HistoryTrade {
+    pub time: i64,
+    pub value: f64,
+    pub size: f64,
+}
+
+/// `web/api/history.json`: every completed trade of the site's currency, oldest first, to draw price
+/// charts. The shape price-chart-proxy reads for its CUP series: `{when, from, data}` with
+/// `data[].{time, value, size}`. It follows the same rules as the Tasa K: the `.env`'s nodes, the
+/// site's currency and the payment methods it doesn't hide
+#[derive(Debug, Clone, PartialEq, Serialize)]
+pub struct History {
+    /// When it was written (unix seconds)
+    pub when: i64,
+    pub from: &'static str,
+    pub data: Vec<HistoryTrade>,
+}
+
+/// The trades to chart: same rules as [`compute`], over all time instead of the last 24 h
+pub fn history(rows: &[Row], rules: &Rules, when: i64) -> History {
+    let orders: Vec<Order> = rows.iter().map(Row::order).collect();
+    let data = site_filters(&orders, rules, when).map_or_else(Vec::new, |(_, filters)| {
+        get_trades(&orders, &filters, |p, _| Some(p))
+            .into_iter()
+            .map(|t| HistoryTrade {
+                time: t.ts,
+                value: t.price,
+                size: t.size,
+            })
+            .collect()
+    });
+    History {
+        when,
+        from: "tasak",
+        data,
+    }
 }
 
 /// The event's content: the shape of mostro-rates ({"BTC": {currency: per BTC}}) plus the audit
@@ -329,9 +380,9 @@ fn write_atomic(path: &Path, text: &str) -> std::io::Result<()> {
     std::fs::rename(tmp, path)
 }
 
-/// Every 5 minutes: computes the rate, publishes the event (with `keys`) and writes `tasa.json` and
-/// `snapshot.json` into `api_dir`. The first time, once `ready` (`orders` has what the relays had when
-/// tasak started) or after `first_wait`. Runs until the task is dropped
+/// Every 5 minutes: computes the rate, publishes the event (with `keys`) and writes `tasa.json`,
+/// `history.json` and `snapshot.json` into `api_dir`. The first time, once `ready` (`orders` has what
+/// the relays had when tasak started) or after `first_wait`. Runs until the task is dropped
 pub async fn run(
     pool: SqlitePool,
     rules: Rules,
@@ -363,24 +414,30 @@ pub async fn run(
     loop {
         let t = now();
         match load_rows(&pool).await {
-            Ok(rows) => match compute(&rows, &rules, t) {
-                Some(rate) => {
-                    let mut event_id = None;
-                    if let Some(keys) = &keys {
-                        match send(&client, keys, &rate, t).await {
-                            Ok(ev) => {
-                                event_id = Some(ev.id.to_hex());
-                                last_event = serde_json::from_str(&ev.as_json()).ok();
+            Ok(rows) => {
+                match compute(&rows, &rules, t) {
+                    Some(rate) => {
+                        let mut event_id = None;
+                        if let Some(keys) = &keys {
+                            match send(&client, keys, &rate, t).await {
+                                Ok(ev) => {
+                                    event_id = Some(ev.id.to_hex());
+                                    last_event = serde_json::from_str(&ev.as_json()).ok();
+                                }
+                                Err(e) => tracing::warn!("publish: {e}"),
                             }
-                            Err(e) => tracing::warn!("publish: {e}"),
                         }
+                        let text = serde_json::to_string_pretty(&api(&rate, t, event_id, pubkey.clone()))
+                            .expect("serializable");
+                        write(&api_dir.join("tasa.json"), &text);
                     }
-                    let text =
-                        serde_json::to_string_pretty(&api(&rate, t, event_id, pubkey.clone())).expect("serializable");
-                    write(&api_dir.join("tasa.json"), &text);
+                    None => tracing::info!("publish: no completed orders yet"),
                 }
-                None => tracing::info!("publish: no completed orders yet"),
-            },
+                write(
+                    &api_dir.join("history.json"),
+                    &serde_json::to_string(&history(&rows, &rules, t)).expect("serializable"),
+                );
+            }
             Err(e) => tracing::warn!("publish: {e}"),
         }
         match crate::snapshot::build(&pool, last_event.clone(), t).await {
@@ -576,11 +633,65 @@ mod tests {
         assert_eq!(compute(&rows, &r, NOW).unwrap().rate.btc, Some(763.0));
     }
 
+    #[test]
+    fn the_history_series_is_every_completed_trade_of_the_site_currency() {
+        let rows = vec![
+            // 1000 CUP for 100 000 sats = 1 000 000 CUP/BTC
+            row("a", NOW - 100, 1000.0, 100_000.0, Some(100_000.0), true, "EnZona"),
+            // A hidden method: doesn't count
+            row("b", NOW - 50, 9000.0, 100_000.0, Some(100_000.0), true, "Saldo móvil"),
+            // No amount in sats: not a trade
+            row("c", NOW - 40, 1000.0, 0.0, Some(100_000.0), true, "EnZona"),
+            // Node data without BTC/USD still counts: the chart is in currency/BTC
+            row("d", NOW - 20, 3000.0, 50_000.0, None, false, "EnZona"),
+        ];
+        let h = history(&rows, &rules(), NOW);
+        assert_eq!((h.when, h.from), (NOW, "tasak"));
+        // Oldest first, with value = currency per BTC and size = currency moved
+        assert_eq!(
+            h.data,
+            vec![
+                HistoryTrade {
+                    time: NOW - 100,
+                    value: 1_000_000.0,
+                    size: 1000.0
+                },
+                HistoryTrade {
+                    time: NOW - 20,
+                    value: 6_000_000.0,
+                    size: 3000.0
+                },
+            ]
+        );
+    }
+
+    #[test]
+    fn the_history_json_keeps_the_price_chart_proxy_contract() {
+        let rows = vec![row("a", NOW - 100, 1000.0, 100_000.0, Some(100_000.0), true, "EnZona")];
+        let json = serde_json::to_value(history(&rows, &rules(), NOW)).unwrap();
+        assert_eq!(json["when"], NOW);
+        assert_eq!(json["from"], "tasak");
+        assert_eq!(json["data"][0]["time"], NOW - 100);
+        assert_eq!(json["data"][0]["value"], 1_000_000.0);
+        assert_eq!(json["data"][0]["size"], 1000.0);
+    }
+
+    #[test]
+    fn the_history_is_empty_without_trades() {
+        let h = history(&[], &rules(), NOW);
+        assert!(h.data.is_empty());
+        assert_eq!(
+            serde_json::to_value(&h).unwrap(),
+            serde_json::json!({"when": NOW, "from": "tasak", "data": []})
+        );
+    }
+
     #[tokio::test]
     async fn the_first_publication_waits_for_orders_but_not_forever() {
         let store = crate::store::tests::memory_store(&[]).await;
         let dir = std::env::temp_dir().join(format!("tasak-first-{}", std::process::id()));
         let snapshot = |d: &std::path::Path| d.join("snapshot.json").exists();
+        let history_json = |d: &std::path::Path| d.join("history.json").exists();
         // Ready at once: published at once, though it could wait a minute
         let ready_dir = dir.join("ready");
         std::fs::create_dir_all(&ready_dir).unwrap();
@@ -590,6 +701,7 @@ mod tests {
         let task = tokio::spawn(run(pool, rules(), vec![], None, d, rx, Duration::from_secs(60)));
         tokio::time::sleep(Duration::from_millis(500)).await;
         assert!(snapshot(&ready_dir), "ready: published at once");
+        assert!(history_json(&ready_dir), "ready: history published at once");
         task.abort();
         // Never ready: not before `first_wait`, but then yes
         let late_dir = dir.join("late");
