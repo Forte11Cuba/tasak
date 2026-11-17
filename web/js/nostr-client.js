@@ -187,7 +187,7 @@ export function createPlatformPool({ urls, author, verify, onEvent, onUpdate, on
     let ws;
     try { ws = new WebSocket(url); } catch { return; }
     let step = 0, page = 0, count = 0, fresh = 0, oldest = Infinity, until = null;
-    let isLive = false, refused = false, changed = false, noDeletions = false;
+    let isLive = false, refused = false, changed = false, noDeletions = false, closedByRelay = false;
     const got = new Set();   // ids of this connection's history
     const startedAt = Math.floor(Date.now() / 1000);
     // On reconnecting, only what is newer than what came, and every new version of the orders, not only
@@ -246,6 +246,7 @@ export function createPlatformPool({ urls, author, verify, onEvent, onUpdate, on
           pool.refused++;
           console.warn(url, 'refuses the platform events:', d[2]);
         }
+        closedByRelay = true;
         ws.close();
       }
     };
@@ -261,7 +262,9 @@ export function createPlatformPool({ urls, author, verify, onEvent, onUpdate, on
       if (isLive) pool.live--;
       onStatus();
       if (refused) return;
-      const next = isLive ? 0 : attempt + 1;
+      // Back to the shortest wait only if it got to live and the relay didn't close it: one that keeps
+      // closing it (too many subscriptions…) is retried less and less often
+      const next = isLive && !closedByRelay ? 0 : attempt + 1;
       setTimeout(() => connect(url, next), Math.min(60000, 5000 * 2 ** next));
     };
     ws.onerror = () => ws.close();
