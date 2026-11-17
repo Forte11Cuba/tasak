@@ -29,6 +29,7 @@ export const state = {
   // 'line' = price, 'candles' = candles, 'avg' = weighted; by default the price of each order,
   // or the last view chosen in this browser
   mode: 'line',
+  depth: false,        // «Depth» tab: the order book now, instead of the chart over time
   tf: 0,               // chart period in seconds; 0 = one point per order
   pmSel: null,         // Set of active methods; null = defaults
   nodeSel: new Set(CONFIG.mostros),
@@ -51,14 +52,15 @@ export const state = {
   snapshotMissing: 0,        // completed orders of that period the relays have and it doesn't
 };
 
-// Last chart view chosen (mode and timeframe)
+// Last chart view chosen (mode, timeframe and whether «Depth» was open)
 try {
   const v = JSON.parse(localStorage.getItem('tasak.view'));
   if (['line', 'candles', 'avg'].includes(v?.mode)) state.mode = v.mode;
   if ([0, 3600, 14400, 86400, 604800, 2592000, 31536000].includes(v?.tf)) state.tf = v.tf;
+  state.depth = v?.depth === true;
 } catch {}
 
-export const saveView = () => { try { localStorage.setItem('tasak.view', JSON.stringify({ mode: state.mode, tf: state.tf })); } catch {} };
+export const saveView = () => { try { localStorage.setItem('tasak.view', JSON.stringify({ mode: state.mode, tf: state.tf, depth: state.depth })); } catch {} };
 
 export const shortKey = k => k.slice(0, 8) + '…';
 export const nodeName = k => state.nodeNames.get(k) || state.profiles.get(k)?.name || shortKey(k);

@@ -12,6 +12,9 @@
 // - clock and time zone: fixtures/meta.json (now and the visitor's time zone);
 // - any other host is unreachable.
 //
+// It also opens «Depth» and checks that its cumulative amounts come from the order book the page computes
+// (depthCheck); expected.json doesn't change, the default view is still Price + Each order.
+//
 // Then it loads the page again with the browser in another time zone (OTHER_ZONE): dates and candles
 // follow the visitor's zone, so the times shown and the chart's periods change, and must be those of
 // shared/ for that zone; the Tasa K, the prices and the orders must not change.
@@ -146,6 +149,57 @@ async function extract() {
   return r;
 }
 
+// «Depth» on the same fixtures, in every unit: each side's cumulative amount at its outermost point is
+// the sum of the book's priced orders in scale, at the second best order it is that of the two best ones,
+// and the orders left out are counted. Then back to the default view (remembered in this browser)
+async function depthCheck() {
+  const T = window.tasak;
+  const settle = async () => {
+    for (let i = 0; i < 100; i++) {
+      await T.rendering;
+      await new Promise(r => setTimeout(r, 20));
+      if (!T.renderQueued) { await T.rendering; return; }
+    }
+  };
+  const problems = [], seen = [];
+  document.querySelector('[data-mode=depth]').click();
+  await settle();
+  if (!document.getElementById('chart').classList.contains('off') || document.getElementById('depth').classList.contains('off')) {
+    problems.push("«Depth» doesn't replace the chart");
+  }
+  const unit0 = T.state.unit;
+  for (const unit of ['usd', 'btc', 'sat']) {
+    T.state.unit = unit;
+    T.scheduleRender();
+    await settle();
+    const book = T.getBook(), c = T.depth.curve, at = `${T.state.fiat}/${unit}`;
+    if (!c.points.length) { problems.push(`${at}: no points`); continue; }
+    const priced = o => o.price != null;
+    const inScale = o => priced(o) && o.price >= c.center / 2 && o.price <= c.center * 2;
+    const noPrice = [...book.asks, ...book.bids].filter(o => !priced(o)).length;
+    const outside = [...book.asks, ...book.bids].filter(o => priced(o) && !inScale(o)).length;
+    if (c.noPrice !== noPrice || c.outside !== outside) problems.push(`${at}: left out ${c.noPrice}/${c.outside}, the book says ${noPrice}/${outside}`);
+    for (const [name, key, outer, edge] of [['asks', 'ask', c.points.at(-1), (x, p) => x >= p], ['bids', 'bid', c.points[0], (x, p) => x <= p]]) {
+      const os = book[name].filter(inScale);
+      const sum = os.reduce((s, o) => s + o.size, 0);
+      if ((outer[key]?.cum ?? 0) !== sum) problems.push(`${at} ${name}: ${outer[key]?.cum} at the outermost point, the book adds up to ${sum}`);
+      if (os.length < 2) { seen.push(`${at} ${name}: ${os.length} order(s), ${sum}`); continue; }
+      // The grid point of the second best order (the first one at or beyond its price)
+      const pts = key === 'ask' ? c.points : c.points.slice().reverse();
+      const g = pts.find(p => edge(p.x, os[1].price));
+      // Orders further out that fall on the same step of the grid count there too
+      const same = os.slice(2).filter(o => edge(g.x, o.price));
+      const want = os[0].size + os[1].size + same.reduce((s, o) => s + o.size, 0);
+      if (g[key]?.cum !== want) problems.push(`${at} ${name}: ${g[key]?.cum} at the second best order (${os[1].price}), not ${want}`);
+      seen.push(`${at} ${name}: ${os[0].size} + ${os[1].size}${same.length ? ` + ${same.length} on the same step` : ''} = ${g[key].cum} at the second best, ${sum} in all`);
+    }
+  }
+  T.state.unit = unit0;
+  document.querySelector('[data-mode=line]').click();
+  await settle();
+  return { problems, seen };
+}
+
 // Paths where two JSON values differ (at most `max`)
 function differences(a, b, path = '', out = [], max = 20) {
   if (out.length >= max) return out;
@@ -173,13 +227,19 @@ try {
     await p.goto(`${server.url}/index.html?lang=es`);
     await p.waitFor('window.tasak && tasak.state.live === CONFIG.relays.length');
     const r = await p.evaluate(`(${extract})()`);
+    const depth = await p.evaluate(`(${depthCheck})()`);
+    if (depth.problems.length) {
+      console.error(`DIFFERENT in «Depth» (${timeZone}):\n  ${depth.problems.join('\n  ')}`);
+      process.exitCode = 1;
+    }
     const page = await p.evaluate(`({ tz: CONFIG.tz, tag: document.getElementById('tzTag').textContent })`);
     // Images of the node's profile are external: failing to load them is expected here
     const errors = p.errors.filter(e => !/ERR_NAME_NOT_RESOLVED|Failed to load resource/.test(e));
     if (errors.length) throw new Error(`errors in the page (${timeZone}):\n  ` + errors.join('\n  '));
-    return { r, page };
+    return { r, page, depth };
   };
-  const { r, page } = await run(meta.browserTimeZone);
+  const { r, page, depth } = await run(meta.browserTimeZone);
+  if (!depth.problems.length) console.log(`«Depth» adds up the order book:\n  ${depth.seen.join('\n  ')}`);
 
   const out = process.argv.indexOf('--screenshot');
   if (out > 0) writeFileSync(process.argv[out + 1], await p.screenshot());

@@ -6,6 +6,7 @@ import { state, store, saveView, HIDDEN_PM } from './state.js';
 import { createRelayPool, fetchProfiles } from './nostr-client.js';
 import { ensurePrices, loadBtcHistory, marketFor, unitPrice } from './prices.js';
 import { chartC, view, renderChart, setEmpty, applyChartTheme } from './chart.js';
+import { renderDepth, applyDepthTheme, depth } from './depth.js';
 import { setStatus, renderStats, renderSelection, renderTrades, renderBook, renderFilters, updatePair, nodeUrl } from './panels.js';
 import { openEvent } from './event-dialog.js';
 import { fetchSnapshot, applySnapshot } from './snapshot.js';
@@ -152,7 +153,9 @@ function scheduleRender() {
       const tasa = renderStats(getOfficialTrades(), trades);
       renderSelection(trades, tasa);
       renderTrades(trades);
-      renderBook(tasa, getBook());
+      const book = getBook();
+      renderBook(tasa, book);
+      renderDepth(tasa, book);
       state.snapshotMissing = snapshotMissing();
       setStatus();
     })
@@ -166,7 +169,9 @@ function renderPlatform() {
   renderChart(trades);
   const tasa = renderStats(trades, trades);
   renderTrades(trades);
-  renderBook(tasa, platformBook());
+  const book = platformBook();
+  renderBook(tasa, book);
+  renderDepth(tasa, book);
   setStatus();
 }
 
@@ -230,14 +235,16 @@ document.querySelectorAll('[data-tf]').forEach(b => b.onclick = () => {
   scheduleRender();
 });
 document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => {
-  state.mode = b.dataset.mode;
+  // «Depth» doesn't change the chart over time: its mode stays for when the visitor comes back
+  state.depth = b.dataset.mode === 'depth';
+  if (!state.depth) state.mode = b.dataset.mode;
   if (state.mode === 'candles' && !state.tf) state.tf = 86400;
   saveView();
   scheduleRender();
 });
 
 // On a theme change the chart takes the new colours and is drawn again
-document.addEventListener('themechange', () => { applyChartTheme(); scheduleRender(); });
+document.addEventListener('themechange', () => { applyChartTheme(); applyDepthTheme(); scheduleRender(); });
 
 // Click on an executed order or one in the order book: its Nostr event
 for (const id of ['trades', 'book']) document.getElementById(id).onclick = e => {
@@ -384,7 +391,7 @@ document.addEventListener('keydown', e => {
 // from the console: module variables are not global
 window.tasak = {
   state, store, relays, p2p, get platformPool() { return platformPool; }, chartC, getTrades, getBook, renderFilters, renderChart, scheduleRender,
-  get view() { return view; }, get rendering() { return rendering; }, get renderQueued() { return renderQueued; },
+  get view() { return view; }, get depth() { return depth; }, get rendering() { return rendering; }, get renderQueued() { return renderQueued; },
 };
 
 updatePair();

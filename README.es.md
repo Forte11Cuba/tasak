@@ -379,11 +379,12 @@ en la FAQ se ven el precio ponderado de las compras y el de las ventas de la ven
 `pending` de la orden o, sin ella, de una prima distinta de 0 (Mostro no admite prima con precio fijo); las
 órdenes con prima 0 de las que no se vio la versión `pending` cuentan como «sin saber».
 
-La gráfica tiene tres modos:
+La gráfica tiene tres modos en el tiempo, y una cuarta pestaña con el libro de órdenes ahora:
 
 - **Precio**: un punto por orden ejecutada, o por periodo (1h, 4h, 1D, 1W, 1M, 1Y) con el precio ponderado del periodo.
 - **Velas**: apertura, máximo, mínimo y cierre de cada periodo.
 - **Ponderado**: en cada punto, el precio ponderado por volumen de las 24 horas anteriores, `Σ(precio × monto) ÷ Σ monto`. Con un punto por orden, las 24 horas hasta esa orden: la Tasa K tras ella. Por periodo, las 24 horas hasta el cierre del periodo (o hasta ahora, en el actual): ese sí se mueve con el tiempo, y difiere de la Tasa K cuando el periodo cerró sin órdenes.
+- **Profundidad**: las órdenes abiertas del libro de órdenes, con los mismos filtros: el precio en el eje horizontal y el monto acumulado en moneda en el vertical, los compradores (verde) sumando desde el mejor precio hacia abajo y los vendedores (rojo) hacia arriba, con una línea en la Tasa K. Donde se solapan, el libro está cruzado. Una orden con rango cuenta por su máximo, como la barra de fondo del libro. Se abre a ±20 % alrededor de la Tasa K (más ancha si los mejores precios quedan más lejos); solo se dibujan las órdenes entre la mitad y el doble de la tasa, y las de fuera, o sin precio (a mercado sin precios del nodo ni de Yadio; en una plataforma, las que llevan prima), quedan fuera y se cuentan en la leyenda. Al pasar el ratón se ve el monto de cada lado hasta ese precio, y un clic abre el evento firmado de la orden de ese escalón.
 
 Los precios se escriben como pares de divisas, base/cotización, como en los mercados: USD/CUP, BTC/CUP o
 sat/CUP (cuántos CUP cuesta un USD, un BTC o un sat) y, en una plataforma, el del activo (QUSD/CUP). La
@@ -581,7 +582,8 @@ se la devolvería a sí mismo a través de las primas.
 | `web/` | el sitio, la carpeta que se publica |
 | `web/index.html` | la tasa: gráfica, libro de órdenes y órdenes ejecutadas |
 | `web/node.html` | información del nodo Mostro |
-| `web/js/` | los módulos de las páginas: cliente de relays (`nostr-client.js`) y almacén de eventos (`event-store.js`), compartidos por las dos páginas, gráfica, paneles, precios y estado, y la página de otra plataforma (`platform.js`) |
+| `web/js/` | los módulos de las páginas: cliente de relays (`nostr-client.js`) y almacén de eventos (`event-store.js`), compartidos por las dos páginas, gráfica, paneles, precios y estado, la gráfica de profundidad (`depth.js`, sus datos en `depth-curve.js`) y la página de otra plataforma (`platform.js`) |
+| `web/test/` | pruebas de los módulos puros de las páginas que el servidor no usa (`node --test 'web/test/*.test.js'`): los datos de la gráfica de profundidad |
 | `web/css/` | estilos de cada página |
 | `web/i18n.js` | idioma (español / inglés): diccionario y traducción de textos |
 | `web/common.js`, `web/common.css` | configuración, formato, colores y tarjeta del nodo, compartidos por las dos páginas |
@@ -591,7 +593,7 @@ se la devolvería a sí mismo a través de las primas.
 | `server/` | el servidor de tasaK en Rust (`tasak`): lee el `.env`, genera `web/config.js`, sirve `web/` y archiva los eventos del nodo; su servicio de systemd es `server/tasak.service`. `src/logic/` es la lógica de `shared/` en Rust, comprobada con los mismos vectores (`server/tests/shared_vectors.rs`); `server/tests/config-cases.json` es el `web/config.js` que debe salir de cada `.env` (`cargo test`) |
 | `Dockerfile`, `docker-compose.yml`, `Caddyfile` | la imagen de Docker (`tasak` con `web/` y `shared/`) y un despliegue de ejemplo, con Caddy para HTTPS (ver [Docker](#docker)) |
 | `.github/workflows/release.yml` | publica una versión al empujar una etiqueta `vX.Y.Z` (debe coincidir con `server/Cargo.toml`): los binarios estáticos y la imagen de Docker (amd64 y arm64, en GHCR), tras comprobar que funcionan; lanzada a mano, o en un pull request que la cambie, solo compila y comprueba |
-| `.github/workflows/ci.yml` | las comprobaciones de cada pull request y de cada push a `main`: `cargo fmt`, `clippy` y `cargo test` del servidor, `node --test` de `shared/`, `tools/reference.mjs` y `tools/snapshot.mjs` en Chrome headless (tras `tasak build`) y la imagen de Docker (se construye, arranca y sirve el sitio) |
+| `.github/workflows/ci.yml` | las comprobaciones de cada pull request y de cada push a `main`: `cargo fmt`, `clippy` y `cargo test` del servidor, `node --test` de `shared/` y `web/test/`, `tools/reference.mjs` y `tools/snapshot.mjs` en Chrome headless (tras `tasak build`) y la imagen de Docker (se construye, arranca y sirve el sitio) |
 | `tools/` | comprobaciones de desarrollo en Chrome headless (Node, sin dependencias); `node tools/reference.mjs` comprueba que `web/` calcula con datos fijos los valores de `shared/test/expected.json`, sin el servidor; `node tools/snapshot.mjs`, con el snapshot de un servidor y una tasa firmada |
 
 ## Idiomas

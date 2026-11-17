@@ -152,7 +152,10 @@ main {
 }
 .tabs button:hover { color: var(--text); }
 .tabs button.on { color: var(--text); background: var(--line); }
-.chart { flex: 1; min-height: 240px; position: relative; }
+.charts { flex: 1; min-height: 240px; position: relative; }
+/* The time chart and the depth one, one over the other: the hidden one keeps its size, zoom and panes */
+.chart { position: absolute; inset: 0; }
+.chart.off { visibility: hidden; }
 .icon-btn {
   background: none; border: 1px solid var(--line); color: var(--muted); border-radius: 4px;
   font: inherit; font-size: 14px; line-height: 1; padding: 4px 7px; cursor: pointer; margin-left: 4px;
@@ -202,7 +205,7 @@ main {
 /* Full screen: native API or, if missing (iPhone), a fixed panel */
 .panel:fullscreen { width: 100vw; height: 100vh; }
 .panel.max { position: fixed; inset: 0; z-index: 50; }
-.panel.max .chart, .panel:fullscreen .chart { min-height: 0; }
+.panel.max .charts, .panel:fullscreen .charts { min-height: 0; }
 /* Tag of the volume pane, with the eye to show or hide it */
 .vol-tag {
   position: absolute; left: 10px; z-index: 5; display: flex; align-items: center; gap: 4px;
@@ -235,6 +238,12 @@ main {
 .legend .row { display: flex; gap: 10px; flex-wrap: wrap; }
 .legend .k { color: var(--muted); margin-right: 3px; }
 .legend .when { color: var(--muted); }
+.legend .rate { color: var(--avg); }
+/* The depth chart's legend: placed by depth.js beside the rate's line, never over it */
+#depthLegend { max-width: calc(100% - 20px); }
+#depthLegend .row { row-gap: 0; }
+#depthLegend .row > span { white-space: nowrap; }
+@media (max-width: 600px) { #depthLegend { font-size: 11px; } #depthLegend .row { column-gap: 6px; } }
 .empty {
   position: absolute; inset: 0; display: flex; align-items: center; justify-content: center;
   color: var(--muted); pointer-events: none; z-index: 3; text-align: center; padding: 16px;
@@ -337,7 +346,7 @@ dialog.faq::backdrop { background: var(--backdrop); }
   .stat.slot-empty { display: none; }
   .brand-box { width: 100%; }
   .splitter { display: none; }
-  .chart { min-height: 340px; }
+  .charts { min-height: 340px; }
   .scroll { max-height: 55vh; }
   .status { margin-left: 0; }
   header { gap: 14px; }
