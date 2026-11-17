@@ -225,27 +225,28 @@ async fn relay_task(
             }
         }
         let resumed = last_ok.iter().all(Option::is_some);
-        let mut result = Ok(0);
+        // Each group on its own: one failing doesn't keep the other from catching up
+        let (mut new, mut error) = (0, None);
         for ((g, last_ok), since) in groups.iter().zip(last_ok.iter_mut()).zip(since) {
             let since = match since {
                 Ok(since) => since,
                 Err(e) => {
-                    result = Err(e);
-                    break;
+                    error.get_or_insert(e);
+                    continue;
                 }
             };
             let started = now();
             match catch_up(&client, &store, &url, &g.filters, since).await {
-                Ok(new) => {
-                    result = result.map(|n| n + new);
+                Ok(n) => {
+                    new += n;
                     *last_ok = Some(started);
                 }
                 Err(e) => {
-                    result = Err(e);
-                    break;
+                    error.get_or_insert(e);
                 }
             }
         }
+        let result = error.map_or(Ok(new), Err);
         match result {
             Ok(new) => {
                 if let Some(t) = failing_since.take() {

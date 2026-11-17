@@ -134,11 +134,15 @@ pub async fn sync(
         .await?,
     );
     keys.extend(
-        sqlx::query_as::<_, (String, String)>("SELECT node, id FROM node_orders WHERE rowid > ? AND rowid <= ?")
-            .bind(after.node_orders)
-            .bind(next.node_orders)
-            .fetch_all(pool)
-            .await?,
+        sqlx::query_as::<_, (String, String)>(
+            "SELECT node, id FROM node_orders WHERE rowid > ? AND rowid <= ? \
+             AND node IN (SELECT value FROM json_each(?))",
+        )
+        .bind(after.node_orders)
+        .bind(next.node_orders)
+        .bind(&nodes)
+        .fetch_all(pool)
+        .await?,
     );
     let mut synced = Synced::default();
     for (node, d) in keys {
@@ -384,7 +388,7 @@ pub mod tests {
     }
 
     #[tokio::test]
-    async fn a_platforms_completed_orders_are_not_part_of_orders() {
+    async fn only_the_nodes_completed_orders_are_part_of_orders() {
         let node = Keys::generate();
         let platform = Keys::generate();
         let store = platforms_store(&[node.public_key()], &[platform.public_key()]).await;
@@ -394,6 +398,16 @@ pub mod tests {
         ] {
             assert_eq!(store.store("wss://a", &ev, 1).await.unwrap(), Stored::New);
         }
+        // Nor an imported order of someone who isn't a node of .env (one removed from it, say)
+        sqlx::query(
+            "INSERT INTO node_orders (node, id, event_id, kind, status, fiat_code, fiat_amount, amount, premium, \
+             price_from_api, payment_method, created_at, taken_at, invoice_held_at, imported) \
+             VALUES (?, 'c', 'ev-c', 'buy', 'success', 'CUP', 2000, 4000, 2, 1, 'EnZona', 500, 600, 650, 1)",
+        )
+        .bind(platform.public_key().to_hex())
+        .execute(store.pool())
+        .await
+        .unwrap();
         let (synced, _) = sync(store.pool(), &lists(), &[node.public_key()], Cursor::default())
             .await
             .unwrap();

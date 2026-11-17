@@ -173,18 +173,21 @@ impl Store {
         Ok(stored)
     }
 
-    /// The last time `relay` sent an event of one of `authors` (unix seconds), to resume from there after
-    /// a restart. By authors: a platform added to an archive that already has the nodes' recent events
-    /// still gets its whole history
+    /// Where to resume `relay` after a restart (unix seconds): the earliest of the last times it sent an
+    /// event of each of `authors`, or none (the whole history) if it never sent one of some author. By
+    /// author: a node or platform added to an archive that already has others' recent events still gets
+    /// its whole history
     pub async fn last_received(&self, relay: &str, authors: &[PublicKey]) -> Result<Option<i64>, sqlx::Error> {
-        let authors = serde_json::to_string(&authors.iter().map(|a| a.to_hex()).collect::<Vec<_>>())
+        let keys = serde_json::to_string(&authors.iter().map(|a| a.to_hex()).collect::<Vec<_>>())
             .expect("a list of strings is always serializable");
         sqlx::query_scalar(
-            "SELECT max(r.received) FROM event_relays r JOIN events e ON e.id = r.id \
-             WHERE r.relay = ? AND e.pubkey IN (SELECT value FROM json_each(?))",
+            "SELECT CASE WHEN count(*) < ? THEN NULL ELSE min(last) END FROM \
+             (SELECT max(r.received) AS last FROM event_relays r JOIN events e ON e.id = r.id \
+              WHERE r.relay = ? AND e.pubkey IN (SELECT value FROM json_each(?)) GROUP BY e.pubkey)",
         )
+        .bind(authors.len() as i64)
         .bind(relay)
-        .bind(authors)
+        .bind(keys)
         .fetch_one(&self.pool)
         .await
     }
@@ -294,14 +297,23 @@ pub mod tests {
         let me = [node.public_key()];
         assert_eq!(store.last_received("wss://a", &me).await.unwrap(), Some(2000));
         assert_eq!(store.last_received("wss://c", &me).await.unwrap(), None);
-        // Another author's events don't count
+        // Another author's events don't count, and an author that never sent one means the whole history
+        let other = Keys::generate();
         assert_eq!(
-            store
-                .last_received("wss://a", &[Keys::generate().public_key()])
-                .await
-                .unwrap(),
+            store.last_received("wss://a", &[other.public_key()]).await.unwrap(),
             None
         );
+        let both = [node.public_key(), other.public_key()];
+        assert_eq!(store.last_received("wss://a", &both).await.unwrap(), None);
+        // With both: the earliest of their last ones
+        let two = memory_store(&both).await;
+        two.store("wss://a", &order(&node, "o1", "pending", 1000), 2000)
+            .await
+            .unwrap();
+        two.store("wss://a", &order(&other, "o2", "pending", 1000), 1500)
+            .await
+            .unwrap();
+        assert_eq!(two.last_received("wss://a", &both).await.unwrap(), Some(1500));
         // The stored JSON is the signed event: it verifies again
         let json: String = sqlx::query_scalar("SELECT json FROM events")
             .fetch_one(store.pool())
