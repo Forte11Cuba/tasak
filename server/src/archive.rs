@@ -1,8 +1,8 @@
 //! The archive: subscribes to the .env relays and stores (store.rs) everything the nodes publish, so
 //! that the intermediate versions of each order (pending, in-progress) and the mostro-rates, which
 //! relays replace or drop after 10 min, are not lost. Of the other platforms (PLATFORMS), their orders
-//! and trades: kinds 38383 and 35353, and the deletion requests of their trades. Also keeps Yadio's BTC/USD of the last 24 h, to
-//! fill the gaps when the archive was off.
+//! and trades: kinds 38383 and 35353, and the deletion requests of their trades. Also keeps Yadio's
+//! BTC/USD of the last 24 h, to fill the gaps when the archive was off.
 //!
 //! Each relay has its own task: a live subscription (to catch pending and in-progress before the relay
 //! replaces them) and, every 5 min, a catch-up that pages its history back to a little before the last
@@ -191,19 +191,22 @@ async fn relay_task(
     let relay = url.to_string();
     let mut live = vec![false; groups.len()];
     let mut last_ok: Vec<Option<i64>> = vec![None; groups.len()];
+    // Where each group's first catch-up starts, read once before its live subscription stores anything,
+    // and kept until that catch-up succeeds: retried after a failure, it must not start from the events
+    // the live subscription stored meanwhile (an active platform sends some within the first second)
+    let mut start: Vec<Option<Option<i64>>> = vec![None; groups.len()];
     let mut failing_since: Option<Instant> = None;
     loop {
-        // Where each group resumes, read before subscribing: what the live subscription stores from now
-        // on must not move the start of a catch-up that hasn't run yet (an active platform sends events
-        // within the first second, and its history would never be asked for)
         let mut since = Vec::with_capacity(groups.len());
-        for (g, last_ok) in groups.iter().zip(&last_ok) {
-            since.push(match *last_ok {
-                Some(t) => Ok(Some(t - CATCH_UP_MARGIN)),
-                None => store
+        for ((g, last_ok), start) in groups.iter().zip(&last_ok).zip(start.iter_mut()) {
+            since.push(match (*last_ok, *start) {
+                (Some(t), _) => Ok(Some(t - CATCH_UP_MARGIN)),
+                (None, Some(s)) => Ok(s),
+                (None, None) => store
                     .last_received(&relay, &g.authors)
                     .await
                     .map(|t| t.map(|t| t - RESTART_MARGIN))
+                    .inspect(|s| *start = Some(*s))
                     .map_err(|e| format!("archive: {e}")),
             });
         }
