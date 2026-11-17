@@ -28,7 +28,8 @@ const relays = createRelayPool({
     return true;
   },
   onUpdate: () => scheduleRender(),
-  onStatus: () => setStatus(),
+  // A relay that goes live or drops: the order book stops or starts saying it is loading
+  onStatus: () => { setStatus(); scheduleRender(); },
 });
 // On a platform's page (?platform=), its own connection instead of the nodes' (started at the end)
 let platformPool = null;
@@ -388,9 +389,13 @@ if (CONFIG.platformError) {
   const msg = t('Plataforma desconocida: {p}', { p: new URLSearchParams(location.search).get('platform') });
   setStatus(msg);
   setEmpty(chartC, true, msg);
+} else if (P && !CONFIG.relays.length) {
+  const msg = t('Configuración sin nodos o sin relays válidos');
+  setStatus(msg);
+  setEmpty(chartC, true, msg);
 } else if (P) {
-  if (!CONFIG.relays.length) setStatus(t('Configuración sin nodos o sin relays válidos'));
-  platformPool = startPlatform({ verify: verifyEvent, onUpdate: () => scheduleRender(), onStatus: () => setStatus() });
+  // A relay that finishes or drops changes whether it is still loading: drawn again too
+  platformPool = startPlatform({ verify: verifyEvent, onUpdate: () => scheduleRender(), onStatus: () => { setStatus(); scheduleRender(); } });
   setStatus();
   scheduleRender();
   // Expires book orders and moves the 24 h window

@@ -18,6 +18,8 @@ const UNIX = /^[0-9]+$/;
 // Layers whose contract addresses must be lowercase (EVM chains of the NIP's table)
 const EVM = ['eth', 'bsc', 'pol', 'arb', 'op', 'base', 'rsk'];
 const lower = s => s === s.toLowerCase();
+// A decimal of the NIP that is also a finite number (a few hundred digits would be Infinity)
+const decimal = s => DECIMAL.test(s) && Number.isFinite(Number(s));
 
 // Tags of the NIP as name -> values, or null if one is repeated or has an empty value
 function nipTags(ev) {
@@ -36,10 +38,11 @@ function nipTags(ev) {
 export const assetId = d => d.layer === 'internal' ? `internal:${d.pubkey}:${d.network}:${d.c}`
   : d.contract ? `${d.layer}:${d.network}:${d.contract}` : `${d.layer}:${d.network}:${d.c}`;
 
-// Payment methods as the platform publishes them, each value one method; «Pruebas» if the text says
-// it is a test, as in Mostro
+// Payment methods as the platform publishes them, each value one method. If one says it is a test, the
+// document is only «Pruebas» (as orderMatchesPm only lets it through then), not also another method
 export function p2pPmKeys(pm) {
-  const keys = [...new Set(pm.map(p => isTestPm(p) ? TESTS : p.trim()).filter(Boolean))];
+  if (pm.some(isTestPm)) return [TESTS];
+  const keys = [...new Set(pm.map(p => p.trim()).filter(Boolean))];
   return keys.length ? keys : [NO_METHOD];
 }
 
@@ -90,9 +93,10 @@ export function parseP2P(ev) {
 function trade(ev, t, base) {
   if (!t.amt || !t.fa || !t.executed_at || t.expiration) return null;
   const [amt, fa, at] = [t.amt[0], t.fa, t.executed_at[0]];
-  if (t.amt.length !== 1 || !DECIMAL.test(amt) || !(Number(amt) > 0)) return null;
-  if (fa.length !== 1 || !DECIMAL.test(fa[0]) || !(Number(fa[0]) > 0)) return null;
-  if (!UNIX.test(at) || Number(at) > ev.created_at) return null;
+  if (t.amt.length !== 1 || !decimal(amt) || !(Number(amt) > 0)) return null;
+  if (fa.length !== 1 || !decimal(fa[0]) || !(Number(fa[0]) > 0)) return null;
+  if (!Number.isFinite(Number(fa[0]) / Number(amt))) return null;
+  if (!UNIX.test(at) || !(Number(at) <= ev.created_at)) return null;
   // The order it fills, of the same platform
   if (t.a && !t.a[0].startsWith(`${P2P_KIND}:${ev.pubkey}:`)) return null;
   return { ...base, doc: 'trade', amt: Number(amt), fa: [Number(fa[0])], executedAt: Number(at), order: t.a?.[0] ?? null };
@@ -100,17 +104,17 @@ function trade(ev, t, base) {
 
 function order(t, base) {
   if (!t.amt || !t.fa || !t.pm || !t.s) return null;
-  if (t.amt.length !== 1 || !DECIMAL.test(t.amt[0])) return null;
-  if (t.fa.length > 2 || !t.fa.every(v => DECIMAL.test(v))) return null;
+  if (t.amt.length !== 1 || !decimal(t.amt[0])) return null;
+  if (t.fa.length > 2 || !t.fa.every(decimal)) return null;
   const fa = t.fa.map(Number);
   if (fa.length === 2 && fa[0] > fa[1]) return null;
   // Exactly one of price and premium
   if (!t.price === !t.premium) return null;
   const price = t.price ? Number(t.price[0]) : null;
-  if (t.price && (!DECIMAL.test(t.price[0]) || !(price > 0))) return null;
+  if (t.price && (!decimal(t.price[0]) || !(price > 0))) return null;
   const premium = t.premium ? Number(t.premium[0]) : null;
-  if (t.premium && (!SIGNED.test(t.premium[0]) || !(premium > -100))) return null;
-  for (const k of ['expires_at', 'expiration']) if (t[k] && !UNIX.test(t[k][0])) return null;
+  if (t.premium && (!SIGNED.test(t.premium[0]) || !(premium > -100) || !Number.isFinite(premium))) return null;
+  for (const k of ['expires_at', 'expiration']) if (t[k] && (!UNIX.test(t[k][0]) || !Number.isFinite(Number(t[k][0])))) return null;
   return {
     ...base, doc: 'order', status: 'pending', amt: Number(t.amt[0]), fa, price, premium,
     expiresAt: Number(t.expires_at?.[0] || 0), expiration: Number(t.expiration?.[0] || 0),
@@ -184,14 +188,17 @@ export function p2pAssets(docs, deletions, fiat, now) {
   return [...assets.values()].sort((a, b) => b.trades - a.trades || b.orders - a.orders || (a.id < b.id ? -1 : a.id > b.id));
 }
 
-// Currency with most trades (or, without trades, with most available orders); null without either
+// Currency with most trades, then with most available orders (the only ones without trades); null
+// without either
 export function p2pMostUsedFiat(docs, deletions, now) {
-  const score = new Map();
+  const counts = new Map();
   for (const d of docs) {
     if (!d.fiat || isDeleted(d, deletions) || (d.doc !== 'trade' && !isAvailable(d, now))) continue;
-    score.set(d.fiat, (score.get(d.fiat) || 0) + (d.doc === 'trade' ? 1000 : 1));
+    const c = counts.get(d.fiat) || { trades: 0, orders: 0 };
+    d.doc === 'trade' ? c.trades++ : c.orders++;
+    counts.set(d.fiat, c);
   }
-  return [...score].sort((a, b) => b[1] - a[1] || (a[0] < b[0] ? -1 : 1))[0]?.[0] ?? null;
+  return [...counts].sort(([fa, a], [fb, b]) => b.trades - a.trades || b.orders - a.orders || (fa < fb ? -1 : 1))[0]?.[0] ?? null;
 }
 
 // Methods of an asset and currency with the trades and available orders of each, in the filter's

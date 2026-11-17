@@ -158,7 +158,10 @@ export function createPlatformPool({ urls, author, verify, onEvent, onUpdate, on
   };
   const paging = new Map();   // url -> events received from its history, while it pages
   const seen = new Set();
-  let newest = 0;   // created_at of the newest kind 35353 received: on reconnecting, only what is newer
+  let newest = 0;   // created_at of the newest kind 35353 accepted (author and signature checked)
+  // Relays that got to the end of their history: on reconnecting, only what is newer. One that was cut
+  // off while paging starts again from the beginning, or the older part would be lost
+  const completed = new Set();
   // The history, one query after another: available orders first (a page or two: the relay keeps only
   // the newest version of each, so those still pending), so the order book doesn't wait for the trades;
   // then the trades and the deletions of its trades
@@ -177,16 +180,18 @@ export function createPlatformPool({ urls, author, verify, onEvent, onUpdate, on
   function connect(url, attempt = 0) {
     let ws;
     try { ws = new WebSocket(url); } catch { return; }
-    let step = 0, page = 0, count = 0, oldest = Infinity, prevOldest = Infinity, until = null;
-    let isLive = false, refused = false, changed = false;
+    let step = 0, page = 0, count = 0, fresh = 0, oldest = Infinity, until = null;
+    let isLive = false, refused = false, changed = false, noDeletions = false;
+    const got = new Set();   // ids of this connection's history
     const startedAt = Math.floor(Date.now() / 1000);
     // On reconnecting, only what is newer than what came, and every new version of the orders, not only
     // the pending ones: an order taken or canceled meanwhile must leave the book
-    const since = newest ? { since: newest - 3600 } : {};
-    const steps = newest ? [{ kinds: [35353], '#z': ['order'] }, ...HISTORY.slice(1)] : HISTORY;
+    const resume = completed.has(url) && newest > 0;
+    const since = resume ? { since: newest - 3600 } : {};
+    const steps = resume ? [{ kinds: [35353], '#z': ['order'] }, ...HISTORY.slice(1)] : HISTORY;
     const sub = () => `h${step}-${page}`;
     const ask = () => {
-      count = 0; oldest = Infinity;
+      count = 0; fresh = 0; oldest = Infinity;
       ws.send(JSON.stringify(['REQ', sub(), { ...steps[step], authors: [author], ...since, limit: PAGE, ...(until ? { until } : {}) }]));
     };
     ws.onopen = () => {
@@ -198,9 +203,14 @@ export function createPlatformPool({ urls, author, verify, onEvent, onUpdate, on
       let d;
       try { d = JSON.parse(msg.data); } catch { return; }
       if (d[0] === 'EVENT') {
-        if (d[1] === sub()) { count++; oldest = Math.min(oldest, d[2]?.created_at ?? Infinity); paging.set(url, (paging.get(url) || 0) + 1); }
-        if (d[2]?.kind === 35353) newest = Math.max(newest, d[2].created_at || 0);
-        if (accept(d[2]) && onEvent(d[2], isLive)) {
+        if (d[1] === sub()) {
+          count++;
+          oldest = Math.min(oldest, d[2]?.created_at ?? Infinity);
+          if (d[2]?.id && !got.has(d[2].id)) { got.add(d[2].id); fresh++; paging.set(url, (paging.get(url) || 0) + 1); }
+        }
+        if (!accept(d[2])) return;
+        if (d[2].kind === 35353) newest = Math.max(newest, d[2].created_at);
+        if (onEvent(d[2], isLive)) {
           if (isLive) onUpdate();
           else changed = true;
         }
@@ -210,16 +220,19 @@ export function createPlatformPool({ urls, author, verify, onEvent, onUpdate, on
         ws.send(JSON.stringify(['CLOSE', d[1]]));
         // What came so far is shown while the rest loads
         if (changed) { changed = false; onUpdate(); }
-        // The next page, until one comes back empty (or doesn't go further back)
-        if (count > 0 && oldest < prevOldest) { prevOldest = oldest; until = oldest - 1; page++; }
-        else { step++; page = 0; until = null; prevOldest = Infinity; }
+        // The next page. Several events can share a second (a platform publishes in batches) and a page
+        // can end in the middle of them: the next one asks again up to that second, included, and goes
+        // below it only once it brings nothing new. Until a page comes back empty or with nothing new
+        if (fresh > 0) { until = oldest; page++; }
+        else if (count > 0 && until === oldest) { until = oldest - 1; page++; }
+        else { step++; page = 0; until = null; }
         if (step < steps.length) { setTimeout(() => ws.readyState === 1 && ask(), PAGE_PAUSE); return; }
         goLive();
       } else if (d[0] === 'CLOSED' && d[1] !== 'meta') {
         // Too many queries: the same one again, later
         if (d[1] === sub() && /^rate-limited/i.test(d[2] || '')) { setTimeout(() => ws.readyState === 1 && ask(), 10 * PAGE_PAUSE); return; }
-        // A deletion query refused (some relays don't index #k): the rest goes on without it
-        if (d[1] === sub() && step === 2) { step++; goLive(); return; }
+        // A deletion query refused (some relays don't index #k): the rest goes on without it, also live
+        if (d[1] === sub() && step === 2) { noDeletions = true; step++; goLive(); return; }
         refused = true;
         pool.refused++;
         console.warn(url, 'refuses the platform events:', d[2]);
@@ -228,9 +241,9 @@ export function createPlatformPool({ urls, author, verify, onEvent, onUpdate, on
     };
     function goLive() {
       paging.delete(url);
-      ws.send(JSON.stringify(['REQ', 'live',
-        { kinds: [35353], authors: [author], since: startedAt - 60 },
-        { kinds: [5], authors: [author], '#k': ['35353'], since: startedAt - 60 }]));
+      completed.add(url);
+      ws.send(JSON.stringify(['REQ', 'live', { kinds: [35353], authors: [author], since: startedAt - 60 },
+        ...(noDeletions ? [] : [{ kinds: [5], authors: [author], '#k': ['35353'], since: startedAt - 60 }])]));
       isLive = true;
       pool.live++;
       onStatus();

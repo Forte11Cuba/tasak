@@ -60,6 +60,9 @@ test('trades that don\'t follow the NIP are ignored', () => {
   assert.equal(parseP2P(ev('trade', {}, { extra: [['fa', '5']] })), null, 'repeated tag');
   assert.equal(parseP2P(ev('trade', { contract: '0xAB', layer: 'eth' })), null, 'EVM contract not lowercase');
   assert.equal(parseP2P(ev('other')), null, 'unknown z');
+  assert.equal(parseP2P(ev('trade', { amt: '9'.repeat(400) })), null, 'an amount that isn\'t a finite number');
+  assert.equal(parseP2P(ev('trade', { amt: '0.' + '0'.repeat(400) + '1' })), null, 'a price that isn\'t a finite number');
+  assert.equal(parseP2P(ev('order', { price: '9'.repeat(400) })), null, 'an order\'s price that isn\'t finite');
   assert.equal(parseP2P(ev('trade', {}, { kind: 38383 })), null, 'another kind');
   // Unknown tags, a non-empty content and an optional `a` of its own are fine
   const ok = ev('trade', { a: `35353:${PK}:o1` }, { extra: [['x', 'y'], ['x', 'z']] });
@@ -144,6 +147,8 @@ test('order book: only available orders, by price; premium orders without price 
 test('payment methods: each value as published, test orders detected by their text', () => {
   assert.deepEqual(p2pPmKeys(['etecsa mobile balance', 'bank transfer']), ['etecsa mobile balance', 'bank transfer']);
   assert.deepEqual(p2pPmKeys(['Prueba, no tomar']), ['Pruebas']);
+  // A test is only a test: not counted under its other method too
+  assert.deepEqual(p2pPmKeys(['test', 'cash']), ['Pruebas']);
   assert.deepEqual(p2pPmKeys([]), ['Sin método']);
 });
 
@@ -157,4 +162,12 @@ test('one method at a time: the most traded one that isn\'t hidden, by default',
   const docs = [ev('trade', { fa: '3000', pm: 'etecsa mobile balance' }), ev('trade', { fa: '11000', pm: 'bank transfer' })].map(parseP2P);
   const one = pm => p2pTrades(docs, new Map(), { asset: docs[0].asset, fiat: 'CUP', pmSel: new Set([pm]) }).map(t => t.price);
   assert.deepEqual([one('etecsa mobile balance'), one('bank transfer')], [[300], [1100]]);
+});
+
+test('default currency: most trades first, available orders only when trades tie', () => {
+  const trade = f => parseP2P(ev('trade', { f }));
+  const order = f => parseP2P(ev('order', { f }));
+  const docs = [trade('CUP'), ...Array.from({ length: 1001 }, () => order('USD'))];
+  assert.equal(p2pMostUsedFiat(docs, new Map(), 2000), 'CUP');
+  assert.equal(p2pMostUsedFiat([order('EUR'), order('USD'), order('USD')], new Map(), 2000), 'USD');
 });
