@@ -380,11 +380,34 @@ export function renderFilters() {
   renderPms(stats, HIDDEN_PM);
 }
 
+// The options of a <select>, rewritten only when they change, and not while it has the focus. Its own
+// copy is compared, not innerHTML (the browser gives «selected» back as «selected=""»: it never matched,
+// and every render rewrote it). With the list open, Chrome rebuilds it on every change, and while the
+// orders load the counts change several times a second: the list flickered and the browser hung. After
+// a choice (change) the next render applies; otherwise, the last pending one when it loses the focus
+const selects = new WeakMap();
+function setOptions(sel, html) {
+  let s = selects.get(sel);
+  if (!s) {
+    s = { html: null, pending: null, chosen: false };
+    selects.set(sel, s);
+    sel.addEventListener('change', () => { s.chosen = true; });
+    sel.addEventListener('blur', () => { if (s.pending != null) apply(sel, s, s.pending); });
+  }
+  if (html === s.html) { s.pending = null; return; }
+  if (document.activeElement === sel && !s.chosen) { s.pending = html; return; }
+  apply(sel, s, html);
+}
+function apply(sel, s, html) {
+  Object.assign(s, { html, pending: null, chosen: false });
+  sel.innerHTML = html;
+}
+
 // The currencies of the bar's selector
 function renderFiats(fiats) {
   const sel = document.getElementById('fiat');
   const html = fiats.map(f => `<option${f === state.fiat ? ' selected' : ''}>${esc(f)}</option>`).join('');
-  if (sel.innerHTML !== html) sel.innerHTML = html;
+  setOptions(sel, html);
 }
 
 // The payment methods' menu: each with its completed and open orders. A platform's methods are shown as
@@ -415,7 +438,7 @@ function renderPlatformPms(keys, counts, name, hidden) {
       + (isHidden(k, hidden) ? ' · ' + t('No se elige por defecto') : '');
     return `<option value="${esc(k)}"${k === m ? ' selected' : ''} title="${esc(title)}">${esc(name(k))} (${counts.get(k).done})</option>`;
   }).join('') || '<option>—</option>';
-  if (sel.innerHTML !== html) sel.innerHTML = html;
+  setOptions(sel, html);
   sel.title = m ? t('{rate} de las operaciones con {m}: cada método es un mercado con su propio precio', { rate: CONFIG.rateName, m: name(m) }) : '';
 }
 
@@ -430,7 +453,7 @@ function renderPlatformFilters() {
   const label = a => a.c.toUpperCase() + (same(a.c) ? ` · ${a.layer}` : '') + (a.network !== 'mainnet' ? ` · ${a.network}` : '');
   const html = state.assets.map(a => `<option value="${esc(a.id)}"${a.id === state.asset ? ' selected' : ''}>${esc(label(a))}</option>`).join('')
     || '<option>—</option>';
-  if (sel.innerHTML !== html) sel.innerHTML = html;
+  setOptions(sel, html);
   const a = state.assets.find(x => x.id === state.asset);
   sel.title = !a ? '' : a.layer === 'internal'
     ? t('Saldo en una cuenta de {p}, no en una cadena de bloques: solo vale dentro de la plataforma', { p: P.name })
