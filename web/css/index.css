@@ -213,6 +213,12 @@ main {
   background: none; border: 0; color: var(--muted); cursor: pointer; padding: 2px; display: flex;
 }
 .vol-tag button:hover { color: var(--text); }
+/* The time zone of the time axis, in the corner below the price axis; it lets the chart have the clicks */
+.tz-tag {
+  position: absolute; right: 0; bottom: 0; z-index: 4; display: flex; align-items: center; justify-content: center;
+  font-size: 10px; color: var(--muted); white-space: nowrap; overflow: hidden; cursor: default;
+}
+.tz-tag[hidden] { display: none; }
 /* Legend over the chart (TradingView style): values under the cursor or of the last point */
 .legend {
   position: absolute; top: 6px; left: 10px; z-index: 4; pointer-events: none;

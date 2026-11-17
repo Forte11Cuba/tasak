@@ -75,7 +75,7 @@ docker compose pull tasak
 ```
 
 **4. Configura tu nodo.** `cp .env.example .env` y edítalo: `MOSTRO_PUBKEYS`, `OTHER_MOSTRO_PUBKEYS`, `RELAYS`, `FIAT`,
-`TIMEZONE`, `HIDDEN_PAYMENT_METHODS`, tu comunidad… (ver las [variables](#docker)). Deja vacíos
+`HIDDEN_PAYMENT_METHODS`, tu comunidad… (ver las [variables](#docker)). Deja vacíos
 `ARCHIVE_DIR`, `LISTEN` y `SIGNING_KEY_FILE`: los pone Docker. La imagen lleva el `web/` del repositorio;
 para tu propio logo, pon el archivo junto a `docker-compose.yml`, móntalo bajo `tasak:` en el override y
 pon `LOGO=mi-logo.svg`:
@@ -279,7 +279,7 @@ OTHER_MOSTRO_PUBKEYS="
 | `PLATFORM_HIDDEN_PAYMENT_METHODS` | Métodos de pago que nunca se eligen por defecto en la página de cada plataforma, cuya tasa es de un método a la vez (opcional): una por línea, el nombre de la plataforma como en `PLATFORMS` u `OTHER_PLATFORMS` y sus métodos tal como los publica, `nombre: método, método`. Los visitantes pueden elegirlos igualmente; `Pruebas` nunca es el de por defecto. Los métodos que no publica se ignoran; un nombre que no es una plataforma es un error |
 | `RELAYS` | Relays a los que conectarse, separados por coma (obligatorio; `wss://`) |
 | `FIAT` | Moneda que se muestra al abrir (vacío = la más usada en el nodo) |
-| `TIMEZONE` | Zona horaria de fechas y velas, p. ej. `America/Caracas` (vacío = la del navegador) |
+| `TIMEZONE` | Ya no se usa: fechas y velas van en la zona horaria de cada visitante (ver [Tasa K](#tasa-k)). Si un `.env` antiguo aún la tiene, `tasak` avisa al arrancar; quítala |
 | `HIDDEN_PAYMENT_METHODS` | Métodos de pago que no cuentan por defecto, separados por coma (por defecto `Pruebas,Otros`) |
 | `COMMUNITY`, `COMMUNITY_URL` | Comunidad que opera el nodo (opcional) |
 | `SOCIAL_LINKS` | Enlaces a sus redes, separados por coma (opcional; Telegram, X, YouTube, GitHub y Nostr se reconocen solos) |
@@ -388,6 +388,12 @@ La gráfica tiene tres modos:
 Los precios se escriben como pares de divisas, base/cotización, como en los mercados: USD/CUP, BTC/CUP o
 sat/CUP (cuántos CUP cuesta un USD, un BTC o un sat) y, en una plataforma, el del activo (QUSD/CUP). La
 cabecera muestra los volúmenes desde un millón en forma compacta (1,74 M CUP), exactos al pasar el ratón.
+
+Las fechas y horas van en la zona horaria de cada visitante, la de su navegador; la esquina de la gráfica,
+bajo el eje de precios, dice su desfase con UTC (UTC−5), y su nombre al pasar el ratón. Los periodos de la
+gráfica también siguen ese calendario (un día de 1D empieza a la medianoche del visitante), así que dos
+visitantes en países distintos pueden ver velas diarias distintas. La Tasa K es la misma para todos: no
+depende de ningún calendario.
 
 El volumen va en la parte baja de la gráfica y, al pasar el ratón, la leyenda de arriba muestra los valores de ese punto; un clic en una orden abre su evento firmado, y «+N» muestra todos sus métodos de pago. El menú «Vista» muestra u oculta la leyenda y el par de fondo de la gráfica. La gráfica se puede ampliar y desplazar (el zoom se mantiene aunque lleguen órdenes nuevas; doble clic para volver a verlo todo) y expandir a pantalla completa. El filtro por método de pago es el menú «Método de pago», junto a la moneda: vale para la gráfica, las tablas y el libro de órdenes.
 

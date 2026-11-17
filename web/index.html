@@ -147,7 +147,7 @@
         </details>
         <button class="icon-btn" id="fsBtn" title="Pantalla completa" aria-label="Pantalla completa" data-i18n-title>⛶</button>
       </div>
-      <div class="chart" id="chart"><div class="legend num" id="legend"></div><div class="vol-tag" id="volTag"><span>Vol.</span><button id="volEye" aria-label="Ocultar volumen" title="Ocultar volumen"></button></div><div class="empty" data-i18n>Cargando órdenes de los relays…</div></div>
+      <div class="chart" id="chart"><div class="legend num" id="legend"></div><div class="vol-tag" id="volTag"><span>Vol.</span><button id="volEye" aria-label="Ocultar volumen" title="Ocultar volumen"></button></div><div class="empty" data-i18n>Cargando órdenes de los relays…</div><div class="tz-tag num" id="tzTag"></div></div>
     </section>
   </div>
 
@@ -242,6 +242,11 @@
       <p>Los periodos van de 1 hora a 1 año (1h, 4h, 1D, 1W, 1M, 1Y) y siguen el calendario hasta ahora, también los periodos sin órdenes, sin volumen: en <strong>Precio</strong> y <strong>Velas</strong> se dibujan planos, al precio del anterior; en <strong>Ponderado</strong>, la línea sigue mientras haya órdenes en sus 24 horas anteriores y se corta cuando no queda ninguna. El volumen se ve en la parte baja de la gráfica y, al pasar el ratón, la leyenda muestra los valores de ese punto. El menú <strong>Vista</strong> muestra u oculta la leyenda y el par de fondo.</p>
     </details>
     <details>
+      <summary>¿En qué hora están las fechas?</summary>
+      <p>En la zona horaria de tu navegador: cada visitante ve las horas de su país. La esquina de la gráfica, bajo el eje de precios, dice su desfase con UTC (por ejemplo, UTC−5), y al pasar el ratón por ella, por la hora de la última orden o por la columna «Hora» se ve el nombre de la zona.</p>
+      <p>Los periodos de la gráfica también siguen tu calendario: un día de 1D empieza a tu medianoche, y la semana, el mes y el año, en tu zona. Por eso dos personas en países distintos pueden ver velas diarias distintas, con otro volumen por periodo. La <span data-name="rate">Tasa K</span> es la misma para todos: son las 24 horas que terminan en la última orden, sin calendario.</p>
+    </details>
+    <details>
       <summary>¿De dónde salen los datos?</summary>
       <p>De los nodos Mostro configurados en este sitio (<span class="node-names"></span>). Cada orden es un evento Nostr (NIP-69, kind 38383) que se lee directamente de los relays y se comprueba su firma, así que cualquiera puede recalcular la misma tasa.</p>
       <p>Si el sitio tiene su servidor, la página carga primero lo que este ha guardado (el historial que los relays ya borraron, los precios de cada orden y la <span data-name="rate">Tasa K</span> firmada) y comprueba sus eventos igual que los de los relays; a estos les pide solo los últimos días, y avisa si el servidor no tiene alguna orden que ellos sí. Sin servidor, todo sale de los relays.</p>
@@ -333,6 +338,11 @@
         <li><strong>Weighted</strong>: the weighted price of the 24 hours before each point. With one point per order, it is the <span data-name="rate">Tasa K</span> after that order; per period, that of the 24 hours up to its close (or now, in the current one), which moves with time and differs from the <span data-name="rate">Tasa K</span> if the period closed without orders.</li>
       </ul>
       <p>Periods go from 1 hour to 1 year (1h, 4h, 1D, 1W, 1M, 1Y) and follow the calendar up to now, also the periods without orders, without volume: in <strong>Price</strong> and <strong>Candles</strong> they are drawn flat, at the previous one's price; in <strong>Weighted</strong>, the line goes on while there are orders in its previous 24 hours and breaks when none is left. Volume is shown at the bottom of the chart and, when hovering, the legend shows that point's values. The <strong>View</strong> menu shows or hides the legend and the pair in the background.</p>
+    </details>
+    <details>
+      <summary>What time zone are the dates in?</summary>
+      <p>In your browser's time zone: each visitor sees the times of their own country. The corner of the chart, below the price axis, shows its offset from UTC (for example, UTC−5), and hovering over it, over the time of the last order or over the «Time» column shows the zone's name.</p>
+      <p>The chart's periods follow your calendar too: a 1D day starts at your midnight, and the week, the month and the year, in your zone. So two people in different countries may see different daily candles, with a different volume per period. The <span data-name="rate">Tasa K</span> is the same for everyone: it is the 24 hours ending at the last order, with no calendar.</p>
     </details>
     <details>
       <summary>Where does the data come from?</summary>

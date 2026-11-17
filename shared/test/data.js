@@ -12,7 +12,8 @@ export const expected = json('./expected.json');
 export const cases = json('./cases.json');
 export const config = json('./fixtures/config.json');
 export const now = expected.now;
-export const tz = config.timeZone;
+// The zone of the visitor's browser the reference values were computed in (the page uses the browser's)
+export const tz = expected.browserTimeZone;
 export const nodes = new Set(config.mostros);
 const events = json('./fixtures/events.json');
 const btcusd = new Map(Object.entries(json('./fixtures/btcusd.json')).map(([t, close]) => [Number(t), close]));

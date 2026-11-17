@@ -158,6 +158,8 @@ const EN = {
   'Prima': 'Premium',
   'Método': 'Method',
   'Hora': 'Time',
+  'Horas en tu zona horaria: {zone} ({offset})': 'Times in your time zone: {zone} ({offset})',
+  'Horas en tu zona horaria: {zone}': 'Times in your time zone: {zone}',
   'Libro de órdenes': 'Order book',
   'Diferencial': 'Spread',
   'Arrastra para cambiar el tamaño del libro de órdenes y las órdenes ejecutadas': 'Drag to resize the order book and executed orders',

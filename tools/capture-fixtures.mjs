@@ -19,6 +19,8 @@ if (!archive) {
   process.exit(1);
 }
 mkdirSync(dir, { recursive: true });
+let previousMeta = null;
+try { previousMeta = JSON.parse(readFileSync(new URL('meta.json', dir), 'utf8')); } catch {}
 
 // --- Events: unique by id, only what web/index.html reads (orders and node metadata) ---
 // (each archive line is {"relay", "recibido", "evento"}, the archiver's format)
@@ -69,7 +71,6 @@ const config = {
   mostros: list(env.MOSTRO_PUBKEYS),
   relays: list(env.RELAYS),
   fiat: (env.FIAT || '').toUpperCase(),
-  timeZone: env.TIMEZONE || '',
   community: { name: env.COMMUNITY || '', url: env.COMMUNITY_URL || '' },
   socialLinks: list(env.SOCIAL_LINKS),
   hiddenPaymentMethods: env.HIDDEN_PAYMENT_METHODS == null ? ['Pruebas', 'Otros']
@@ -83,8 +84,9 @@ write('yadio.json', yadio);
 write('config.json', config);
 write('meta.json', {
   now,
-  // The visitor's browser time zone: the old tzOffset() depended on it, not only on CONFIG.tz
-  browserTimeZone: config.timeZone || 'UTC',
+  // The visitor's browser time zone, which the page's dates and candles follow: the previous fixtures' one,
+  // so that capturing them in another country doesn't change expected.json silently; TZ=… to choose another
+  browserTimeZone: process.env.TZ || previousMeta?.browserTimeZone || 'UTC',
   capturedAt: new Date().toISOString(),
   events: { file: archive.split('/').pop(), total: events.length, orders: orders.length },
   btcusd: { source: 'Coinbase BTC-USD candles granularity=3600 (close)', hours: Object.keys(btcusd).length },

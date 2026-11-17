@@ -93,7 +93,7 @@ export function renderStats(official, trades) {
   // Buy or sell alone, as the pair already says of what; whole on hover
   const lastSub = document.getElementById('sLastSub');
   lastSub.textContent = lastT ? `${fmtTime(lastT.ts)} · ${t(lastT.side === 'buy' ? 'compra' : 'venta')}` : ' ';
-  lastSub.title = lastT ? sideName(lastT.side) : '';
+  lastSub.title = lastT ? `${sideName(lastT.side)}\n${tzNote(lastT.ts)}` : '';
 
   // Volume of what the table shows: everything in Order mode, or the timeframe's range
   const shown = state.tf ? trades.filter(t => t.ts > now - state.tf) : trades;
@@ -274,7 +274,7 @@ export function renderTrades(trades) {
   document.getElementById('tradesHint').textContent =
     state.tf ? n : `${n} · ${t('atenuadas: más de 24h')}`;
   document.getElementById('tradesHead').innerHTML =
-    `<tr><th>${t('Hora')}</th><th>${t('Precio')}</th><th>${esc(state.fiat)}</th><th class="hide-sm">${P ? esc(assetTicker()) : 'Sats'}</th><th>${t('Método')}</th></tr>`;
+    `<tr><th title="${esc(tzNote())}">${t('Hora')}</th><th>${t('Precio')}</th><th>${esc(state.fiat)}</th><th class="hide-sm">${P ? esc(assetTicker()) : 'Sats'}</th><th>${t('Método')}</th></tr>`;
   const from = now - WINDOW;
   document.getElementById('trades').innerHTML = shown.slice().reverse().map(o => `
     <tr class="${o.fresh ? 'new' : ''} ${state.tf || o.ts > from ? '' : 'out'}" data-key="${esc(o.key)}" title="${o.unsigned ? t('Orden de la base de datos del nodo, sin firma: ver detalles') : t('Ver el evento Nostr de esta orden')}">

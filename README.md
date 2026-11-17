@@ -74,7 +74,7 @@ docker compose pull tasak
 ```
 
 **4. Configure your node.** `cp .env.example .env` and edit it: `MOSTRO_PUBKEYS`, `OTHER_MOSTRO_PUBKEYS`, `RELAYS`, `FIAT`,
-`TIMEZONE`, `HIDDEN_PAYMENT_METHODS`, your community… (see the [variables](#docker)). Leave `ARCHIVE_DIR`,
+`HIDDEN_PAYMENT_METHODS`, your community… (see the [variables](#docker)). Leave `ARCHIVE_DIR`,
 `LISTEN` and `SIGNING_KEY_FILE` empty: Docker sets them. The image carries the repository's `web/`; for
 your own logo, put the file next to `docker-compose.yml`, mount it under `tasak:` in the override and
 set `LOGO=my-logo.svg`:
@@ -276,7 +276,7 @@ OTHER_MOSTRO_PUBKEYS="
 | `PLATFORM_HIDDEN_PAYMENT_METHODS` | Payment methods never chosen by default on each platform's page, whose rate is of one method at a time (optional): one per line, the platform's name as in `PLATFORMS` or `OTHER_PLATFORMS` and its methods as it publishes them, `name: method, method`. Visitors can still choose them; `Pruebas` is never the default. Methods it doesn't publish are ignored; a name that isn't a platform is an error |
 | `RELAYS` | Relays to connect to, comma separated (required; `wss://`) |
 | `FIAT` | Currency shown on load (empty = the most traded one on the node) |
-| `TIMEZONE` | Time zone for dates and candles, e.g. `America/Caracas` (empty = the browser's) |
+| `TIMEZONE` | No longer used: dates and candles are in each visitor's own time zone (see [Tasa K](#tasa-k)). If an older `.env` still has it, `tasak` warns when it starts; remove it |
 | `HIDDEN_PAYMENT_METHODS` | Payment methods that don't count by default, comma separated (default `Pruebas,Otros`) |
 | `COMMUNITY`, `COMMUNITY_URL` | Community running the node (optional) |
 | `SOCIAL_LINKS` | Links to its social media, comma separated (optional; Telegram, X, YouTube, GitHub and Nostr are recognised automatically) |
@@ -383,6 +383,11 @@ The chart has three modes:
 Prices are written as currency pairs, base/quote, as in the markets: USD/CUP, BTC/CUP or sat/CUP (how
 many CUP one USD, BTC or sat costs) and, on a platform, the asset's (QUSD/CUP). The header shows volumes
 from a million in compact form (1.74M CUP), exact on hover.
+
+Dates and times are in each visitor's own time zone, their browser's; the corner of the chart, below the
+price axis, shows its offset from UTC (UTC−5), and its name on hover. The chart's periods follow that
+calendar too (a 1D day starts at the visitor's midnight), so two visitors in different countries may see
+different daily candles. The Tasa K is the same for everyone: it doesn't depend on any calendar.
 
 Volume is shown at the bottom of the chart and, when hovering, the legend at the top shows that point's
 values; clicking an order opens its signed event, and «+N» shows all its payment methods. The «View» menu
