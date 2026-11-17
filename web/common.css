@@ -22,6 +22,7 @@
   --down-vol: rgba(234, 57, 67, .4);
   --shadow: rgba(0, 0, 0, .5);
   --backdrop: rgba(0, 0, 0, .6);
+  --watermark: rgba(138, 145, 156, .13);
   color-scheme: dark;
 }
 
@@ -48,6 +49,7 @@
   --down-vol: rgba(209, 50, 59, .35);
   --shadow: rgba(20, 24, 32, .18);
   --backdrop: rgba(20, 24, 32, .35);
+  --watermark: rgba(93, 101, 114, .1);
   color-scheme: light;
 }
 * { box-sizing: border-box; }

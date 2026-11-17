@@ -31,8 +31,10 @@ export function setStatus(error) {
   if (state.sigs === 'ok') { short.push('<span class="ok">✓</span>'); full.push(t('Firmas de los eventos verificadas en este navegador')); }
   if (state.sigs === 'off') { short.push(`<span class="warn">${t('⚠ sin verificar')}</span>`); full.push(t('Firmas sin verificar: no cargó nostr-tools')); }
   if (state.snapshotAt) {
-    const ago = fmtAgo(Date.now() / 1000 - state.snapshotAt);
-    short.push(`<span class="muted">· ${esc(ago)}</span>`);
+    const age = Date.now() / 1000 - state.snapshotAt;
+    const ago = fmtAgo(age);
+    // Only on hover while it is recent: in the header, as a warning, once the server is 10 min late
+    if (age > 600) short.push(`<span class="warn">· ${esc(ago)}</span>`);
     full.push(t('Datos del servidor de hace {t}: órdenes completadas, precios y {rate} firmada; lo nuevo llega de los relays', { t: ago, rate: CONFIG.rateName }));
   }
   if (state.snapshotMissing) {
@@ -88,8 +90,10 @@ export function renderStats(official, trades) {
   renderBreakdown(official, head.to);
   const lastT = trades.at(-1);
   document.getElementById('sLast').innerHTML = lastT ? fmtPrice(lastT.price) + unit : '—';
-  document.getElementById('sLastSub').textContent = lastT
-    ? `${fmtTime(lastT.ts)} · ${sideName(lastT.side)}` : ' ';
+  // Buy or sell alone, as the pair already says of what; whole on hover
+  const lastSub = document.getElementById('sLastSub');
+  lastSub.textContent = lastT ? `${fmtTime(lastT.ts)} · ${t(lastT.side === 'buy' ? 'compra' : 'venta')}` : ' ';
+  lastSub.title = lastT ? sideName(lastT.side) : '';
 
   // Volume of what the table shows: everything in Order mode, or the timeframe's range
   const shown = state.tf ? trades.filter(t => t.ts > now - state.tf) : trades;
@@ -97,12 +101,12 @@ export function renderStats(official, trades) {
   // And in sats (on a platform, in the asset), straight from the events (amt): the same for every currency
   const shownSats = shown.reduce((a, t) => a + t.amt, 0);
   document.getElementById('lblVol').textContent = state.tf ? t('Volumen · {range}', { range: rangeTitle(state.tf) }) : t('Volumen total');
-  // Compact from a million (1,96 M), so that the header still fits in one line; exact on hover
-  const sats = shownSats >= 1e6
-    ? new Intl.NumberFormat(LOCALE, { notation: 'compact', maximumFractionDigits: 2 }).format(shownSats) : P ? fmtAmt(shownSats) : fmtInt(shownSats);
+  // Both compact from a million (1,74 M), so that the header still fits in one line; exact on hover
+  const compact = (n, fmt) => n >= 1e6 ? new Intl.NumberFormat(LOCALE, { notation: 'compact', maximumFractionDigits: 2 }).format(n) : fmt(n);
+  const sats = compact(shownSats, P ? fmtAmt : fmtInt);
   const amtUnit = P ? assetTicker() : 'sats';
   const sVol = document.getElementById('sVol');
-  sVol.innerHTML = `${fmtInt(shownVol)} ${esc(state.fiat)}<span class="vol-sats"> / ${sats} ${esc(amtUnit)}</span>`;
+  sVol.innerHTML = `${compact(shownVol, fmtInt)} ${esc(state.fiat)}<span class="vol-sats"> / ${sats} ${esc(amtUnit)}</span>`;
   sVol.title = `${fmtInt(shownVol)} ${state.fiat} / ${P ? fmtAmt(shownSats) : fmtInt(shownSats)} ${amtUnit}`;
   const first = shown[0] && new Date(shown[0].ts * 1000).toLocaleDateString(LOCALE, { timeZone: CONFIG.tz, day: 'numeric', month: 'numeric' });
   document.getElementById('sVolSub').textContent =
@@ -131,11 +135,13 @@ export function renderStats(official, trades) {
   // How far the Tasa K is from the reference
   const diff = tasa != null && refVal ? (tasa / refVal - 1) * 100 : null;
   const above = name ? t(diff >= 0 ? 'sobre {s}' : 'bajo {s}', { s: name }) : t(diff >= 0 ? 'sobre la referencia' : 'bajo la referencia');
+  // Short (the sign and the colour say above or below); the sentence on hover
   document.getElementById('sYadioSub').innerHTML = diff == null ? '&nbsp;'
-    : `${esc(CONFIG.rateName)} <span class="${diff >= 0 ? 'up' : 'down'}">${fmtPct(diff, 1)}</span> ${esc(above)}`;
+    : `${esc(CONFIG.rateName)} <span class="${diff >= 0 ? 'up' : 'down'}">${fmtPct(diff, 1)}</span>`;
   document.getElementById('statYadio').title = [
+    diff != null && `${CONFIG.rateName} ${fmtPct(diff, 1)} ${above}`,
     t(name === 'Yadio' ? 'Tasa de referencia de Yadio, la que usa Mostro para las órdenes a precio de mercado'
-      : 'Precio de referencia del nodo, el que usa para las órdenes a precio de mercado'), priceSource()].join('\n');
+      : 'Precio de referencia del nodo, el que usa para las órdenes a precio de mercado'), priceSource()].filter(Boolean).join('\n');
   return tasa;
 }
 
@@ -523,7 +529,7 @@ function renderPlatformMenu() {
 export function updatePair() {
   for (const el of document.querySelectorAll('.mostro-only')) el.hidden = !!P;
   for (const el of document.querySelectorAll('.platform-only')) el.hidden = !P;
-  document.querySelectorAll('[data-unit]').forEach(b => b.textContent = `${state.fiat || '…'}/${UNITS[b.dataset.unit]}`);
+  document.querySelectorAll('[data-unit]').forEach(b => b.textContent = `${UNITS[b.dataset.unit]}/${state.fiat || '…'}`);
   // Texts that name the currency or the node (/sat help and FAQ)
   const fiat = state.fiat || t('la moneda local');
   document.querySelector('[data-unit="sat"]').title =
