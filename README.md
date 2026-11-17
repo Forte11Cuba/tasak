@@ -390,9 +390,11 @@ The methods in `HIDDEN_PAYMENT_METHODS` are left out by default; they can be ena
 
 `PLATFORMS` and `OTHER_PLATFORMS` add other P2P platforms that publish on Nostr their orders and trades
 of assets other than bitcoin (their own balances, stablecoins…) against fiat currencies: kind 35353,
-proposed in [nostr-protocol/nips#2541](https://github.com/nostr-protocol/nips/pull/2541). The node
-selector shows Mostro first and then each platform, by the name given in `.env`, with its keys below
-(their profile's name, or the domain of its NIP-05). Each one opens its own page (`?platform=name`, and
+proposed in [nostr-protocol/nips#2541](https://github.com/nostr-protocol/nips/pull/2541). The header
+then has a «Platform» selector (Mostro and each platform, by the name given in `.env`) next to the node
+selector, which lists only the chosen platform's nodes or accounts: for a platform, its keys, by their
+profile's name or the domain of its NIP-05, and nothing when it has only one. Both keep their width, so
+the header doesn't move when changing platform. Each platform opens its own page (`?platform=name`, and
 `&key=npub…` for a key other than the first).
 
 That page works like a node's, with these differences:

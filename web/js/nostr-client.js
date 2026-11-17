@@ -145,18 +145,24 @@ export function fetchProfiles({ urls, authors, verify, ms = 8000 }) {
 // count. Only events of `author`, of those kinds and with a valid signature are handed over
 // (onEvent(ev, live)).
 const PAGE_PAUSE = 1000;
+const LOADING_MS = 120 * 1000;
 export function createPlatformPool({ urls, author, verify, onEvent, onUpdate, onStatus }) {
   const pool = {
     live: 0,         // relays with the history loaded and subscribed live
     refused: 0,      // relays that don't accept kind 35353
     rejected: 0,     // events with an invalid signature
     total: urls.length,
-    // Still loading: no relay has its history yet, or one that has events of the platform is still
-    // paging through it (an empty relay finishing first doesn't mean there is nothing)
-    get loading() { return pool.live === 0 || [...paging.values()].some(got => got > 0); },
+    // Still loading: no relay has its history yet, or one that has events of the platform hasn't got to
+    // the end of it, also while it reconnects (an empty relay finishing first doesn't mean there is
+    // nothing). At most LOADING_MS: a relay that never comes back doesn't keep the page waiting
+    get loading() {
+      if (Date.now() - openedAt > LOADING_MS) return false;
+      return pool.live === 0 || [...withData].some(url => !completed.has(url));
+    },
     start: () => urls.forEach(url => connect(url)),
   };
-  const paging = new Map();   // url -> events received from its history, while it pages
+  const openedAt = Date.now();
+  const withData = new Set();   // relays whose history brought events of the platform
   const seen = new Set();
   let newest = 0;   // created_at of the newest kind 35353 accepted (author and signature checked)
   // Relays that got to the end of their history: on reconnecting, only what is newer. One that was cut
@@ -195,7 +201,6 @@ export function createPlatformPool({ urls, author, verify, onEvent, onUpdate, on
       ws.send(JSON.stringify(['REQ', sub(), { ...steps[step], authors: [author], ...since, limit: PAGE, ...(until ? { until } : {}) }]));
     };
     ws.onopen = () => {
-      paging.set(url, 0);
       ws.send(JSON.stringify(['REQ', 'meta', { kinds: [0], authors: [author] }]));
       ask();
     };
@@ -206,7 +211,7 @@ export function createPlatformPool({ urls, author, verify, onEvent, onUpdate, on
         if (d[1] === sub()) {
           count++;
           oldest = Math.min(oldest, d[2]?.created_at ?? Infinity);
-          if (d[2]?.id && !got.has(d[2].id)) { got.add(d[2].id); fresh++; paging.set(url, (paging.get(url) || 0) + 1); }
+          if (d[2]?.id && !got.has(d[2].id)) { got.add(d[2].id); fresh++; withData.add(url); }
         }
         if (!accept(d[2])) return;
         if (d[2].kind === 35353) newest = Math.max(newest, d[2].created_at);
@@ -233,14 +238,18 @@ export function createPlatformPool({ urls, author, verify, onEvent, onUpdate, on
         if (d[1] === sub() && /^rate-limited/i.test(d[2] || '')) { setTimeout(() => ws.readyState === 1 && ask(), 10 * PAGE_PAUSE); return; }
         // A deletion query refused (some relays don't index #k): the rest goes on without it, also live
         if (d[1] === sub() && step === 2) { noDeletions = true; step++; goLive(); return; }
-        refused = true;
-        pool.refused++;
-        console.warn(url, 'refuses the platform events:', d[2]);
+        // Refused only if the relay says it doesn't take these events («kind not allowed», blocked,
+        // restricted): then it isn't retried. Any other reason (an error, too many subscriptions…) is
+        // passing: the connection is closed and tried again later, as when it drops
+        if (/kind|not allowed|blocked|restricted|auth-required/i.test(d[2] || '')) {
+          refused = true;
+          pool.refused++;
+          console.warn(url, 'refuses the platform events:', d[2]);
+        }
         ws.close();
       }
     };
     function goLive() {
-      paging.delete(url);
       completed.add(url);
       ws.send(JSON.stringify(['REQ', 'live', { kinds: [35353], authors: [author], since: startedAt - 60 },
         ...(noDeletions ? [] : [{ kinds: [5], authors: [author], '#k': ['35353'], since: startedAt - 60 }])]));
@@ -249,7 +258,6 @@ export function createPlatformPool({ urls, author, verify, onEvent, onUpdate, on
       onStatus();
     }
     ws.onclose = () => {
-      paging.delete(url);
       if (isLive) pool.live--;
       onStatus();
       if (refused) return;

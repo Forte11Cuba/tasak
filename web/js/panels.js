@@ -447,6 +447,7 @@ export function nodeUrl(k) {
 // With the site's nodes, those rows are the node filter (at least one stays selected); every other row
 // opens that node's page
 function renderNodeMenu() {
+  renderPlatformSelector();
   if (P) return renderPlatformMenu();
   const sel = CONFIG.mostros.filter(k => state.nodeSel.has(k));
   const pic = nodePicture(sel[0]);
@@ -472,7 +473,7 @@ function renderNodeMenu() {
     CONFIG.siteMostros.map(k => CONFIG.urlNodes ? row(k, { href: nodeUrl('') }) : row(k, { on: state.nodeSel.has(k) })),
     guests.map(k => row(k, { on: CONFIG.urlNodes && CONFIG.mostros.includes(k), href: nodeUrl(k) })),
   ].filter(g => g.length).map(g => g.join(''));
-  setMenu((CONFIG.platforms.length ? '<div class="node-group">Mostro</div>' : '') + groups.join('<hr>') + platformGroups());
+  setMenu(groups.join('<hr>'));
 }
 
 const setMenu = html => {
@@ -484,25 +485,39 @@ const picHtml = k => {
   return p ? `<img alt="" src="${esc(p)}" data-hide-broken>` : '<span class="no-pic"></span>';
 };
 
-// The other platforms of the menu, after Mostro: «Platform → who publishes», each platform's name from
-// .env and below it its pubkeys, with their profile's name or NIP-05 domain. Each one opens its page
-function platformGroups() {
-  const row = (p, k) => {
-    const on = P?.key === k;
-    return `<a class="node-row${on ? ' on' : ''}" href="${esc(platformUrl(p.name, p.keys[0] === k ? '' : k))}" title="${k}">${picHtml(k)}<span class="name">${esc(publisherName(k))}</span>${on ? '<span class="check">✓</span>' : ''}</a>`;
-  };
-  return CONFIG.platforms.map(p => `<hr><div class="node-group">${esc(p.name)}</div>${p.keys.map(k => row(p, k)).join('')}`).join('');
+const MOSTRO_LOGO = '<img alt="" src="vendor/mostro-logo.png">';
+
+// The platform selector, before the node's: Mostro and each platform of .env, each one opening its page.
+// Only with other platforms in .env
+function renderPlatformSelector() {
+  const box = document.getElementById('platformStat');
+  box.hidden = !CONFIG.platforms.length;
+  if (box.hidden) return;
+  const summary = document.getElementById('platformSummary');
+  const html = (P ? picHtml(P.keys[0]) : MOSTRO_LOGO) + `<span class="name">${esc(P ? P.name : 'Mostro')}</span><span class="caret">▾</span>`;
+  if (summary.dataset.html !== html) { summary.innerHTML = html; summary.dataset.html = html; }
+  const row = (name, href, on, pic) => `<a class="node-row${on ? ' on' : ''}" href="${esc(href)}">${pic}<span class="name">${esc(name)}</span>${on ? '<span class="check">✓</span>' : ''}</a>`;
+  const list = row('Mostro', nodeUrl(''), !P, MOSTRO_LOGO)
+    + CONFIG.platforms.map(p => row(p.name, platformUrl(p.name, ''), P?.name === p.name, picHtml(p.keys[0]))).join('');
+  const el = document.getElementById('platformList');
+  if (el.dataset.html !== list) { el.innerHTML = list; el.dataset.html = list; }
 }
 
-// On a platform's page: the platform in the summary (who publishes on hover); in the menu, Mostro (its
-// rows open the site's nodes and the guests) and the platforms
+// On a platform's page, the node selector is that of its accounts: the keys that publish for it, by their
+// profile's name or NIP-05 domain. With only one, nothing to choose: no arrow and no menu
 function renderPlatformMenu() {
   const summary = document.getElementById('nodeSummary');
-  const html = picHtml(P.key) + `<span class="name">${esc(P.name)}</span><span class="caret">▾</span>`;
+  const many = P.keys.length > 1;
+  // A single account: no block, but its place is kept, so the header doesn't move when changing platform
+  document.getElementById('nodeStat').classList.toggle('slot-empty', !many);
+  const html = picHtml(P.key) + `<span class="name">${esc(publisherName(P.key))}</span>${many ? '<span class="caret">▾</span>' : ''}`;
   if (summary.dataset.html !== html) { summary.innerHTML = html; summary.dataset.html = html; }
-  summary.title = `${P.name} → ${publisherName(P.key)}\n${t('Elegir nodo Mostro u otra plataforma')}`;
-  const row = k => `<a class="node-row" href="${esc(nodeUrl(CONFIG.siteMostros.includes(k) ? '' : k))}" title="${k}">${picHtml(k)}<span class="name">${esc(nodeName(k))}</span></a>`;
-  setMenu(`<div class="node-group">Mostro</div>${[...CONFIG.siteMostros, ...CONFIG.otherMostros].map(row).join('')}${platformGroups()}`);
+  summary.classList.toggle('single', !many);
+  summary.title = `${publisherName(P.key)} · ${P.key}\n${t('Cuenta de Nostr que firma las órdenes y operaciones de {p}', { p: P.name })}`;
+  setMenu(P.keys.map(k => {
+    const on = k === P.key;
+    return `<a class="node-row${on ? ' on' : ''}" href="${esc(platformUrl(P.name, k === P.keys[0] ? '' : k))}" title="${k}">${picHtml(k)}<span class="name">${esc(publisherName(k))}</span>${on ? '<span class="check">✓</span>' : ''}</a>`;
+  }).join(''));
 }
 
 export function updatePair() {

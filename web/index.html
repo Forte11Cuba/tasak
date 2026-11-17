@@ -29,13 +29,22 @@
   <div class="brand-box">
     <div class="brand" data-name="site">tasa<span>K</span></div>
   </div>
-  <div class="stat node-stat">
+  <!-- The platform (Mostro, then each one of PLATFORMS and OTHER_PLATFORMS) and, next to it, which of its
+       nodes or accounts: only with other platforms in .env -->
+  <div class="stat node-stat" id="platformStat" hidden>
+    <span class="label" data-i18n>Plataforma</span>
+    <details class="menu node-menu" id="platformMenu">
+      <summary id="platformSummary" title="Elegir plataforma" data-i18n-title>—</summary>
+      <div class="pop node-pop"><div id="platformList"></div></div>
+    </details>
+  </div>
+  <div class="stat node-stat" id="nodeStat">
     <span class="label node-label"><span id="nodeLabel" data-i18n>Nodo</span> <a class="node-info mostro-only" id="nodeBtn2" href="node.html" title="Información del nodo Mostro: comisión, condiciones, comunidad y redes" aria-label="Información del nodo Mostro: comisión, condiciones, comunidad y redes" data-i18n-title>ⓘ</a></span>
     <details class="menu node-menu" id="nodeMenu">
       <summary id="nodeSummary" title="Elegir nodo Mostro" data-i18n-title>—</summary>
       <div class="pop node-pop">
         <div id="nodes"></div>
-        <form class="node-form" id="nodeForm">
+        <form class="node-form mostro-only" id="nodeForm">
           <input id="nodeInput" type="text" autocomplete="off" spellcheck="false">
           <button type="submit" data-i18n>Ver</button>
         </form>
@@ -275,7 +284,7 @@
     </details>
     <details>
       <summary>¿Qué son las otras plataformas del selector?</summary>
-      <p>Plataformas P2P que no son Mostro y publican en Nostr sus órdenes y operaciones de otros activos (saldos propios, monedas estables…) contra la moneda local, firmadas con su clave (kind 35353, un NIP propuesto en <a href="https://github.com/nostr-protocol/nips/pull/2541" target="_blank" rel="noopener">nostr-protocol/nips#2541</a>). Quien despliega el sitio elige cuáles se ofrecen en el selector: cada plataforma y, debajo, las claves que publican.</p>
+      <p>Plataformas P2P que no son Mostro y publican en Nostr sus órdenes y operaciones de otros activos (saldos propios, monedas estables…) contra la moneda local, firmadas con su clave (kind 35353, un NIP propuesto en <a href="https://github.com/nostr-protocol/nips/pull/2541" target="_blank" rel="noopener">nostr-protocol/nips#2541</a>). Quien despliega el sitio elige cuáles se ofrecen en el selector «Plataforma», junto al de nodo, que en una plataforma lista las cuentas que publican por ella (si tiene más de una).</p>
       <p>Su <span data-name="rate">Tasa K</span> se calcula igual, Σ(precio × monto) ÷ Σ monto en las 24 horas que terminan en la última operación, pero solo con sus <strong>operaciones</strong> (cada ejecución de una orden): precio = monto en moneda ÷ monto del activo, nunca el precio anunciado en la orden. Hay una por plataforma, activo, moneda y método de pago, sin mezclarlas: un saldo dentro de una plataforma no es lo mismo que el mismo activo en una cadena de bloques ni que el saldo de otra plataforma, y cada método es un mercado con su propio precio. Se ve un método a la vez: el de más operaciones, u otro que elijas en el selector de método, junto a la moneda.</p>
       <p>No cuentan las operaciones que la plataforma retira con una petición de borrado (NIP-09) ni los eventos que no siguen el formato del NIP (se cuentan al pasar el ratón por el estado de la conexión). Las órdenes de la propia plataforma (<code>maker = platform</code>) cuentan como las demás. Los métodos de pago son los que publica la plataforma, tal cual; quien despliega el sitio puede hacer que algunos no se muestren por defecto.</p>
       <p>Las lee tu navegador de los relays: toda la historia de operaciones y órdenes que guardan, sin sats ni precio en dólares. Este sitio no firma la tasa de una plataforma y no cuenta en su <span data-name="rate">Tasa K</span> oficial. La firma de cada evento prueba que la plataforma lo publicó, no que la operación ocurrió.</p>
@@ -367,7 +376,7 @@
     </details>
     <details>
       <summary>What are the other platforms of the selector?</summary>
-      <p>P2P platforms that aren't Mostro and publish on Nostr their orders and trades of other assets (their own balances, stablecoins…) against the local currency, signed with their key (kind 35353, a NIP proposed in <a href="https://github.com/nostr-protocol/nips/pull/2541" target="_blank" rel="noopener">nostr-protocol/nips#2541</a>). Whoever deploys the site chooses which ones the selector offers: each platform and, below it, the keys that publish.</p>
+      <p>P2P platforms that aren't Mostro and publish on Nostr their orders and trades of other assets (their own balances, stablecoins…) against the local currency, signed with their key (kind 35353, a NIP proposed in <a href="https://github.com/nostr-protocol/nips/pull/2541" target="_blank" rel="noopener">nostr-protocol/nips#2541</a>). Whoever deploys the site chooses which ones the «Platform» selector offers, next to the node selector, which on a platform lists the accounts that publish for it (if it has more than one).</p>
       <p>Their <span data-name="rate">Tasa K</span> is calculated the same way, Σ(price × amount) ÷ Σ amount over the 24 hours that end at the last trade, but only from their <strong>trades</strong> (each execution of an order): price = fiat amount ÷ asset amount, never the price advertised in the order. There is one per platform, asset, currency and payment method, never mixed: a balance inside a platform is not the same as the same asset on a blockchain, nor as another platform's balance, and each method is a market with its own price. One method is shown at a time: the most traded one, or another you choose in the method selector, next to the currency.</p>
       <p>Trades the platform withdraws with a deletion request (NIP-09) don't count, nor do events that don't follow the NIP's format (counted when hovering over the connection status). Orders published by the platform itself (<code>maker = platform</code>) count as any other. Payment methods are the ones the platform publishes, as they are; whoever deploys the site can keep some from being shown by default.</p>
       <p>Your browser reads them from the relays: the whole history of trades and orders they keep, without sats or a dollar price. This site doesn't sign a platform's rate, and it doesn't count in its official <span data-name="rate">Tasa K</span>. Each event's signature proves the platform published it, not that the trade happened.</p>

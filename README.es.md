@@ -393,9 +393,11 @@ Los métodos de `HIDDEN_PAYMENT_METHODS` quedan fuera por defecto; se pueden act
 
 `PLATFORMS` y `OTHER_PLATFORMS` añaden otras plataformas P2P que publican en Nostr sus órdenes y
 operaciones de activos que no son bitcoin (saldos propios, monedas estables…) contra monedas locales: kind
-35353, propuesto en [nostr-protocol/nips#2541](https://github.com/nostr-protocol/nips/pull/2541). El
-selector de nodos muestra primero Mostro y después cada plataforma, con el nombre del `.env`, y debajo sus
-claves (el nombre de su perfil o el dominio de su NIP-05). Cada una abre su propia página
+35353, propuesto en [nostr-protocol/nips#2541](https://github.com/nostr-protocol/nips/pull/2541). La
+cabecera tiene entonces un selector «Plataforma» (Mostro y cada plataforma, con el nombre del `.env`) junto
+al selector de nodo, que solo lista los nodos o cuentas de la plataforma elegida: en una plataforma, sus
+claves, con el nombre de su perfil o el dominio de su NIP-05, y nada si tiene una sola. Los dos conservan su
+ancho, para que la cabecera no se mueva al cambiar de plataforma. Cada plataforma abre su propia página
 (`?platform=nombre`, y `&key=npub…` para una clave que no sea la primera).
 
 Esa página funciona como la de un nodo, con estas diferencias:

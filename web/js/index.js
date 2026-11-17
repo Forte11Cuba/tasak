@@ -285,10 +285,13 @@ applyBookFrac();
 // The node page keeps the URL parameters (same node and relays)
 document.getElementById('nodeBtn2').href = 'node.html' + location.search;
 
-// Node selector: the names and pictures of the nodes not shown, asked for the first time it opens
+// Node and platform selectors: the names and pictures of the nodes and accounts not shown, asked for the
+// first time one opens
 const nodeMenu = document.getElementById('nodeMenu');
-nodeMenu.addEventListener('toggle', () => {
-  if (!nodeMenu.open || state.profilesAsked) return;
+// A platform with a single account: nothing to choose
+nodeMenu.querySelector('summary').addEventListener('click', e => { if (P && P.keys.length < 2) e.preventDefault(); });
+for (const menu of [nodeMenu, document.getElementById('platformMenu')]) menu.addEventListener('toggle', () => {
+  if (!menu.open || state.profilesAsked) return;
   state.profilesAsked = true;
   // On a platform's page no node is loaded: all of them; the platforms' pubkeys always
   const nodes = [...CONFIG.siteMostros, ...CONFIG.otherMostros].filter(k => P || !CONFIG.mostros.includes(k));
@@ -300,7 +303,7 @@ nodeMenu.addEventListener('toggle', () => {
 });
 // A platform: its rate isn't the site's (its trades, computed here, not signed), on hover
 if (P) {
-  document.getElementById('nodeLabel').textContent = t('Plataforma');
+  document.getElementById('nodeLabel').textContent = t('Cuenta');
   const label = document.getElementById('rateLabel');
   label.classList.add('guest');
   label.title = t('Otra plataforma P2P, no un nodo Mostro: la {rate} de {p} se calcula en este navegador con sus operaciones firmadas de los relays, por activo, moneda y método de pago, y este sitio no la firma', { rate: CONFIG.rateName, p: P.name });
