@@ -12,12 +12,18 @@
 // - clock and time zone: fixtures/meta.json (now and the visitor's time zone);
 // - any other host is unreachable.
 //
+// Then it loads the page again with the browser in another time zone (OTHER_ZONE): dates and candles
+// follow the visitor's zone, so the times shown and the chart's periods change, and must be those of
+// shared/ for that zone; the Tasa K, the prices and the orders must not change.
+//
 // cases.buggyOffsets is not checked: it froze a bug of the old tzOffset that is fixed now (the
 // correct values are in cases.json); --write keeps it as it was.
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { serve, openChrome } from './cdp.mjs';
 import { simulation } from './simulation.mjs';
+import { chartPoints } from '../shared/rate.js';
+import { TIMEFRAMES } from '../shared/time.js';
 
 const root = new URL('../', import.meta.url);
 const fixture = n => JSON.parse(readFileSync(new URL(`shared/test/fixtures/${n}`, root), 'utf8'));
@@ -25,6 +31,8 @@ const meta = fixture('meta.json');
 const FIX = { events: fixture('events.json'), btcusd: fixture('btcusd.json'), yadio: fixture('yadio.json'), now: meta.now };
 const expectedFile = new URL('shared/test/expected.json', root);
 const write = process.argv.includes('--write');
+// +14 h from Havana: the day changes
+const OTHER_ZONE = 'Asia/Tokyo';
 
 
 // Runs in the page once it has loaded the fixtures: reads what the site computed. The page's
@@ -156,18 +164,25 @@ const server = await serve(web, { '/config.js': `window.TASAK_CONFIG = ${JSON.st
 const chrome = await openChrome(['--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1']);
 try {
   const p = await chrome.newPage();
-  await p.cmd('Emulation.setTimezoneOverride', { timezoneId: meta.browserTimeZone });
   await p.cmd('Emulation.setDeviceMetricsOverride', { width: 1400, height: 900, deviceScaleFactor: 1, mobile: false });
   await p.cmd('Page.addScriptToEvaluateOnNewDocument', { source: `(${simulation})(${JSON.stringify(FIX)});` });
-  await p.goto(`${server.url}/index.html?lang=es`);
-  await p.waitFor('window.tasak && tasak.state.live === CONFIG.relays.length');
-  const r = await p.evaluate(`(${extract})()`);
+  // The page with the browser in `timeZone`: what it computed, the zone it uses and the zone's tag
+  const run = async timeZone => {
+    p.errors.length = 0;
+    await p.cmd('Emulation.setTimezoneOverride', { timezoneId: timeZone });
+    await p.goto(`${server.url}/index.html?lang=es`);
+    await p.waitFor('window.tasak && tasak.state.live === CONFIG.relays.length');
+    const r = await p.evaluate(`(${extract})()`);
+    const page = await p.evaluate(`({ tz: CONFIG.tz, tag: document.getElementById('tzTag').textContent })`);
+    // Images of the node's profile are external: failing to load them is expected here
+    const errors = p.errors.filter(e => !/ERR_NAME_NOT_RESOLVED|Failed to load resource/.test(e));
+    if (errors.length) throw new Error(`errors in the page (${timeZone}):\n  ` + errors.join('\n  '));
+    return { r, page };
+  };
+  const { r, page } = await run(meta.browserTimeZone);
 
   const out = process.argv.indexOf('--screenshot');
   if (out > 0) writeFileSync(process.argv[out + 1], await p.screenshot());
-  // Images of the node's profile are external: failing to load them is expected here
-  const errors = p.errors.filter(e => !/ERR_NAME_NOT_RESOLVED|Failed to load resource/.test(e));
-  if (errors.length) throw new Error('errors in the page:\n  ' + errors.join('\n  '));
 
   const previous = existsSync(expectedFile) ? JSON.parse(readFileSync(expectedFile, 'utf8')) : null;
   const actual = {
@@ -192,6 +207,46 @@ try {
     } else {
       console.log(`same as expected.json: ${r.orders.length} orders, currencies ${Object.keys(r.currencies).join(', ')}`);
     }
+  }
+
+  // In another zone: the same rate, prices and orders; other times, and the candles of shared/ for that zone
+  const other = await run(OTHER_ZONE);
+  const o = other.r;
+  const problems = [];
+  if (page.tz !== meta.browserTimeZone || other.page.tz !== OTHER_ZONE) {
+    problems.push(`the page doesn't use the browser's time zone: ${page.tz}, ${other.page.tz}`);
+  }
+  const { sLastSub, sVolSub, ...header } = o.header;
+  const { sLastSub: sLastSub0, sVolSub: sVolSub0, ...header0 } = r.header;
+  problems.push(...differences(header, header0, '.header'), ...differences(o.orders, r.orders, '.orders'),
+    ...differences(o.view, r.view, '.view'));
+  if (sLastSub === sLastSub0) problems.push(`.header.sLastSub: the time of the last order didn't change (${sLastSub})`);
+  let candles = 0;
+  for (const [fiat, c] of Object.entries(r.currencies)) {
+    for (const [unit, u] of Object.entries(c.units)) {
+      const ou = o.currencies[fiat]?.units[unit];
+      const at = `.currencies.${fiat}.units.${unit}`;
+      if (!ou) { problems.push(`${at}: missing`); continue; }
+      const same = ({ approximateUsd, rateTo, rate, previousRate, orders24h, volume24h, book, trades }) =>
+        ({ approximateUsd, rateTo, rate, previousRate, orders24h, volume24h, book, trades: trades.map(({ chartTime, ...t }) => t) });
+      problems.push(...differences(same(ou), same(u), at));
+      const trades = ou.trades.map(({ key, ts, size, price }) => ({ key, ts, size, price }));
+      for (const tf of [0, ...TIMEFRAMES]) {
+        const want = chartPoints(trades, { tf, tz: OTHER_ZONE, now: meta.now, withEmpty: true }).map(p => ({ time: p.time,
+          value: p.value ?? null, vol: p.vol, n: p.n, avg: p.avg ?? null, avgN: p.avgN ?? null, avgVol: p.avgVol ?? null,
+          empty: !!p.empty, key: p.order?.key ?? null }));
+        problems.push(...differences(ou.points[tf], want, `${at}.points.${tf}`));
+        if (tf === 86400 && u.points[tf].length && JSON.stringify(ou.points[tf]) !== JSON.stringify(u.points[tf])) candles++;
+      }
+    }
+  }
+  if (!candles) problems.push(`the daily candles are the same in ${meta.browserTimeZone} and ${OTHER_ZONE}`);
+  if (problems.length) {
+    console.error(`DIFFERENT in ${OTHER_ZONE}:\n  ${problems.slice(0, 20).join('\n  ')}`);
+    process.exitCode = 1;
+  } else {
+    console.log(`in ${OTHER_ZONE} (${other.page.tag}; ${page.tag} in ${meta.browserTimeZone}): the same rate, prices and orders;`
+      + ` last order «${sLastSub}» instead of «${sLastSub0}», and the candles of shared/ for that zone`);
   }
 } finally {
   chrome.close();

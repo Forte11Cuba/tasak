@@ -153,6 +153,12 @@ fn main() -> ExitCode {
 
     let (mut config, mut errors) = config::build_config(get, &root.join("web"));
     errors.splice(0..0, env_errors);
+    // Dates are shown in each visitor's time zone: an old .env may still have it, and that's not an error
+    if get("TIMEZONE").is_some_and(|v| !v.is_empty()) {
+        warn!(
+            "TIMEZONE is no longer used: dates and candles are shown in each visitor's time zone (remove it from .env)"
+        );
+    }
     let listen = get("LISTEN")
         .filter(|v| !v.is_empty())
         .unwrap_or_else(|| DEFAULT_LISTEN.to_string());

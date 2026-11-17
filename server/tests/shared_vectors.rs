@@ -50,12 +50,14 @@ static DATA: LazyLock<Data> = LazyLock::new(|| {
     let config = read_json("shared/test/fixtures/config.json");
     let yadio = read_json("shared/test/fixtures/yadio.json");
     let script = std::fs::read_to_string(path("web/vendor/mostro-payment-methods.js")).unwrap();
+    // The zone of the visitor's browser the reference values were computed in
+    let tz = expected["browserTimeZone"].as_str().unwrap().parse().unwrap();
     Data {
         now: expected["now"].as_f64().unwrap(),
         expected,
         cases: read_json("shared/test/cases.json"),
         hidden: serde_json::from_value(config["hiddenPaymentMethods"].clone()).unwrap(),
-        tz: config["timeZone"].as_str().unwrap().parse().unwrap(),
+        tz,
         nodes: serde_json::from_value(config["mostros"].clone()).unwrap(),
         events: serde_json::from_value(read_json("shared/test/fixtures/events.json")).unwrap(),
         btcusd: read_json("shared/test/fixtures/btcusd.json")

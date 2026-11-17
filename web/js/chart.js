@@ -109,6 +109,24 @@ new ResizeObserver(() => requestAnimationFrame(positionVolTag)).observe(chartC.e
 
 volEye.onclick = () => { volOn = !volOn; applyVolLayout(); saveVolPref(); };
 
+// The time zone of the time axis, in the corner below the price axis (as TradingView): the visitor's.
+// Checked every minute, so that it changes with daylight saving time while the page stays open
+const tzTag = document.getElementById('tzTag');
+function renderTzTag() {
+  const offset = tzOffsetName();
+  if (tzTag.textContent !== offset) {
+    tzTag.textContent = offset;
+    tzTag.title = tzNote();
+  }
+  const width = chartC.chart.priceScale('right').width(), height = chartC.chart.timeScale().height();
+  tzTag.hidden = !width || !height;
+  tzTag.style.setProperty('width', width + 'px');
+  tzTag.style.setProperty('height', height + 'px');
+}
+new ResizeObserver(() => requestAnimationFrame(renderTzTag)).observe(chartC.el);
+chartC.chart.timeScale().subscribeVisibleLogicalRangeChange(() => requestAnimationFrame(renderTzTag));
+setInterval(renderTzTag, 60e3);
+
 // What is drawn over the chart, chosen in «View»: the legend (the data of the point) and the pair behind
 // the price, big and translucent (TradingView's watermark). Remembered in this browser
 const viewPref = (() => {
@@ -315,6 +333,8 @@ export function renderChart(trades) {
   if (fitKey !== chartFit.key) chartFit = { key: fitKey, moved: false };
   if (!chartFit.moved) fitView();
   positionVolTag();
+  // The price axis widens with longer prices
+  requestAnimationFrame(renderTzTag);
 }
 
 // The default view: everything, or the newest points that fit at BAR_PX pixels each (by hour the calendar

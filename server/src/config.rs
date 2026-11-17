@@ -125,9 +125,8 @@ pub struct Config {
     /// at a time), as it publishes them; the test orders never are
     pub platform_hidden_payment_methods: Vec<PlatformMethods>,
     pub relays: Vec<String>,
-    /// Empty: the most traded currency on the node and the visitor's browser time zone
+    /// Empty: the most traded currency on the node
     pub fiat: String,
-    pub time_zone: String,
     pub community: Community,
     pub social_links: Vec<String>,
     pub hidden_payment_methods: Vec<String>,
@@ -239,7 +238,6 @@ pub fn build_config(get: impl Fn(&str) -> Option<String>, web: &Path) -> (Config
         platform_hidden_payment_methods: platform_methods(get("PLATFORM_HIDDEN_PAYMENT_METHODS")),
         relays: list(get("RELAYS")),
         fiat: or_empty("FIAT").to_uppercase(),
-        time_zone: or_empty("TIMEZONE"),
         community: Community {
             name: or_empty("COMMUNITY"),
             url: or_empty("COMMUNITY_URL"),
@@ -327,10 +325,6 @@ pub fn build_config(get: impl Fn(&str) -> Option<String>, web: &Path) -> (Config
         if !is_https(u) {
             errors.push(format!("invalid link (must start with https://): {u}"));
         }
-    }
-    // The browser checks it with Intl; both use the IANA database
-    if !config.time_zone.is_empty() && chrono_tz::Tz::from_str_insensitive(&config.time_zone).is_err() {
-        errors.push(format!("invalid TIMEZONE: {}", config.time_zone));
     }
     for (k, v) in [("LOGO", &config.logo), ("LOGO_LIGHT", &config.logo_light)] {
         if v.is_empty() {

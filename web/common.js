@@ -78,7 +78,8 @@ const CONFIG = (() => {
     // Without a configured currency, the page picks the most traded one on the node; the .env one
     // belongs to the .env nodes, so it doesn't apply if the URL changes the node
     fiat: (qs.get('fiat') || (urlNodes || platformName ? '' : base.fiat) || '').toUpperCase(),
-    tz: base.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    // Dates and candles in each visitor's own time zone, the browser's
+    tz: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
     // The key that signs the site's Tasa K (hex): its rate is about the .env's nodes, so it doesn't
     // apply if the URL changes the node
     ratePubkey: !urlNodes && /^[0-9a-f]{64}$/.test(base.ratePubkey || '') ? base.ratePubkey : '',
@@ -159,6 +160,15 @@ const fmtInt = n => Math.round(n).toLocaleString(LOCALE);
 const fmtTime = ts => new Date(ts * 1000).toLocaleString(LOCALE, {
   timeZone: CONFIG.tz, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
 });
+// The offset of the visitor's time zone at `ts` (now by default), from Intl, so that it follows daylight
+// saving time and half hours: UTC−5, UTC+5:30, UTC
+const tzOffsetName = (ts = Date.now() / 1000) => {
+  const part = new Intl.DateTimeFormat('en-US', { timeZone: CONFIG.tz, timeZoneName: 'shortOffset' })
+    .formatToParts(new Date(ts * 1000)).find(p => p.type === 'timeZoneName');
+  return (part?.value || 'GMT').replace('GMT', 'UTC').replace('-', '−');
+};
+// Which time zone the dates are in, for tooltips
+const tzNote = ts => t('Horas en tu zona horaria: {zone} ({offset})', { zone: CONFIG.tz, offset: tzOffsetName(ts) });
 
 // ---------- Node information: profile (0), information (38385) and relays (10002) ----------
 const META_KINDS = [0, 38385, 10002];
