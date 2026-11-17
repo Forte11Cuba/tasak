@@ -1,13 +1,14 @@
 //! The archive: subscribes to the .env relays and stores (store.rs) everything the nodes publish, so
 //! that the intermediate versions of each order (pending, in-progress) and the mostro-rates, which
-//! relays replace or drop after 10 min, are not lost. Also keeps Yadio's BTC/USD of the last 24 h, to
-//! fill the gaps when the archive was off.
+//! relays replace or drop after 10 min, are not lost. Of the other platforms (PLATFORMS), their orders
+//! and trades: kinds 38383 and 35353, and the deletion requests of their trades. Also keeps Yadio's
+//! BTC/USD of the last 24 h, to fill the gaps when the archive was off.
 //!
 //! Each relay has its own task: a live subscription (to catch pending and in-progress before the relay
 //! replaces them) and, every 5 min, a catch-up that pages its history back to a little before the last
 //! one, which covers whatever the live subscription missed (disconnections, a lagging channel).
 
-use crate::store::{META, ORDERS, RATES, RATES_D, Store, Stored};
+use crate::store::{ASSETS, DELETION, META, ORDERS, RATES, RATES_D, Store, Stored};
 use nostr_sdk::prelude::*;
 use std::collections::HashSet;
 use std::sync::Arc;
@@ -30,6 +31,9 @@ const CATCH_UP_MARGIN: i64 = 15 * 60;
 /// A relay unreachable for longer than this may have dropped mostro-rates: ask Yadio
 const OUTAGE: Duration = Duration::from_secs(5 * 60);
 const LIVE_ID: &str = "tasak-live";
+/// The platforms have their own: some relays only allow certain kinds (wss://mostro-p2p.tech refuses
+/// 35353), and a refused subscription must not take the nodes' one with it
+const PLATFORMS_LIVE_ID: &str = "tasak-live-platforms";
 
 const YADIO_URL: &str = "https://api.yadio.io/today/24/USD";
 /// Two overlapping downloads a day cover the 24 h even if one fails
@@ -44,24 +48,61 @@ pub fn now() -> i64 {
         .map_or(0, |d| d.as_secs() as i64)
 }
 
-/// Everything the nodes publish: every currency, every version. Filtering later is free; recovering
-/// what was not stored is impossible
-pub fn filters(nodes: &[PublicKey]) -> Vec<Filter> {
-    let nodes = nodes.iter().copied();
-    vec![
-        Filter::new().kind(Kind::from_u16(ORDERS)).authors(nodes.clone()),
-        Filter::new().kinds(META.map(Kind::from_u16)).authors(nodes.clone()),
-        Filter::new()
-            .kind(Kind::from_u16(RATES))
-            .authors(nodes)
-            .identifier(RATES_D),
-    ]
+/// One live subscription and its catch-up: what it asks for, and whose events say where its catch-up
+/// resumes after a restart (by group: a platform added later still gets its whole history)
+#[derive(Debug, Clone)]
+pub struct Group {
+    id: &'static str,
+    authors: Vec<PublicKey>,
+    filters: Vec<Filter>,
+}
+
+/// Everything the nodes publish: every currency, every version; of the platforms, every version of
+/// their orders and trades. Filtering later is free; recovering what was not stored is impossible
+pub fn groups(nodes: &[PublicKey], platforms: &[PublicKey]) -> Vec<Group> {
+    let authors = nodes.iter().copied();
+    let mut groups = vec![Group {
+        id: LIVE_ID,
+        authors: nodes.to_vec(),
+        filters: vec![
+            Filter::new().kind(Kind::from_u16(ORDERS)).authors(authors.clone()),
+            Filter::new().kinds(META.map(Kind::from_u16)).authors(authors.clone()),
+            Filter::new()
+                .kind(Kind::from_u16(RATES))
+                .authors(authors)
+                .identifier(RATES_D),
+        ],
+    }];
+    // An empty authors list would ask the relays for everyone's events
+    if !platforms.is_empty() {
+        let authors = platforms.iter().copied();
+        groups.push(Group {
+            id: PLATFORMS_LIVE_ID,
+            authors: platforms.to_vec(),
+            filters: vec![
+                Filter::new()
+                    .kinds([ORDERS, ASSETS].map(Kind::from_u16))
+                    .authors(authors.clone()),
+                Filter::new()
+                    .kind(Kind::from_u16(DELETION))
+                    .authors(authors)
+                    .custom_tag(SingleLetterTag::LOWERCASE_K, ASSETS.to_string()),
+            ],
+        });
+    }
+    groups
 }
 
 /// Runs until the task is dropped
 /// `caught_up` turns true once every relay's first catch-up has ended, well or not (a relay that doesn't
 /// answer doesn't hold it back): what the relays had when tasak started is then in the archive
-pub async fn run(store: Arc<Store>, nodes: Vec<PublicKey>, relays: Vec<String>, caught_up: watch::Sender<bool>) {
+pub async fn run(
+    store: Arc<Store>,
+    nodes: Vec<PublicKey>,
+    platforms: Vec<PublicKey>,
+    relays: Vec<String>,
+    caught_up: watch::Sender<bool>,
+) {
     let client = Client::default();
     let mut urls = Vec::new();
     for r in &relays {
@@ -75,10 +116,15 @@ pub async fn run(store: Arc<Store>, nodes: Vec<PublicKey>, relays: Vec<String>, 
         }
     }
     client.connect().and_wait(CONNECT_WAIT).await;
-    info!("archive: {} node(s), {} relay(s)", nodes.len(), urls.len());
+    info!(
+        "archive: {} node(s), {} platform key(s), {} relay(s)",
+        nodes.len(),
+        platforms.len(),
+        urls.len()
+    );
 
     let outage = Arc::new(AtomicBool::new(false));
-    let filters = filters(&nodes);
+    let groups = groups(&nodes, &platforms);
     // Taken before any REQ: the stream only carries what arrives after it is opened
     let mut notifications = client.notifications();
     let (first_tx, mut first_rx) = mpsc::channel(urls.len().max(1));
@@ -88,7 +134,7 @@ pub async fn run(store: Arc<Store>, nodes: Vec<PublicKey>, relays: Vec<String>, 
             client.clone(),
             store.clone(),
             url,
-            filters.clone(),
+            groups.clone(),
             outage.clone(),
             first_tx.clone(),
         ));
@@ -114,7 +160,7 @@ pub async fn run(store: Arc<Store>, nodes: Vec<PublicKey>, relays: Vec<String>, 
         let RelayMessage::Event { subscription_id, event } = *message else {
             continue;
         };
-        if subscription_id.as_str() != LIVE_ID {
+        if ![LIVE_ID, PLATFORMS_LIVE_ID].contains(&subscription_id.as_str()) {
             continue;
         }
         match store.store(relay_url.as_str(), &event, now()).await {
@@ -126,12 +172,13 @@ pub async fn run(store: Arc<Store>, nodes: Vec<PublicKey>, relays: Vec<String>, 
 }
 
 /// One relay: subscribe live (again until it works: the sdk forgets a subscription it could not send)
-/// and catch up every few minutes. `first` is told when the first catch-up has ended, well or not
+/// and catch up every few minutes, each group from where it was. `first` is told when the first
+/// catch-up has ended, well or not
 async fn relay_task(
     client: Client,
     store: Arc<Store>,
     url: RelayUrl,
-    filters: Vec<Filter>,
+    groups: Vec<Group>,
     outage: Arc<AtomicBool>,
     first: mpsc::Sender<()>,
 ) {
@@ -142,36 +189,65 @@ async fn relay_task(
         }
     };
     let relay = url.to_string();
-    let mut live = false;
-    let mut last_ok: Option<i64> = None;
+    let mut live = vec![false; groups.len()];
+    let mut last_ok: Vec<Option<i64>> = vec![None; groups.len()];
+    // Where each group's first catch-up starts, read once before its live subscription stores anything,
+    // and kept until that catch-up succeeds: retried after a failure, it must not start from the events
+    // the live subscription stored meanwhile (an active platform sends some within the first second)
+    let mut start: Vec<Option<Option<i64>>> = vec![None; groups.len()];
     let mut failing_since: Option<Instant> = None;
     loop {
-        if !live {
-            // Only new events: history comes from the catch-up. The sdk sends it again by itself when
-            // the relay reconnects
-            let since = Timestamp::from_secs((now() - 60).max(0) as u64);
-            let live_filters: Vec<Filter> = filters.iter().map(|f| f.clone().since(since)).collect();
-            // Ok even if the relay refused it: what counts is that this relay is among the successful
-            let sent = client
-                .subscribe(ReqTarget::single(&url, live_filters))
-                .with_id(SubscriptionId::new(LIVE_ID))
-                .await;
-            live = sent.is_ok_and(|out| out.success.contains_key(&url));
+        let mut since = Vec::with_capacity(groups.len());
+        for ((g, last_ok), start) in groups.iter().zip(&last_ok).zip(start.iter_mut()) {
+            since.push(match (*last_ok, *start) {
+                (Some(t), _) => Ok(Some(t - CATCH_UP_MARGIN)),
+                (None, Some(s)) => Ok(s),
+                (None, None) => store
+                    .last_received(&relay, &g.authors)
+                    .await
+                    .map(|t| t.map(|t| t - RESTART_MARGIN))
+                    .inspect(|s| *start = Some(*s))
+                    .map_err(|e| format!("archive: {e}")),
+            });
         }
-        let since = match last_ok {
-            Some(t) => Some(t - CATCH_UP_MARGIN),
-            None => match store.last_received(&relay).await {
-                Ok(t) => t.map(|t| t - RESTART_MARGIN),
+        for (g, live) in groups.iter().zip(live.iter_mut()) {
+            if !*live {
+                // Only new events: history comes from the catch-up. The sdk sends it again by itself when
+                // the relay reconnects
+                let since = Timestamp::from_secs((now() - 60).max(0) as u64);
+                let live_filters: Vec<Filter> = g.filters.iter().map(|f| f.clone().since(since)).collect();
+                // Ok even if the relay refused it: what counts is that this relay is among the successful
+                let sent = client
+                    .subscribe(ReqTarget::single(&url, live_filters))
+                    .with_id(SubscriptionId::new(g.id))
+                    .await;
+                *live = sent.is_ok_and(|out| out.success.contains_key(&url));
+            }
+        }
+        let resumed = last_ok.iter().all(Option::is_some);
+        // Each group on its own: one failing doesn't keep the other from catching up
+        let (mut new, mut error) = (0, None);
+        for ((g, last_ok), since) in groups.iter().zip(last_ok.iter_mut()).zip(since) {
+            let since = match since {
+                Ok(since) => since,
                 Err(e) => {
-                    warn!("archive: {e}");
-                    first_done();
-                    tokio::time::sleep(CATCH_UP_EVERY).await;
+                    error.get_or_insert(e);
                     continue;
                 }
-            },
-        };
-        let started = now();
-        match catch_up(&client, &store, &url, &filters, since).await {
+            };
+            let started = now();
+            match catch_up(&client, &store, &url, &g.filters, since).await {
+                Ok(n) => {
+                    new += n;
+                    *last_ok = Some(started);
+                }
+                Err(e) => {
+                    error.get_or_insert(e);
+                }
+            }
+        }
+        let result = error.map_or(Ok(new), Err);
+        match result {
             Ok(new) => {
                 if let Some(t) = failing_since.take() {
                     info!("{relay}: answering again");
@@ -179,10 +255,9 @@ async fn relay_task(
                         outage.store(true, Ordering::Relaxed);
                     }
                 }
-                if last_ok.is_none() || new > 0 {
+                if !resumed || new > 0 {
                     info!("{relay}: {new} new events from history");
                 }
-                last_ok = Some(started);
             }
             Err(e) => {
                 if failing_since.is_none() {
@@ -303,7 +378,7 @@ async fn fetch_yadio(http: &reqwest::Client, store: &Store) -> Result<usize, Str
 #[cfg(test)]
 mod tests {
     use super::*;
-    use crate::store::tests::{memory_store, order, rates};
+    use crate::store::tests::{asset, memory_store, order, platforms_store, rates};
     use nostr_sdk::local_relay::{LocalRelay, LocalRelayBuilder, RateLimit};
 
     async fn local_relay() -> LocalRelay {
@@ -325,6 +400,11 @@ mod tests {
             client.send_event(ev).await.unwrap();
         }
         client.shutdown().await;
+    }
+
+    /// Every group's filters, as one catch-up of all of them
+    fn filters(nodes: &[PublicKey], platforms: &[PublicKey]) -> Vec<Filter> {
+        groups(nodes, platforms).into_iter().flat_map(|g| g.filters).collect()
     }
 
     async fn count(store: &Store, sql: &'static str) -> i64 {
@@ -350,7 +430,7 @@ mod tests {
         let client = Client::default();
         client.add_relay(&url).await.unwrap();
         client.connect().and_wait(Duration::from_secs(5)).await;
-        let f = filters(&[node.public_key()]);
+        let f = filters(&[node.public_key()], &[]);
         assert_eq!(catch_up(&client, &store, &url, &f, None).await.unwrap(), 1201);
         assert_eq!(count(&store, "SELECT count(*) FROM events").await, 1201);
         // Again: nothing new, and nothing stored twice
@@ -364,13 +444,56 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn catch_up_brings_the_platforms_orders_trades_and_deletions() {
+        let relay = local_relay().await;
+        let url = relay.url().await;
+        let node = Keys::generate();
+        let platform = Keys::generate();
+        let base = now() as u64 - 1000;
+        let deletion = |k: &str| {
+            EventBuilder::new(Kind::from_u16(DELETION), "")
+                .tags([Tag::parse(["k", k]).unwrap()])
+                .custom_created_at(Timestamp::from_secs(base + 10))
+                .finalize(&platform)
+                .unwrap()
+        };
+        publish(
+            &url,
+            &[
+                order(&node, "o1", "success", base),
+                asset(&platform, "a1", "order", base),
+                asset(&platform, "t1", "trade", base + 1),
+                order(&platform, "b1", "pending", base),
+                deletion("35353"),
+                // Not archived: a deletion of something else and a node's kind 35353
+                deletion("1"),
+                asset(&node, "a2", "order", base),
+            ],
+        )
+        .await;
+
+        let store = platforms_store(&[node.public_key()], &[platform.public_key()]).await;
+        let client = Client::default();
+        client.add_relay(&url).await.unwrap();
+        client.connect().and_wait(Duration::from_secs(5)).await;
+        let f = filters(&[node.public_key()], &[platform.public_key()]);
+        assert_eq!(catch_up(&client, &store, &url, &f, None).await.unwrap(), 5);
+        let by_kind: Vec<(i64, i64)> = sqlx::query_as("SELECT kind, count(*) FROM events GROUP BY kind ORDER BY kind")
+            .fetch_all(store.pool())
+            .await
+            .unwrap();
+        assert_eq!(by_kind, [(5, 1), (35353, 2), (38383, 2)]);
+        client.shutdown().await;
+    }
+
+    #[tokio::test]
     async fn an_unreachable_relay_is_an_error_not_an_empty_history() {
         let store = memory_store(&[]).await;
         let url = RelayUrl::parse("ws://127.0.0.1:1").unwrap();
         let client = Client::default();
         client.add_relay(&url).await.unwrap();
         client.connect().and_wait(Duration::from_secs(1)).await;
-        assert!(catch_up(&client, &store, &url, &filters(&[]), None).await.is_err());
+        assert!(catch_up(&client, &store, &url, &filters(&[], &[]), None).await.is_err());
         client.shutdown().await;
     }
 
@@ -387,6 +510,7 @@ mod tests {
         let task = tokio::spawn(run(
             store.clone(),
             vec![node.public_key()],
+            vec![],
             vec![url.to_string()],
             caught_up,
         ));
@@ -426,10 +550,46 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn a_platform_added_to_an_archive_with_recent_events_gets_its_whole_history() {
+        let relay = local_relay().await;
+        let url = relay.url().await;
+        let node = Keys::generate();
+        let platform = Keys::generate();
+        // Ten days old: before the hour that a restart asks for again
+        let old = asset(&platform, "a1", "trade", now() as u64 - 10 * 86400);
+        publish(&url, &[old]).await;
+
+        let store = Arc::new(platforms_store(&[node.public_key()], &[platform.public_key()]).await);
+        // The archive already has a recent event of the node from this relay
+        let recent = order(&node, "o1", "success", now() as u64 - 60);
+        store.store(url.as_str(), &recent, now()).await.unwrap();
+        let (caught_up, mut caught_up_rx) = watch::channel(false);
+        let task = tokio::spawn(run(
+            store.clone(),
+            vec![node.public_key()],
+            vec![platform.public_key()],
+            vec![url.to_string()],
+            caught_up,
+        ));
+        tokio::time::timeout(Duration::from_secs(20), caught_up_rx.wait_for(|v| *v))
+            .await
+            .expect("caught up")
+            .unwrap();
+        assert_eq!(count(&store, "SELECT count(*) FROM events WHERE kind = 35353").await, 1);
+        task.abort();
+    }
+
+    #[tokio::test]
     async fn a_relay_that_doesnt_answer_doesnt_hold_back_the_catch_up() {
         let store = Arc::new(memory_store(&[]).await);
         let (caught_up, mut caught_up_rx) = watch::channel(false);
-        let task = tokio::spawn(run(store, vec![], vec!["ws://127.0.0.1:1".to_string()], caught_up));
+        let task = tokio::spawn(run(
+            store,
+            vec![],
+            vec![],
+            vec!["ws://127.0.0.1:1".to_string()],
+            caught_up,
+        ));
         tokio::time::timeout(Duration::from_secs(60), caught_up_rx.wait_for(|v| *v))
             .await
             .expect("caught up despite the relay")

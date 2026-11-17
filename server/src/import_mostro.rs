@@ -359,7 +359,9 @@ mod tests {
                 missing: vec![]
             }
         );
-        sync(store.pool(), &lists(), Cursor::default()).await.unwrap();
+        sync(store.pool(), &lists(), &[node.public_key()], Cursor::default())
+            .await
+            .unwrap();
         let pm2 = r#"["Otros"]"#.to_string();
         assert_eq!(
             orders(store.pool()).await,
@@ -382,7 +384,9 @@ mod tests {
         // Importing again changes nothing in `orders`
         let before = orders(store.pool()).await;
         import(store.pool(), &file, &pk, 10000).await.unwrap();
-        sync(store.pool(), &lists(), Cursor::default()).await.unwrap();
+        sync(store.pool(), &lists(), &[node.public_key()], Cursor::default())
+            .await
+            .unwrap();
         assert_eq!(orders(store.pool()).await, before);
         // Never a private column: node_orders has no place for them
         let columns: Vec<String> = sqlx::query_scalar("SELECT name FROM pragma_table_info('node_orders')")
@@ -405,7 +409,9 @@ mod tests {
             .unwrap();
         assert_eq!(imported.success, 2);
         assert_eq!(imported.missing, vec!["price_from_api".to_string()]);
-        sync(store.pool(), &lists(), Cursor::default()).await.unwrap();
+        sync(store.pool(), &lists(), &[node.public_key()], Cursor::default())
+            .await
+            .unwrap();
         // Without price_from_api: market or fixed is unknown
         assert!(orders(store.pool()).await.iter().all(|r| r.5.is_none()));
         let _ = std::fs::remove_file(file);

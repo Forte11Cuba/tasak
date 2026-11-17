@@ -196,7 +196,9 @@ mod tests {
         .execute(store.pool())
         .await
         .unwrap();
-        sync(store.pool(), &lists(), Cursor::default()).await.unwrap();
+        sync(store.pool(), &lists(), &[node.public_key()], Cursor::default())
+            .await
+            .unwrap();
         sqlx::query(
             "UPDATE orders SET btc_usd = 90000, btc_usd_source = 'coinbase', btc_usd_at = 1200 WHERE key LIKE '%:a'",
         )
