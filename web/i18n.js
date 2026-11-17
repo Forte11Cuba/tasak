@@ -244,7 +244,7 @@ const EN = {
   'Plataforma': 'Platform',
   'Plataforma desconocida: {p}': 'Unknown platform: {p}',
   'Elegir nodo Mostro u otra plataforma': 'Choose a Mostro node or another platform',
-  'Otra plataforma P2P, no un nodo Mostro: la {rate} de {p} se calcula en este navegador con sus operaciones firmadas de los relays, por activo y moneda, y este sitio no la firma': "Another P2P platform, not a Mostro node: {p}'s {rate} is computed in this browser from its signed trades on the relays, per asset and currency, and this site doesn't sign it",
+  'Otra plataforma P2P, no un nodo Mostro: la {rate} de {p} se calcula en este navegador con sus operaciones firmadas de los relays, por activo, moneda y método de pago, y este sitio no la firma': "Another P2P platform, not a Mostro node: {p}'s {rate} is computed in this browser from its signed trades on the relays, per asset, currency and payment method, and this site doesn't sign it",
   '1 relay no acepta los eventos de otras plataformas (kind 35353)': "1 relay doesn't accept the events of other platforms (kind 35353)",
   '{n} relays no aceptan los eventos de otras plataformas (kind 35353)': "{n} relays don't accept the events of other platforms (kind 35353)",
   '{n} eventos ignorados por no seguir el formato del NIP': "{n} events ignored because they don't follow the NIP's format",

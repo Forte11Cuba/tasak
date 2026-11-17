@@ -33,8 +33,8 @@ const CONFIG = (() => {
   const siteMostros = hexList(base.mostros || []);
   const relays = list('relays').length ? list('relays') : base.relays || [];
   // Other P2P platforms (kind 35353): those of PLATFORMS (archived by the server) and OTHER_PLATFORMS
-  // (guests), each with its name in .env and its pubkeys; the methods each one hides by default, as it
-  // publishes them (PLATFORM_HIDDEN_PAYMENT_METHODS; without them, only the test orders)
+  // (guests), each with its name in .env and its pubkeys; the methods never chosen by default on each one,
+  // as it publishes them (PLATFORM_HIDDEN_PAYMENT_METHODS; the test orders always)
   const platforms = [[base.platforms, true], [base.otherPlatforms, false]].flatMap(([ps, archived]) =>
     (ps || []).filter(p => /^[a-z0-9][a-z0-9.-]*$/i.test(p?.name || ''))
       .map(p => ({ name: p.name, keys: hexList(p.pubkeys || []), archived })))

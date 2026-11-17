@@ -140,9 +140,10 @@ export function fetchProfiles({ urls, authors, verify, ms = 8000 }) {
 // Connection to the relays for a P2P platform (kind 35353): the whole history they keep of its trades,
 // available orders and deletions, as with the nodes, and then what is new, live; its profile (kind 0)
 // once. Each kind is paged backwards with `until` until a page comes back empty, at most PAGE events per
-// query and with a pause between pages, since relays cut off clients that ask too fast. A relay that refuses the kind (CLOSED, e.g. «kind not allowed») is `refused`, not down:
-// it isn't retried and doesn't count. Only events of `author`, of those kinds and with a valid signature
-// are handed over (onEvent(ev, live)).
+// query and with a pause between pages, since relays cut off clients that ask too fast. A relay that
+// refuses the kind (CLOSED, e.g. «kind not allowed») is `refused`, not down: it isn't retried and doesn't
+// count. Only events of `author`, of those kinds and with a valid signature are handed over
+// (onEvent(ev, live)).
 const PAGE_PAUSE = 1000;
 export function createPlatformPool({ urls, author, verify, onEvent, onUpdate, onStatus }) {
   const pool = {
@@ -179,12 +180,14 @@ export function createPlatformPool({ urls, author, verify, onEvent, onUpdate, on
     let step = 0, page = 0, count = 0, oldest = Infinity, prevOldest = Infinity, until = null;
     let isLive = false, refused = false, changed = false;
     const startedAt = Math.floor(Date.now() / 1000);
-    // On reconnecting, only what is newer than what came
+    // On reconnecting, only what is newer than what came, and every new version of the orders, not only
+    // the pending ones: an order taken or canceled meanwhile must leave the book
     const since = newest ? { since: newest - 3600 } : {};
+    const steps = newest ? [{ kinds: [35353], '#z': ['order'] }, ...HISTORY.slice(1)] : HISTORY;
     const sub = () => `h${step}-${page}`;
     const ask = () => {
       count = 0; oldest = Infinity;
-      ws.send(JSON.stringify(['REQ', sub(), { ...HISTORY[step], authors: [author], ...since, limit: PAGE, ...(until ? { until } : {}) }]));
+      ws.send(JSON.stringify(['REQ', sub(), { ...steps[step], authors: [author], ...since, limit: PAGE, ...(until ? { until } : {}) }]));
     };
     ws.onopen = () => {
       paging.set(url, 0);
@@ -210,7 +213,7 @@ export function createPlatformPool({ urls, author, verify, onEvent, onUpdate, on
         // The next page, until one comes back empty (or doesn't go further back)
         if (count > 0 && oldest < prevOldest) { prevOldest = oldest; until = oldest - 1; page++; }
         else { step++; page = 0; until = null; prevOldest = Infinity; }
-        if (step < HISTORY.length) { setTimeout(() => ws.readyState === 1 && ask(), PAGE_PAUSE); return; }
+        if (step < steps.length) { setTimeout(() => ws.readyState === 1 && ask(), PAGE_PAUSE); return; }
         goLive();
       } else if (d[0] === 'CLOSED' && d[1] !== 'meta') {
         // Too many queries: the same one again, later

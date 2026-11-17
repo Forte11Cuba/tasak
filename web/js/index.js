@@ -200,7 +200,7 @@ document.getElementById('fiat').onchange = e => {
   state.pmKnown = null;
   scheduleRender();
 };
-// A platform's asset, instead of the unit; and whether the trades of its own orders count
+// A platform's asset, instead of the unit
 document.getElementById('asset').onchange = e => {
   state.asset = e.target.value;
   state.assetAuto = false;
@@ -302,7 +302,7 @@ if (P) {
   document.getElementById('nodeLabel').textContent = t('Plataforma');
   const label = document.getElementById('rateLabel');
   label.classList.add('guest');
-  label.title = t('Otra plataforma P2P, no un nodo Mostro: la {rate} de {p} se calcula en este navegador con sus operaciones firmadas de los relays, por activo y moneda, y este sitio no la firma', { rate: CONFIG.rateName, p: P.name });
+  label.title = t('Otra plataforma P2P, no un nodo Mostro: la {rate} de {p} se calcula en este navegador con sus operaciones firmadas de los relays, por activo, moneda y método de pago, y este sitio no la firma', { rate: CONFIG.rateName, p: P.name });
 } else if (CONFIG.urlNodes) {
   // Another node than the site's: its rate isn't the site's (other methods, not signed), on hover
   const label = document.getElementById('rateLabel');
