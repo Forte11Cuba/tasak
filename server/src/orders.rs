@@ -3,8 +3,11 @@
 //! node's database (`node_orders`, unsigned). The signed event wins; the database adds what the relays
 //! didn't keep (the take time, market or fixed price) and the orders that are no longer on any relay.
 //! Each run looks only at the orders with something new in either source since the previous one.
+//! Only the nodes' orders: the archive also keeps the kind 38383 of other platforms (PLATFORMS), which
+//! are not part of the Tasa K.
 
 use crate::prices::{Asked, Candles, price_orders};
+use nostr_sdk::prelude::PublicKey;
 use sqlx::SqlitePool;
 use std::collections::BTreeSet;
 use std::time::Duration;
@@ -21,6 +24,7 @@ use tracing::{info, warn};
 pub async fn run(
     pool: SqlitePool,
     lists: PmLists,
+    nodes: Vec<PublicKey>,
     candles: impl Candles,
     mut caught_up: watch::Receiver<bool>,
     synced: watch::Sender<bool>,
@@ -30,7 +34,7 @@ pub async fn run(
     loop {
         // Before this run: if the archive had caught up, this run has what it brought
         let archived = *caught_up.borrow_and_update();
-        match sync(&pool, &lists, cursor).await {
+        match sync(&pool, &lists, &nodes, cursor).await {
             Ok((synced, next)) => {
                 if first || synced.completed > 0 {
                     info!("orders: {} completed orders updated", synced.completed);
@@ -98,9 +102,17 @@ pub struct NodeOrder {
     pub invoice_held_at: Option<i64>,
 }
 
-/// Updates `orders` with the orders that have something new after `after` in either source. Returns
-/// what changed and where to start next time
-pub async fn sync(pool: &SqlitePool, lists: &PmLists, after: Cursor) -> Result<(Synced, Cursor), sqlx::Error> {
+/// Updates `orders` with the orders of `nodes` that have something new after `after` in either source.
+/// Returns what changed and where to start next time
+pub async fn sync(
+    pool: &SqlitePool,
+    lists: &PmLists,
+    nodes: &[PublicKey],
+    after: Cursor,
+) -> Result<(Synced, Cursor), sqlx::Error> {
+    // Bound as a JSON array: `pubkey IN (SELECT value FROM json_each(?))`
+    let nodes = serde_json::to_string(&nodes.iter().map(|n| n.to_hex()).collect::<Vec<_>>())
+        .expect("a list of strings is always serializable");
     let next = Cursor {
         events: sqlx::query_scalar("SELECT coalesce(max(rowid), 0) FROM events")
             .fetch_one(pool)
@@ -112,10 +124,12 @@ pub async fn sync(pool: &SqlitePool, lists: &PmLists, after: Cursor) -> Result<(
     let mut keys: BTreeSet<(String, String)> = BTreeSet::new();
     keys.extend(
         sqlx::query_as::<_, (String, String)>(
-            "SELECT DISTINCT pubkey, d FROM events WHERE kind = 38383 AND d IS NOT NULL AND rowid > ? AND rowid <= ?",
+            "SELECT DISTINCT pubkey, d FROM events WHERE kind = 38383 AND d IS NOT NULL AND rowid > ? AND rowid <= ? \
+             AND pubkey IN (SELECT value FROM json_each(?))",
         )
         .bind(after.events)
         .bind(next.events)
+        .bind(&nodes)
         .fetch_all(pool)
         .await?,
     );
@@ -281,7 +295,8 @@ async fn write(pool: &SqlitePool, o: &Order, signed: bool) -> Result<(), sqlx::E
 #[cfg(test)]
 pub mod tests {
     use super::*;
-    use crate::store::tests::memory_store;
+    use crate::store::Stored;
+    use crate::store::tests::{memory_store, platforms_store};
     use nostr_sdk::prelude::*;
 
     /// A version of an order with the tags Mostro publishes
@@ -343,7 +358,9 @@ pub mod tests {
         for ev in &events {
             store.store("wss://a", ev, 1).await.unwrap();
         }
-        let (synced, last) = sync(store.pool(), &lists(), Cursor::default()).await.unwrap();
+        let (synced, last) = sync(store.pool(), &lists(), &[node.public_key()], Cursor::default())
+            .await
+            .unwrap();
         assert_eq!(
             synced,
             Synced {
@@ -362,8 +379,27 @@ pub mod tests {
             ]
         );
         // Nothing new: nothing looked at
-        let (again, _) = sync(store.pool(), &lists(), last).await.unwrap();
+        let (again, _) = sync(store.pool(), &lists(), &[node.public_key()], last).await.unwrap();
         assert_eq!(again, Synced::default());
+    }
+
+    #[tokio::test]
+    async fn a_platforms_completed_orders_are_not_part_of_orders() {
+        let node = Keys::generate();
+        let platform = Keys::generate();
+        let store = platforms_store(&[node.public_key()], &[platform.public_key()]).await;
+        for ev in [
+            version(&node, "a", "success", 1200, "5000", "3"),
+            version(&platform, "b", "success", 1300, "6000", "0"),
+        ] {
+            assert_eq!(store.store("wss://a", &ev, 1).await.unwrap(), Stored::New);
+        }
+        let (synced, _) = sync(store.pool(), &lists(), &[node.public_key()], Cursor::default())
+            .await
+            .unwrap();
+        assert_eq!(synced.completed, 1);
+        let keys: Vec<String> = rows(store.pool()).await.into_iter().map(|r| r.0).collect();
+        assert_eq!(keys, [format!("{}:a", node.public_key().to_hex())]);
     }
 
     #[tokio::test]
@@ -374,7 +410,9 @@ pub mod tests {
             .store("wss://a", &version(&node, "a", "success", 1200, "5000", "3"), 1)
             .await
             .unwrap();
-        let (_, last) = sync(store.pool(), &lists(), Cursor::default()).await.unwrap();
+        let (_, last) = sync(store.pool(), &lists(), &[node.public_key()], Cursor::default())
+            .await
+            .unwrap();
         sqlx::query("UPDATE orders SET btc_usd = 100000, btc_usd_source = 'coinbase', btc_usd_at = 1200")
             .execute(store.pool())
             .await
@@ -384,7 +422,7 @@ pub mod tests {
             .store("wss://b", &version(&node, "a", "success", 1200, "5000", "3"), 2)
             .await
             .unwrap();
-        let (_, last) = sync(store.pool(), &lists(), last).await.unwrap();
+        let (_, last) = sync(store.pool(), &lists(), &[node.public_key()], last).await.unwrap();
         let price = || async {
             sqlx::query_scalar::<_, Option<f64>>("SELECT btc_usd FROM orders")
                 .fetch_one(store.pool())
@@ -397,7 +435,7 @@ pub mod tests {
             .store("wss://a", &version(&node, "a", "in-progress", 1100, "5000", "3"), 3)
             .await
             .unwrap();
-        sync(store.pool(), &lists(), last).await.unwrap();
+        sync(store.pool(), &lists(), &[node.public_key()], last).await.unwrap();
         assert_eq!(price().await, None);
         assert_eq!(rows(store.pool()).await[0].3, 1100);
     }
@@ -416,7 +454,14 @@ pub mod tests {
         let store = memory_store(&[node.public_key()]).await;
         let (caught_up, caught_up_rx) = watch::channel(false);
         let (synced, mut synced_rx) = watch::channel(false);
-        let task = tokio::spawn(run(store.pool().clone(), lists(), NoCandles, caught_up_rx, synced));
+        let task = tokio::spawn(run(
+            store.pool().clone(),
+            lists(),
+            vec![node.public_key()],
+            NoCandles,
+            caught_up_rx,
+            synced,
+        ));
         // Its first run, with the archive still empty: not synced
         tokio::time::sleep(Duration::from_millis(500)).await;
         assert!(!*synced_rx.borrow());

@@ -18,6 +18,10 @@ pub const RATES: u16 = 30078;
 pub const RATES_D: &str = "mostro-rates";
 /// The node's profile (0), relays (10002) and information (38385), republished every 1–5 min
 pub const META: [u16; 3] = [0, 10002, 38385];
+/// Orders and trades of assets other than bitcoin (NIP-XX, nostr-protocol/nips#2541): every version
+pub const ASSETS: u16 = 35353;
+/// Deletion requests (NIP-09): a platform withdraws a trade of kind 35353 with one, tagged k = 35353
+pub const DELETION: u16 = 5;
 
 /// File name of the database inside ARCHIVE_DIR
 pub const FILE: &str = "tasak.sqlite";
@@ -49,7 +53,7 @@ pub enum Stored {
     Known,
     /// Node metadata with the same content as the last one stored (the node republishes it)
     Unchanged,
-    /// Not from a configured node, a kind that isn't archived, or an invalid id or signature
+    /// Not from a configured node or platform, a kind that isn't archived, or an invalid id or signature
     Rejected,
 }
 
@@ -59,13 +63,19 @@ type MetaKey = (u16, String, String);
 pub struct Store {
     pool: SqlitePool,
     nodes: HashSet<PublicKey>,
+    /// Other P2P platforms (PLATFORMS): only their orders and trades, never part of the Tasa K
+    platforms: HashSet<PublicKey>,
     /// One write at a time, so «already stored?» and the insert don't race between the live
     /// subscription and a catch-up; it also guards the fingerprint of the last metadata of each node
     last_meta: Mutex<HashMap<MetaKey, String>>,
 }
 
 impl Store {
-    pub async fn new(pool: SqlitePool, nodes: impl IntoIterator<Item = PublicKey>) -> Result<Self, sqlx::Error> {
+    pub async fn new(
+        pool: SqlitePool,
+        nodes: impl IntoIterator<Item = PublicKey>,
+        platforms: impl IntoIterator<Item = PublicKey>,
+    ) -> Result<Self, sqlx::Error> {
         // The last metadata stored for each node and kind (rowid = insertion order)
         let rows: Vec<String> = sqlx::query_scalar(
             "SELECT json FROM events WHERE rowid IN \
@@ -81,6 +91,7 @@ impl Store {
         Ok(Self {
             pool,
             nodes: nodes.into_iter().collect(),
+            platforms: platforms.into_iter().collect(),
             last_meta: Mutex::new(last_meta),
         })
     }
@@ -89,14 +100,24 @@ impl Store {
         &self.pool
     }
 
-    /// Whether the event is something the archive keeps: from a configured node and of an archived kind
+    /// Whether the event is something the archive keeps: from a configured node or platform and of a
+    /// kind archived for it
     pub fn accepts(&self, ev: &Event) -> bool {
-        self.nodes.contains(&ev.pubkey)
-            && match ev.kind.as_u16() {
+        if self.nodes.contains(&ev.pubkey) {
+            match ev.kind.as_u16() {
                 ORDERS => true,
                 RATES => ev.tags.identifier().as_deref() == Some(RATES_D),
                 k => META.contains(&k),
             }
+        } else if self.platforms.contains(&ev.pubkey) {
+            match ev.kind.as_u16() {
+                ORDERS | ASSETS => true,
+                DELETION => ev.tags.iter().any(|t| t.as_slice() == ["k", "35353"]),
+                _ => false,
+            }
+        } else {
+            false
+        }
     }
 
     /// Stores `ev` as sent by `relay` at `received` (unix seconds)
@@ -152,12 +173,20 @@ impl Store {
         Ok(stored)
     }
 
-    /// The last time `relay` sent an event (unix seconds), to resume from there after a restart
-    pub async fn last_received(&self, relay: &str) -> Result<Option<i64>, sqlx::Error> {
-        sqlx::query_scalar("SELECT max(received) FROM event_relays WHERE relay = ?")
-            .bind(relay)
-            .fetch_one(&self.pool)
-            .await
+    /// The last time `relay` sent an event of one of `authors` (unix seconds), to resume from there after
+    /// a restart. By authors: a platform added to an archive that already has the nodes' recent events
+    /// still gets its whole history
+    pub async fn last_received(&self, relay: &str, authors: &[PublicKey]) -> Result<Option<i64>, sqlx::Error> {
+        let authors = serde_json::to_string(&authors.iter().map(|a| a.to_hex()).collect::<Vec<_>>())
+            .expect("a list of strings is always serializable");
+        sqlx::query_scalar(
+            "SELECT max(r.received) FROM event_relays r JOIN events e ON e.id = r.id \
+             WHERE r.relay = ? AND e.pubkey IN (SELECT value FROM json_each(?))",
+        )
+        .bind(relay)
+        .bind(authors)
+        .fetch_one(&self.pool)
+        .await
     }
 
     /// Stores one Yadio response (`data`, JSON) as downloaded from `url`
@@ -199,6 +228,11 @@ pub mod tests {
 
     /// An in-memory archive (one connection: each connection would be another empty database)
     pub async fn memory_store(nodes: &[PublicKey]) -> Store {
+        platforms_store(nodes, &[]).await
+    }
+
+    /// The same, with platforms
+    pub async fn platforms_store(nodes: &[PublicKey], platforms: &[PublicKey]) -> Store {
         let options = SqliteConnectOptions::new().in_memory(true).foreign_keys(true);
         let pool = SqlitePoolOptions::new()
             .max_connections(1)
@@ -209,7 +243,9 @@ pub mod tests {
             .await
             .unwrap();
         MIGRATOR.run(&pool).await.unwrap();
-        Store::new(pool, nodes.iter().copied()).await.unwrap()
+        Store::new(pool, nodes.iter().copied(), platforms.iter().copied())
+            .await
+            .unwrap()
     }
 
     pub fn order(keys: &Keys, d: &str, status: &str, at: u64) -> Event {
@@ -255,8 +291,17 @@ pub mod tests {
         assert_eq!(count(&store, "SELECT count(*) FROM events").await, 1);
         assert_eq!(count(&store, "SELECT count(*) FROM event_relays").await, 2);
         assert_eq!(count(&store, "SELECT received FROM events").await, 2000);
-        assert_eq!(store.last_received("wss://a").await.unwrap(), Some(2000));
-        assert_eq!(store.last_received("wss://c").await.unwrap(), None);
+        let me = [node.public_key()];
+        assert_eq!(store.last_received("wss://a", &me).await.unwrap(), Some(2000));
+        assert_eq!(store.last_received("wss://c", &me).await.unwrap(), None);
+        // Another author's events don't count
+        assert_eq!(
+            store
+                .last_received("wss://a", &[Keys::generate().public_key()])
+                .await
+                .unwrap(),
+            None
+        );
         // The stored JSON is the signed event: it verifies again
         let json: String = sqlx::query_scalar("SELECT json FROM events")
             .fetch_one(store.pool())
@@ -316,7 +361,66 @@ pub mod tests {
         let mut resent = good.clone();
         resent.sig = order(&other, "o3", "success", 1000).sig;
         assert_eq!(store.store("wss://forger", &resent, 2).await.unwrap(), Stored::Rejected);
-        assert_eq!(store.last_received("wss://forger").await.unwrap(), None);
+        assert_eq!(
+            store.last_received("wss://forger", &[node.public_key()]).await.unwrap(),
+            None
+        );
+    }
+
+    /// An order or trade of NIP-XX (kind 35353)
+    pub fn asset(keys: &Keys, d: &str, z: &str, at: u64) -> Event {
+        EventBuilder::new(Kind::from_u16(ASSETS), "")
+            .tags([
+                Tag::identifier(d),
+                Tag::parse(["c", "usdt"]).unwrap(),
+                Tag::parse(["f", "USD"]).unwrap(),
+                Tag::parse(["z", z]).unwrap(),
+            ])
+            .custom_created_at(Timestamp::from_secs(at))
+            .finalize(keys)
+            .unwrap()
+    }
+
+    fn deletion(keys: &Keys, k: &str, at: u64) -> Event {
+        EventBuilder::new(Kind::from_u16(DELETION), "")
+            .tags([
+                Tag::parse(["a", &format!("{k}:{}:t1", keys.public_key().to_hex())]).unwrap(),
+                Tag::parse(["k", k]).unwrap(),
+            ])
+            .custom_created_at(Timestamp::from_secs(at))
+            .finalize(keys)
+            .unwrap()
+    }
+
+    #[tokio::test]
+    async fn keeps_only_the_orders_trades_and_their_deletions_of_a_platform() {
+        let node = Keys::generate();
+        let platform = Keys::generate();
+        let store = platforms_store(&[node.public_key()], &[platform.public_key()]).await;
+        let offer = |ev: Event| {
+            let store = &store;
+            async move { store.store("wss://a", &ev, 1).await.unwrap() }
+        };
+        for ev in [
+            asset(&platform, "o1", "order", 1000),
+            asset(&platform, "t1", "trade", 1000),
+            order(&platform, "b1", "success", 1000),
+            deletion(&platform, "35353", 1100),
+        ] {
+            assert_eq!(offer(ev).await, Stored::New);
+        }
+        // Not a node: no prices, metadata or other deletions
+        for ev in [
+            rates(&platform, RATES_D, 1000),
+            relays_info(&platform, &["wss://a"], 1000),
+            deletion(&platform, "1", 1100),
+            EventBuilder::new(Kind::TextNote, "hola").finalize(&platform).unwrap(),
+        ] {
+            assert_eq!(offer(ev).await, Stored::Rejected);
+        }
+        // A node's kind 35353 is not archived: it is not one of the platforms
+        assert_eq!(offer(asset(&node, "o2", "order", 1000)).await, Stored::Rejected);
+        assert_eq!(count(&store, "SELECT count(*) FROM events").await, 4);
     }
 
     #[tokio::test]
@@ -331,7 +435,7 @@ pub mod tests {
         let changed = relays_info(&node, &["wss://a"], 1120);
         assert_eq!(store.store("wss://a", &changed, 3).await.unwrap(), Stored::New);
         // After a restart the last fingerprint comes from the database
-        let reopened = Store::new(store.pool().clone(), [node.public_key()]).await.unwrap();
+        let reopened = Store::new(store.pool().clone(), [node.public_key()], []).await.unwrap();
         let same = relays_info(&node, &["wss://a"], 1180);
         assert_eq!(reopened.store("wss://a", &same, 4).await.unwrap(), Stored::Unchanged);
         assert_eq!(count(&reopened, "SELECT count(*) FROM events").await, 2);

@@ -271,6 +271,8 @@ OTHER_MOSTRO_PUBKEYS="
 | `LANGUAGE` | Default language, `es` or `en` (empty = the browser language). Visitors can switch it with ES · EN |
 | `MOSTRO_PUBKEYS` | Nodes to show, in hex or npub, comma separated (required): the site's, archived and part of its Tasa K |
 | `OTHER_MOSTRO_PUBKEYS` | Other nodes visitors can pick in the node selector, in this order, hex or npub (optional): read live from the relays, not archived nor part of the site's Tasa K. The example has the Mostro app's other trusted nodes |
+| `PLATFORMS` | Other P2P platforms whose orders and trades the server archives (optional): one per line, a name you choose and its keys, `name: npub1…, npub1…`. It archives their kind 38383 (bitcoin, NIP-69) and 35353 (other assets, proposed in [nostr-protocol/nips#2541](https://github.com/nostr-protocol/nips/pull/2541)) events and the deletions of those trades; they are not part of the Tasa K, and the site doesn't show them yet |
+| `OTHER_PLATFORMS` | Other P2P platforms read live from the relays, like `OTHER_MOSTRO_PUBKEYS` (optional): same format as `PLATFORMS`, not archived. A name or a key only once in both lists. The site doesn't show them yet |
 | `RELAYS` | Relays to connect to, comma separated (required; `wss://`) |
 | `FIAT` | Currency shown on load (empty = the most traded one on the node) |
 | `TIMEZONE` | Time zone for dates and candles, e.g. `America/Caracas` (empty = the browser's) |
@@ -435,6 +437,11 @@ publishes, verified (signature, author and kind), in a SQLite database, `data/ta
 It must run all the time: whatever happens while it is off is lost, except the latest version of each
 order. Each relay has a live subscription and, every 5 minutes, a catch-up of its recent history that
 covers disconnections. Around 1 MB per day. `ARCHIVE=false` serves the site without archiving.
+
+With `PLATFORMS` it also stores in `events` every version of the other platforms' orders and trades
+(kinds 38383 and 35353) and the deletion requests of their trades. They never enter `orders` nor the Tasa
+K. Nodes and platforms each have their own subscription and catch-up: a relay that refuses kind 35353
+still sends the nodes' events, and a platform added later gets the whole history the relays still have.
 
 To run it as a service that starts by itself, see `server/tasak.service`. The daily files of the old
 JavaScript archiver (`{"relay", "recibido", "evento"}` lines) can be imported; importing twice changes

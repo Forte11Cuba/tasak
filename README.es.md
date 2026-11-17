@@ -274,6 +274,8 @@ OTHER_MOSTRO_PUBKEYS="
 | `LANGUAGE` | Idioma por defecto, `es` o `en` (vacío = el del navegador). Cada visitante puede cambiarlo con ES · EN |
 | `MOSTRO_PUBKEYS` | Nodos a visualizar, en hex o npub, separados por coma (obligatorio): los del sitio, archivados y parte de su Tasa K |
 | `OTHER_MOSTRO_PUBKEYS` | Otros nodos que los visitantes pueden elegir en el selector de nodos, en este orden, en hex o npub (opcional): se leen en vivo de los relays, sin archivarlos ni contarlos en la Tasa K del sitio. El ejemplo trae los demás nodos de confianza de la app de Mostro |
+| `PLATFORMS` | Otras plataformas P2P cuyas órdenes y operaciones archiva el servidor (opcional): una por línea, un nombre que eliges y sus claves, `nombre: npub1…, npub1…`. Archiva sus eventos kind 38383 (bitcoin, NIP-69) y 35353 (otros activos, propuesto en [nostr-protocol/nips#2541](https://github.com/nostr-protocol/nips/pull/2541)) y las peticiones de borrado de esas operaciones; no cuentan en la Tasa K y el sitio aún no los muestra |
+| `OTHER_PLATFORMS` | Otras plataformas P2P que se leen en vivo de los relays, como `OTHER_MOSTRO_PUBKEYS` (opcional): mismo formato que `PLATFORMS`, sin archivarlas. Cada nombre y cada clave, una sola vez entre las dos listas. El sitio aún no las muestra |
 | `RELAYS` | Relays a los que conectarse, separados por coma (obligatorio; `wss://`) |
 | `FIAT` | Moneda que se muestra al abrir (vacío = la más usada en el nodo) |
 | `TIMEZONE` | Zona horaria de fechas y velas, p. ej. `America/Caracas` (vacío = la del navegador) |
@@ -441,6 +443,12 @@ Debe estar siempre encendido: lo que pase mientras está apagado se pierde, salv
 cada orden. Cada relay tiene una suscripción en vivo y, cada 5 minutos, una puesta al día de su historial
 reciente que cubre las desconexiones. Ocupa alrededor de 1 MB al día. `ARCHIVE=false` sirve el sitio
 sin archivar.
+
+Con `PLATFORMS` guarda también en `events` todas las versiones de las órdenes y operaciones de las otras
+plataformas (kinds 38383 y 35353) y las peticiones de borrado de esas operaciones. Nunca entran en
+`orders` ni en la Tasa K. Los nodos y las plataformas tienen cada uno su suscripción y su puesta al día:
+un relay que rechaza el kind 35353 sigue enviando los eventos de los nodos, y una plataforma añadida más
+tarde recibe todo el historial que aún tengan los relays.
 
 Para que arranque solo como servicio, ver `server/tasak.service`. Los archivos diarios del antiguo
 archivador en JavaScript (líneas `{"relay", "recibido", "evento"}`) se pueden importar; importarlos dos

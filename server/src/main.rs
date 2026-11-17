@@ -1,4 +1,5 @@
-//! tasak: reads .env, generates web/config.js, serves web/ and archives the nodes' events in SQLite.
+//! tasak: reads .env, generates web/config.js, serves web/ and archives the events of the nodes and
+//! platforms in SQLite.
 //! Later it will also compute and publish the Tasa K (see the README).
 
 mod archive;
@@ -27,7 +28,8 @@ const USAGE: &str = "\
 Usage: tasak [build | import-jsonl FILE... | import-mostro FILE [NODE] | keygen FILE] [--root DIR]
 
   tasak                     generates web/config.js from .env, copies shared/ into web/shared/, serves
-                            web/ and archives the nodes' events in ARCHIVE_DIR/tasak.sqlite
+                            web/ and archives the events of the nodes and platforms in
+                            ARCHIVE_DIR/tasak.sqlite
   tasak build               only generates web/config.js and web/shared/ (to publish web/ with any
                             static server)
   tasak import-jsonl FILE…  imports the daily .jsonl files of the old JavaScript archiver
@@ -201,6 +203,32 @@ fn main() -> ExitCode {
             errors.push(format!("invalid pubkey: {k} ({e})"));
         }
     }
+    // The platforms' keys: each one only once in both lists and never a node of MOSTRO_PUBKEYS. Only those
+    // of PLATFORMS are archived; the guests' are checked like the guest nodes', for the browser
+    let mut platforms: Vec<PublicKey> = Vec::new();
+    let mut guests: Vec<PublicKey> = Vec::new();
+    let lists = [
+        ("PLATFORMS", &config.platforms),
+        ("OTHER_PLATFORMS", &config.other_platforms),
+    ];
+    for (var, list) in lists {
+        for p in list {
+            for k in &p.pubkeys {
+                match PublicKey::parse(k) {
+                    Ok(pk) if nodes.contains(&pk) => {
+                        errors.push(format!("{var}: {k} ({}) is a node of MOSTRO_PUBKEYS", p.name))
+                    }
+                    Ok(pk) if platforms.contains(&pk) || guests.contains(&pk) => {
+                        errors.push(format!("{var}: {k} is listed twice"))
+                    }
+                    Ok(pk) if var == "PLATFORMS" => platforms.push(pk),
+                    Ok(pk) => guests.push(pk),
+                    Err(_) if errors.iter().any(|e| e.contains(k.as_str())) => {}
+                    Err(e) => errors.push(format!("invalid pubkey: {k} ({e})")),
+                }
+            }
+        }
+    }
     if !errors.is_empty() {
         eprintln!("Configuration error:\n  {}", errors.join("\n  "));
         return ExitCode::FAILURE;
@@ -252,7 +280,7 @@ fn main() -> ExitCode {
             fs::create_dir_all(&archive_dir).map_err(|e| format!("cannot create {}: {e}", archive_dir.display()))?;
             let path = archive_dir.join(store::FILE);
             let pool = store::open(&path).await.map_err(|e| format!("cannot open {}: {e}", path.display()))?;
-            let store = store::Store::new(pool, nodes.iter().copied())
+            let store = store::Store::new(pool, nodes.iter().copied(), platforms.iter().copied())
                 .await
                 .map_err(|e| format!("cannot read {}: {e}", path.display()))?;
             Ok::<_, String>((Arc::new(store), path))
@@ -330,7 +358,7 @@ fn main() -> ExitCode {
                     error!("cannot read web/vendor/mostro-payment-methods.js");
                     return ExitCode::FAILURE;
                 };
-                match orders::sync(store.pool(), &lists, orders::Cursor::default()).await {
+                match orders::sync(store.pool(), &lists, &nodes, orders::Cursor::default()).await {
                     Ok((synced, _)) => info!("orders: {} completed orders", synced.completed),
                     Err(e) => {
                         error!("orders: {e}");
@@ -388,6 +416,7 @@ fn main() -> ExitCode {
                             tasks.push(tokio::spawn(orders::run(
                                 store.pool().clone(),
                                 lists,
+                                nodes.clone(),
                                 coinbase,
                                 caught_up_rx,
                                 synced,
@@ -401,7 +430,13 @@ fn main() -> ExitCode {
                                 synced_rx,
                                 publish::FIRST_WAIT,
                             )));
-                            tasks.push(tokio::spawn(archive::run(store, nodes, config.relays.clone(), caught_up)));
+                            tasks.push(tokio::spawn(archive::run(
+                                store,
+                                nodes,
+                                platforms,
+                                config.relays.clone(),
+                                caught_up,
+                            )));
                         }
                         Err(e) => {
                             error!("{e} (ARCHIVE=false serves without archiving)");
