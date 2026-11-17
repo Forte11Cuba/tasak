@@ -128,8 +128,9 @@ const toLogical = x => (x - depth.curve.points[0].x) / depth.curve.step;
 const fromLogical = l => depth.curve.points[0].x + l * depth.curve.step;
 
 // The view opens at depth.curve.view (±20 % around the rate); once the visitor moves or zooms it, it
-// stays (in prices: the grid changes with the book) until the filters change. Double click: back
-let fit = { key: null, moved: false };
+// stays (in prices, `prices`: the grid changes with the book, and may be empty for a while) until the
+// filters change. Double click: back
+let fit = { key: null, moved: false, prices: null };
 const fitView = () => {
   const v = depth.curve?.view;
   if (v) chart.timeScale().setVisibleLogicalRange({ from: toLogical(v.from), to: toLogical(v.to) });
@@ -138,8 +139,8 @@ const fitView = () => {
 export function renderDepth(tasa, book) {
   const curve = depthCurve(book, { center: tasa });
   // The visitor's view in prices, before the grid changes
-  const old = depth.curve?.points.length ? chart.timeScale().getVisibleLogicalRange() : null;
-  const oldPrices = old && { from: fromLogical(old.from), to: fromLogical(old.to) };
+  const old = fit.moved && depth.curve?.points.length ? chart.timeScale().getVisibleLogicalRange() : null;
+  if (old) fit.prices = { from: fromLogical(old.from), to: fromLogical(old.to) };
   depth = { curve, byX: new Map(curve.points.map(p => [p.x, p])) };
   priceAxis.unit = curve.step ? 10 ** Math.floor(Math.log10(curve.step) + 1e-9) : 1;
 
@@ -157,10 +158,10 @@ export function renderDepth(tasa, book) {
   rateLine.requestUpdate?.();
 
   const key = [state.fiat, state.unit, state.asset, [...state.nodeSel], [...(state.pmSel || [])].sort()].join('|');
-  if (key !== fit.key) fit = { key, moved: false };
+  if (key !== fit.key) fit = { key, moved: false, prices: null };
   if (curve.points.length) {
     if (!fit.moved) fitView();
-    else if (oldPrices) chart.timeScale().setVisibleLogicalRange({ from: toLogical(oldPrices.from), to: toLogical(oldPrices.to) });
+    else if (fit.prices) chart.timeScale().setVisibleLogicalRange({ from: toLogical(fit.prices.from), to: toLogical(fit.prices.to) });
   }
   renderLegend();
 }
@@ -217,13 +218,18 @@ chart.subscribeCrosshairMove(p => renderLegend(p.time));
 el.addEventListener('mouseleave', () => renderLegend());
 
 // A click opens the signed event of the order of that step: the outermost one in the amount under the
-// cursor (where both sides overlap, the one hovered, or the buyers')
+// cursor (where both sides overlap, the one hovered, or the buyers'). A moment later: the chart gives
+// the click on the first mouseup, and if it was a double click (back to the initial view, over the
+// steps nearly everywhere) the event's dialog would open first and take the second one
+const DOUBLE_CLICK_MS = 300;
+let pendingClick = null;
 chart.subscribeClick(p => {
   const pt = p.time == null ? null : depth.byX.get(p.time);
   if (!pt) return;
   const s = p.hoveredSeries === asks ? pt.ask ?? pt.bid : pt.bid ?? pt.ask;
   const o = s && (P ? p2p.docs : state.orders).get(s.order.key);
-  if (o) openEvent(o);
+  clearTimeout(pendingClick);
+  if (o) pendingClick = setTimeout(() => openEvent(o), DOUBLE_CLICK_MS);
 });
 
 // Zoom or scroll done by the visitor (wheel, drag, pinch); in the capture phase: the chart library
@@ -232,4 +238,4 @@ const moved = () => { fit.moved = true; };
 el.addEventListener('wheel', moved, { passive: true });
 el.addEventListener('pointermove', e => { if (e.buttons) moved(); }, true);
 el.addEventListener('touchmove', moved, { passive: true });
-el.addEventListener('dblclick', () => { fit.moved = false; fitView(); });
+el.addEventListener('dblclick', () => { clearTimeout(pendingClick); fit.moved = false; fit.prices = null; fitView(); });

@@ -51,7 +51,8 @@ export function depthCurve({ asks, bids }, { center = null } = {}) {
   const prices = [...sa, ...sb].map(o => o.price);
   const from = Math.max(lo, Math.min(c * (1 - WINDOW), ...prices) - c * MARGIN);
   const to = Math.min(hi, Math.max(c * (1 + WINDOW), ...prices) + c * MARGIN);
-  const k0 = Math.ceil(from / size), k1 = Math.floor(to / size);
+  // Rounded outwards: an order near the ends of the scale still falls on a point of the grid
+  const k0 = Math.floor(from / size), k1 = Math.ceil(to / size);
   const points = [];
   for (let k = k0; k <= k1; k++) points.push({ x: gridValue(step, k), bid: null, ask: null });
 

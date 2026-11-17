@@ -88,3 +88,13 @@ test('small units: an exact grid', () => {
   assert.equal(at(c, 0.4015).ask.cum, 100);
   assert.equal(at(c, 0.3985).bid.cum, 100);
 });
+
+test('orders near the ends of the scale fall on the grid (rounded outwards)', () => {
+  // center 1000.3: step 2, scale 500.15–2000.6, whose ends aren't on the grid
+  const c = depthCurve({ asks: [o('a', 2000.5, 5)], bids: [o('b', 500.2, 7)] }, { center: 1000.3 });
+  assert.equal(c.step, 2);
+  assert.equal(c.outside, 0);
+  assert.ok(c.points[0].x <= 500.2 && c.points.at(-1).x >= 2000.5);
+  assert.equal(c.points[0].bid.cum, 7);
+  assert.equal(c.points.at(-1).ask.cum, 5);
+});

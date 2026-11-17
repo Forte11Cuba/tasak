@@ -228,6 +228,10 @@ try {
     await p.waitFor('window.tasak && tasak.state.live === CONFIG.relays.length');
     const r = await p.evaluate(`(${extract})()`);
     const depth = await p.evaluate(`(${depthCheck})()`);
+    if (depth.problems.length) {
+      console.error(`DIFFERENT in «Depth» (${timeZone}):\n  ${depth.problems.join('\n  ')}`);
+      process.exitCode = 1;
+    }
     const page = await p.evaluate(`({ tz: CONFIG.tz, tag: document.getElementById('tzTag').textContent })`);
     // Images of the node's profile are external: failing to load them is expected here
     const errors = p.errors.filter(e => !/ERR_NAME_NOT_RESOLVED|Failed to load resource/.test(e));
@@ -235,12 +239,7 @@ try {
     return { r, page, depth };
   };
   const { r, page, depth } = await run(meta.browserTimeZone);
-  if (depth.problems.length) {
-    console.error(`DIFFERENT in «Depth»:\n  ${depth.problems.join('\n  ')}`);
-    process.exitCode = 1;
-  } else {
-    console.log(`«Depth» adds up the order book:\n  ${depth.seen.join('\n  ')}`);
-  }
+  if (!depth.problems.length) console.log(`«Depth» adds up the order book:\n  ${depth.seen.join('\n  ')}`);
 
   const out = process.argv.indexOf('--screenshot');
   if (out > 0) writeFileSync(process.argv[out + 1], await p.screenshot());
