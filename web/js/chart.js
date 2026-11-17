@@ -2,6 +2,7 @@
 import { WEEK, MONTH, YEAR } from '../shared/time.js';
 import { chartPoints } from '../shared/rate.js';
 import { state, assetTicker } from './state.js';
+import { unitName } from './prices.js';
 import { fmtPrice, fmtPct, fmtAmt } from './format.js';
 import { openEvent } from './event-dialog.js';
 
@@ -108,6 +109,38 @@ new ResizeObserver(() => requestAnimationFrame(positionVolTag)).observe(chartC.e
 
 volEye.onclick = () => { volOn = !volOn; applyVolLayout(); saveVolPref(); };
 
+// What is drawn over the chart, chosen in «View»: the legend (the data of the point) and the pair behind
+// the price, big and translucent (TradingView's watermark). Remembered in this browser
+const viewPref = (() => {
+  try { return { legend: true, pair: true, ...JSON.parse(localStorage.getItem('tasak.chartView')) }; } catch { return { legend: true, pair: true }; }
+})();
+const watermark = LightweightCharts.createTextWatermark(chartC.chart.panes()[0], { horzAlign: 'center', vertAlign: 'center', lines: [] });
+let pairKey = '';
+function renderPair() {
+  const name = state.fiat ? unitName() : '';
+  const size = chartC.el.clientWidth < 600 ? 40 : 72;
+  const key = [name, size, viewPref.pair, C('--watermark')].join('|');
+  if (key === pairKey) return;
+  pairKey = key;
+  watermark.applyOptions({ visible: viewPref.pair, lines: [{ text: name, color: C('--watermark'), fontSize: size, fontStyle: 'bold' }] });
+}
+function applyView() {
+  document.getElementById('legend').hidden = !viewPref.legend;
+  document.querySelectorAll('[data-view]').forEach(b => {
+    b.classList.toggle('on', !!viewPref[b.dataset.view]);
+    b.setAttribute('aria-pressed', String(!!viewPref[b.dataset.view]));
+  });
+  document.getElementById('viewSummary').textContent = `${t('Vista')} ▾`;
+  renderPair();
+}
+document.querySelectorAll('[data-view]').forEach(b => b.addEventListener('click', () => {
+  viewPref[b.dataset.view] = !viewPref[b.dataset.view];
+  try { localStorage.setItem('tasak.chartView', JSON.stringify(viewPref)); } catch {}
+  applyView();
+}));
+applyView();
+new ResizeObserver(() => renderPair()).observe(chartC.el);
+
 // On a theme change the chart takes the new colours (it doesn't use CSS: they must be given); the
 // volume is coloured when drawing, so the caller renders again
 export function applyChartTheme() {
@@ -123,6 +156,7 @@ export function applyChartTheme() {
   chartC.line.applyOptions({ color: C('--accent') });
   chartC.candles.applyOptions({ upColor: C('--up'), downColor: C('--down'), wickUpColor: C('--up'), wickDownColor: C('--down') });
   chartC.avg.applyOptions({ color: C('--avg') });
+  renderPair();
 }
 
 applyVolLayout();
@@ -150,13 +184,41 @@ function fmtWhen(time, tf) {
 const fmtChg = c => c == null ? '' : `<span class="${c >= 0 ? 'up' : 'down'}">${fmtPct(c)}</span>`;
 const kv = (k, v, cls = '') => `<span><span class="k">${k}</span><span class="${cls}">${v}</span></span>`;
 
-// Nostr event of an order, in the legend
-const evRow = o => !o.ev ? '' : o.unsigned
-  ? `<div class="row"><span class="muted">${t('Sin firma: de la base de datos del nodo')}</span></div>`
-  : `<div class="row">${kv(t('Evento'), esc(o.ev.id.slice(0, 8) + '…' + o.ev.id.slice(-8)))}<span class="muted">${t('clic para ver el evento firmado')}</span></div>`;
+// An order's payment methods: the first one and «+N», which shows them all (and «−» hides them again) for
+// every order, until clicked again
+let pmOpen = false;
+const pmHtml = pm => pm.length < 2 ? `<span class="muted">${esc(pm.join(''))}</span>`
+  : pmOpen ? `<span class="muted">${esc(pm.join(', '))}</span><button class="pm-more" type="button" title="${esc(t('Mostrar solo el primero'))}">−</button>`
+  : `<span class="muted">${esc(pm[0])}</span><button class="pm-more" type="button" title="${esc(pm.join(', '))}">+${pm.length - 1}</button>`;
+// The legend lets every gesture through to the chart (drag, wheel, pinch); only «+N» takes clicks. With
+// the mouse over it, it stays on the point it showed (the crosshair would change it on the way to «+N»),
+// and a click there opens that order's signed event
+let legendTime, legendHeld = false;
+const legendEl = document.getElementById('legend');
+legendEl.addEventListener('click', e => {
+  if (!e.target.closest('.pm-more')) return;
+  pmOpen = !pmOpen;
+  renderLegend(legendTime);
+});
+function holdLegend(on) {
+  if (on === legendHeld) return;
+  legendHeld = on;
+  const order = on && view.info.get(legendTime ?? view.last)?.order;
+  chartC.el.classList.toggle('legend-held', !!order);
+  chartC.el.title = order ? t('Ver el evento Nostr de esta orden') : '';
+}
+// In the capture phase, before the chart moves its crosshair; not while dragging, nor with touch (a tap
+// is a tap on the chart)
+chartC.el.addEventListener('pointermove', e => {
+  if (e.pointerType !== 'mouse') return;
+  const r = legendEl.getBoundingClientRect();
+  holdLegend(!e.buttons && !legendEl.hidden && !!legendEl.innerHTML
+    && e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom);
+}, true);
 
 function renderLegend(time) {
-  const el = document.getElementById('legend');
+  legendTime = time;
+  const el = legendEl;
   const tm = time ?? view.last;
   const p = view.info.get(tm);
   if (tm == null) { el.innerHTML = ''; return; }
@@ -168,8 +230,7 @@ function renderLegend(time) {
     el.innerHTML = p.avg == null
       ? `<div class="row">${when}<span class="muted">${t('sin órdenes en las 24h anteriores')}</span></div>`
       : `<div class="row">${when}${kv(t('Ponderado'), fmtPrice(p.avg), cls)}${fmtChg(p.chg)}</div>
-      <div class="row"><span class="muted">${t(p.avgN === 1 ? '{n} orden · {vol} en las 24h anteriores' : '{n} órdenes · {vol} en las 24h anteriores', { n: p.avgN, vol: `${fmtInt(p.avgVol)} ${state.fiat}` })}</span></div>
-      ${p.order ? evRow(p.order) : ''}`;
+      <div class="row"><span class="muted">${t(p.avgN === 1 ? '{n} orden · {vol} en las 24h anteriores' : '{n} órdenes · {vol} en las 24h anteriores', { n: p.avgN, vol: `${fmtInt(p.avgVol)} ${state.fiat}` })}</span></div>`;
   } else if (p.empty) {
     const flat = state.mode === 'candles' ? p.flatClose : p.flatValue;
     el.innerHTML = `<div class="row">${when}<span class="muted">${t('sin órdenes')}</span>${flat == null ? '' : kv(t('Precio'), fmtPrice(flat))}</div>`;
@@ -178,8 +239,7 @@ function renderLegend(time) {
     el.innerHTML = `
       <div class="row">${when}${kv(t('Precio'), fmtPrice(o.price), cls)}${fmtChg(p.chg)}<span class="muted">${CONFIG.platform
         ? t(o.side === 'buy' ? 'compra de {a}' : 'venta de {a}', { a: esc(assetTicker()) }) : t(o.side === 'buy' ? 'compra de BTC' : 'venta de BTC')}</span></div>
-      <div class="row">${kv('Vol', fmtInt(o.size) + ' ' + state.fiat)}${CONFIG.platform ? kv(esc(assetTicker()), fmtAmt(o.amt)) : kv('Sats', fmtInt(o.amt))}<span class="muted">${esc(o.pm.join(', '))}</span></div>
-      ${evRow(o)}`;
+      <div class="row">${kv('Vol', fmtInt(o.size) + ' ' + state.fiat)}${CONFIG.platform ? kv(esc(assetTicker()), fmtAmt(o.amt)) : kv('Sats', fmtInt(o.amt))}${pmHtml(o.pm)}</div>`;
   } else if (state.mode === 'candles') {
     el.innerHTML = `
       <div class="row">${when}${kv(t('A'), fmtPrice(p.open), cls)}${kv(t('Máx'), fmtPrice(p.high), cls)}${kv(t('Mín'), fmtPrice(p.low), cls)}${kv(t('C'), fmtPrice(p.close), cls)}${fmtChg(p.chg)}</div>
@@ -209,6 +269,7 @@ export function renderChart(trades) {
   });
   document.getElementById('tfOrders').hidden = mode === 'candles';
   document.getElementById('tfSummary').textContent = `${t(TF_SHORT[state.tf])} ▾`;
+  renderPair();
 
   // Points: one per period or one per order, each with the weighted price of its previous 24 h. The
   // periods follow the calendar up to now, also those without orders (their previous 24 h may still
@@ -243,7 +304,11 @@ export function renderChart(trades) {
     { time: p.time, value: p.vol, color: C(p.up ? '--up-vol' : '--down-vol') }));
 
   view = { info: new Map(points.map(p => [p.time, p])), last: points.at(-1)?.time ?? null, tf: state.tf };
-  renderLegend();
+  // A held legend keeps its point while it is still on the chart (a click opens what it shows); if it is
+  // gone (another view, timeframe or filter), it is released
+  const held = legendHeld && legendTime != null && view.info.has(legendTime) ? legendTime : undefined;
+  if (legendHeld && legendTime != null && held === undefined) holdLegend(false);
+  renderLegend(held);
   // Fit to all the data unless the visitor has moved or zoomed the chart in this view: otherwise
   // every render (a new order, the refresh every minute) would lose their zoom
   const fitKey = [state.fiat, state.unit, state.asset, mode, state.tf, [...state.nodeSel], [...(state.pmSel || [])].sort()].join('|');
@@ -264,9 +329,12 @@ function fitView() {
 }
 
 // The legend shows the point under the cursor; on leaving, back to the last one
-chartC.chart.subscribeCrosshairMove(p => renderLegend(p.time));
-chartC.chart.subscribeClick(p => { const o = view.info.get(p.time)?.order; if (o) openEvent(o); });
-chartC.el.addEventListener('mouseleave', () => renderLegend());
+chartC.chart.subscribeCrosshairMove(p => { if (!legendHeld) renderLegend(p.time); });
+chartC.chart.subscribeClick(p => {
+  const o = view.info.get(legendHeld ? legendTime ?? view.last : p.time)?.order;
+  if (o) openEvent(o);
+});
+chartC.el.addEventListener('mouseleave', () => { holdLegend(false); renderLegend(); });
 // Zoom or scroll done by the visitor (wheel, drag, pinch)
 let chartFit = { key: null, moved: false };
 const userMoved = () => { chartFit.moved = true; };

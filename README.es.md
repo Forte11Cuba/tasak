@@ -320,7 +320,7 @@ completada:
 Tasa K = Σ(precio × monto) ÷ Σ monto
 ```
 
-Ejemplo (en CUP): 3 órdenes a 785 CUP/USD que suman 3000 CUP y una a 750 de 5000 CUP →
+Ejemplo (en CUP): 3 órdenes a 785 USD/CUP que suman 3000 CUP y una a 750 de 5000 CUP →
 (785×3000 + 750×5000) ÷ 8000 = **763,13**.
 
 Así la Tasa K de la cabecera solo cambia cuando se completa una orden nueva: no se mueve sola con el paso
@@ -331,14 +331,14 @@ más abajo.
 
 ### Qué mide
 
-El precio al que de verdad se cambia la moneda en operaciones con bitcoin. En moneda/USD es una tasa
+El precio al que de verdad se cambia la moneda en operaciones con bitcoin. En USD/moneda es una tasa
 implícita: moneda pagada por cada BTC dividida por el BTC/USD. No es el precio del dólar en efectivo ni en
 transferencias: si comprar o vender bitcoin con la moneda lleva un sobreprecio propio, también está en la
-Tasa K. Moneda/BTC y moneda/sat no pasan por el dólar.
+Tasa K. BTC/moneda y sat/moneda no pasan por el dólar.
 
 Casi todas las órdenes son a precio de mercado: el nodo fija los sats con su precio de referencia y la
 prima de la orden, así que su precio es aproximadamente `referencia ÷ (1 − prima)`. Por eso la Tasa K
-sigue a esa referencia, y lo que se separa de ella («sobre Yadio» en la cabecera) son sobre todo las primas
+sigue a esa referencia, y lo que se separa de ella (el porcentaje bajo la referencia en la cabecera) son sobre todo las primas
 con las que se opera. Las órdenes a precio fijo no dependen de ella.
 
 ### Qué órdenes cuentan
@@ -385,7 +385,11 @@ La gráfica tiene tres modos:
 - **Velas**: apertura, máximo, mínimo y cierre de cada periodo.
 - **Ponderado**: en cada punto, el precio ponderado por volumen de las 24 horas anteriores, `Σ(precio × monto) ÷ Σ monto`. Con un punto por orden, las 24 horas hasta esa orden: la Tasa K tras ella. Por periodo, las 24 horas hasta el cierre del periodo (o hasta ahora, en el actual): ese sí se mueve con el tiempo, y difiere de la Tasa K cuando el periodo cerró sin órdenes.
 
-El volumen va en la parte baja de la gráfica y, al pasar el ratón, la leyenda de arriba muestra los valores de ese punto. La gráfica se puede ampliar y desplazar (el zoom se mantiene aunque lleguen órdenes nuevas; doble clic para volver a verlo todo) y expandir a pantalla completa. El filtro por método de pago es el menú «Método de pago», junto a la moneda: vale para la gráfica, las tablas y el libro de órdenes.
+Los precios se escriben como pares de divisas, base/cotización, como en los mercados: USD/CUP, BTC/CUP o
+sat/CUP (cuántos CUP cuesta un USD, un BTC o un sat) y, en una plataforma, el del activo (QUSD/CUP). La
+cabecera muestra los volúmenes desde un millón en forma compacta (1,74 M CUP), exactos al pasar el ratón.
+
+El volumen va en la parte baja de la gráfica y, al pasar el ratón, la leyenda de arriba muestra los valores de ese punto; un clic en una orden abre su evento firmado, y «+N» muestra todos sus métodos de pago. El menú «Vista» muestra u oculta la leyenda y el par de fondo de la gráfica. La gráfica se puede ampliar y desplazar (el zoom se mantiene aunque lleguen órdenes nuevas; doble clic para volver a verlo todo) y expandir a pantalla completa. El filtro por método de pago es el menú «Método de pago», junto a la moneda: vale para la gráfica, las tablas y el libro de órdenes.
 
 Los métodos de `HIDDEN_PAYMENT_METHODS` quedan fuera por defecto; se pueden activar desde el menú.
 
@@ -420,7 +424,7 @@ Esa página funciona como la de un nodo, con estas diferencias:
 - **El libro de órdenes** muestra solo las disponibles: `pending`, sin `expires_at` ni `expiration`
   vencidos. Una orden con prima no tiene precio (el NIP no publica el precio de mercado de la plataforma):
   «—», al final.
-- **Sin sats ni precio en dólares**: la unidad es el activo (`CUP/QUSD`), el volumen va en la moneda y en el
+- **Sin sats ni precio en dólares**: el par es el del activo (`QUSD/CUP`), el volumen va en la moneda y en el
   activo, y no hay precio de referencia.
 - **Se lee en vivo en el navegador**: toda la historia que guardan los relays de sus operaciones, órdenes
   disponibles y borrados, como con los nodos, página a página y con pausa (los relays cortan a quien
@@ -451,7 +455,7 @@ Servicios externos que usa y qué pasa si están bloqueados:
 | Servicio | Para qué | Si está bloqueado |
 |---|---|---|
 | Relays Nostr | las órdenes, y los precios actuales que publica el nodo (`mostro-rates`: BTC/USD, referencia de la moneda frente al USD, libro de órdenes a precio de mercado) | sin ellos no hay datos (basta con que responda uno) |
-| Yadio | solo si un nodo no publica `mostro-rates` válidos: una estimación de los precios actuales | la moneda/USD no se puede calcular; moneda/BTC y moneda/sat siguen funcionando |
+| Yadio | solo si un nodo no publica `mostro-rates` válidos: una estimación de los precios actuales | USD/moneda no se puede calcular; BTC/moneda y sat/moneda siguen funcionando |
 | Coinbase | BTC/USD histórico por hora, para la moneda/USD (la hora en que se tomó cada orden o, si no se sabe, en que se completó); no hace falta si el servidor del sitio da a cada orden su BTC/USD | se calcula con el BTC/USD actual (el del nodo o el de Yadio) y se avisa de que es aproximado |
 
 ## Archivo
@@ -473,8 +477,8 @@ que publica el nodo, verificado (firma, autor y tipo), en una base de datos SQLi
   su versión vigente, si fue a precio de mercado o fijo, cuándo se tomó y su BTC/USD de ese momento con
   su origen: el `mostro-rates` del nodo o, si no lo hay, Coinbase (velas de 1 minuto) o Yadio.
   Así, las órdenes de antes del archivo (o importadas de la base de datos del nodo) llevan el BTC/USD de
-  Coinbase y las posteriores el del nodo: la moneda/USD puede dar un pequeño salto entre unas y otras
-  (suelen diferir menos de un 0,1 %), mientras que la moneda/BTC y la moneda/sat no cambian, porque salen
+  Coinbase y las posteriores el del nodo: USD/moneda puede dar un pequeño salto entre unas y otras
+  (suelen diferir menos de un 0,1 %), mientras que BTC/moneda y sat/moneda no cambian, porque salen
   solo de los eventos.
 - `btc_prices`: los cierres de BTC/USD de 1 minuto de Coinbase, cada uno pedido una vez y guardado.
 
@@ -523,7 +527,7 @@ la publica. La primera vez, cuando el archivo se ha puesto al día con todos los
 archivo (o a los 3 minutos, si algún relay no responde), para que una orden firmada en los relays nunca
 salga como sin firma:
 
-- **`/api/tasa.json`**: la tasa en moneda/BTC, moneda/USD y moneda/sat, las 24 h anteriores, su volumen
+- **`/api/tasa.json`**: la tasa en BTC/moneda, USD/moneda y sat/moneda, las 24 h anteriores, su volumen
   y sus órdenes, su ventana, cuándo se actualizó y el id del evento firmado. Para bots, hojas de cálculo
   y aplicaciones que no hablan Nostr.
 - **Un evento Nostr firmado**, si hay `SIGNING_KEY_FILE`: kind 30078 con `d = tasak`, contenido

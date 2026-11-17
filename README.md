@@ -318,7 +318,7 @@ Volume-weighted price of the orders completed in the 24 hours that end at the la
 Tasa K = Σ(price × amount) ÷ Σ amount
 ```
 
-Example (in CUP): 3 orders at 785 CUP/USD totalling 3,000 CUP and one at 750 for 5,000 CUP →
+Example (in CUP): 3 orders at 785 USD/CUP totalling 3,000 CUP and one at 750 for 5,000 CUP →
 (785×3000 + 750×5000) ÷ 8000 = **763.13**.
 
 So the Tasa K in the header changes only when a new order is completed: it doesn't move by itself as time
@@ -328,14 +328,14 @@ old. The chart's «Weighted» points per period are another thing: see below.
 
 ### What it measures
 
-The price at which the currency is actually exchanged in bitcoin trades. In currency/USD it is an implied
+The price at which the currency is actually exchanged in bitcoin trades. In USD/currency it is an implied
 rate: currency paid per BTC divided by BTC/USD. It is not the price of cash dollars or transfers: if
 buying or selling bitcoin with the currency carries a premium of its own, it is in the Tasa K too.
-Currency/BTC and currency/sat don't go through the dollar.
+BTC/currency and sat/currency don't go through the dollar.
 
 Almost all orders are at market price: the node sets the sats from its reference price and the order's
 premium, so their price is roughly `reference ÷ (1 − premium)`. The Tasa K therefore follows that
-reference, and its distance from it («above Yadio» in the header) is mostly the premiums people trade at.
+reference, and its distance from it (the percentage under the reference in the header) is mostly the premiums people trade at.
 Fixed-price orders don't depend on it.
 
 ### Which orders count
@@ -380,8 +380,13 @@ The chart has three modes:
 - **Candles**: open, high, low and close of each period.
 - **Weighted**: at each point, the volume-weighted price of the previous 24 hours, `Σ(price × amount) ÷ Σ amount`. With one point per order, the 24 hours up to that order: the Tasa K after it. Per period, the 24 hours up to the period's close (or now, in the current one): it does move with time, and differs from the Tasa K when the period closed without an order.
 
+Prices are written as currency pairs, base/quote, as in the markets: USD/CUP, BTC/CUP or sat/CUP (how
+many CUP one USD, BTC or sat costs) and, on a platform, the asset's (QUSD/CUP). The header shows volumes
+from a million in compact form (1.74M CUP), exact on hover.
+
 Volume is shown at the bottom of the chart and, when hovering, the legend at the top shows that point's
-values. The chart can be zoomed and scrolled (the zoom is kept when new orders arrive; double-click to see
+values; clicking an order opens its signed event, and «+N» shows all its payment methods. The «View» menu
+turns the legend and the pair in the background of the chart on or off. The chart can be zoomed and scrolled (the zoom is kept when new orders arrive; double-click to see
 everything again) and can go full screen. The payment method filter is the «Payment method» menu, next to the currency: it applies to the chart, the tables and the order book.
 
 The methods in `HIDDEN_PAYMENT_METHODS` are left out by default; they can be enabled from that menu.
@@ -417,7 +422,7 @@ That page works like a node's, with these differences:
 - **The order book** shows only available orders: `pending`, with neither `expires_at` nor `expiration`
   elapsed. An order with a premium has no price (the NIP doesn't publish the platform's market price):
   «—», last.
-- **No sats nor dollar price**: the unit is the asset (`CUP/QUSD`), the volume is in the currency and the
+- **No sats nor dollar price**: the pair is the asset's (`QUSD/CUP`), the volume is in the currency and the
   asset, and there is no reference price.
 - **Read live in the browser**: the whole history the relays keep of its trades, available orders and
   deletions, as with the nodes, page by page with a pause (relays cut off clients that ask too fast). A
@@ -447,7 +452,7 @@ External services it uses and what happens if they are blocked:
 | Service | Used for | If blocked |
 |---|---|---|
 | Nostr relays | the orders, and the current prices the node publishes (`mostro-rates`: BTC/USD, the currency's USD reference, market-price order book) | no data without them (one responding is enough) |
-| Yadio | only if a node doesn't publish valid `mostro-rates`: an estimate of the current prices | currency/USD can't be calculated; currency/BTC and currency/sat keep working |
+| Yadio | only if a node doesn't publish valid `mostro-rates`: an estimate of the current prices | USD/currency can't be calculated; BTC/currency and sat/currency keep working |
 | Coinbase | hourly historical BTC/USD, for currency/USD (the hour each order was taken or, if unknown, completed); not needed when the site's server gives each order its BTC/USD | it's calculated with the current BTC/USD (the node's or Yadio's) and marked as approximate |
 
 ## Archive
@@ -468,8 +473,8 @@ publishes, verified (signature, author and kind), in a SQLite database, `data/ta
   version, whether it was at market or fixed price, when it was taken, and its BTC/USD at that moment
   with where it came from: the node's `mostro-rates` or, without it, Coinbase (1-minute candles) or Yadio.
   So the orders from before the archive (or imported from the node's database) carry Coinbase's BTC/USD
-  and the later ones the node's: currency/USD may jump slightly between them (they usually differ by less
-  than 0.1%), while currency/BTC and currency/sat don't change, as they come only from the events.
+  and the later ones the node's: USD/currency may jump slightly between them (they usually differ by less
+  than 0.1%), while BTC/currency and sat/currency don't change, as they come only from the events.
 - `btc_prices`: Coinbase's 1-minute BTC/USD closes, each asked for once and kept.
 
 It must run all the time: whatever happens while it is off is lost, except the latest version of each
@@ -512,7 +517,7 @@ and also the orders that only come from the node's database, marked as unsigned)
 first time, once the archive has caught up with every relay and `orders` with the archive (or after 3
 minutes, if a relay doesn't answer), so that an order signed on the relays never goes out as unsigned:
 
-- **`/api/tasa.json`**: the rate in currency/BTC, currency/USD and currency/sat, the previous 24 h, its
+- **`/api/tasa.json`**: the rate in BTC/currency, USD/currency and sat/currency, the previous 24 h, its
   volume and orders, its window, when it was updated and the id of the signed event. For bots,
   spreadsheets and apps that don't speak Nostr.
 - **A signed Nostr event**, if `SIGNING_KEY_FILE` is set: kind 30078 with `d = tasak`, content

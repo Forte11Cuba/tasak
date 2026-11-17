@@ -88,8 +88,9 @@ export function btcAt(ts) {
 // Yadio's reference for the chosen currency: currency per USD
 export const yadioFiatPerUsd = () => currentPrices()?.fiatPerUsd(state.fiat) ?? null;
 
-// Name of the chosen unit: CUP/USD, CUP/BTC or CUP/sat; on a platform's page, currency per asset (CUP/QUSD)
-export const unitName = () => `${state.fiat}/${CONFIG.platform ? assetTicker() : UNITS[state.unit]}`;
+// The chosen pair, base/quote as in the markets: USD/CUP, BTC/CUP or sat/CUP (how many CUP one USD, BTC
+// or sat costs); on a platform's page, the asset's (QUSD/CUP)
+export const unitName = () => `${CONFIG.platform ? assetTicker() : UNITS[state.unit]}/${state.fiat}`;
 
 // Converts currency per BTC to the chosen unit; in USD with the BTC/USD of the order (btcOf) or, without
 // an order, the current one

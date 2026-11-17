@@ -89,9 +89,9 @@
   <select id="fiat"></select>
   <select id="asset" class="platform-only" aria-label="Activo" hidden></select>
   <span class="tabs mostro-only" id="units">
-    <button data-unit="usd" class="on">/USD</button>
-    <button data-unit="btc">/BTC</button>
-    <button data-unit="sat">/sat</button>
+    <button data-unit="usd" class="on">USD/</button>
+    <button data-unit="btc">BTC/</button>
+    <button data-unit="sat">sat/</button>
   </span>
   <details class="menu mostro-only" id="pmMenu">
     <summary id="pmSummary">Método de pago ▾</summary>
@@ -136,6 +136,13 @@
             <button data-tf="2592000" data-i18n>1 mes</button>
             <div class="tf-group" data-i18n>Años</div>
             <button data-tf="31536000" data-i18n>1 año</button>
+          </div>
+        </details>
+        <details class="menu tf view-menu" id="viewMenu">
+          <summary id="viewSummary" title="Qué se ve sobre la gráfica" data-i18n-title>Vista ▾</summary>
+          <div class="pop tf-pop view-pop">
+            <button data-view="legend" data-i18n>Datos del punto</button>
+            <button data-view="pair" data-i18n>Par de fondo</button>
           </div>
         </details>
         <button class="icon-btn" id="fsBtn" title="Pantalla completa" aria-label="Pantalla completa" data-i18n-title>⛶</button>
@@ -203,13 +210,14 @@
       <summary>¿Qué es la <span data-name="rate">Tasa K</span>?</summary>
       <p>Es el precio ponderado por volumen de las órdenes <strong>completadas</strong> en las 24 horas que terminan en la última orden completada, no de anuncios publicados:</p>
       <p><code><span data-name="rate">Tasa K</span> = Σ(precio × monto) ÷ Σ monto</code></p>
-      <p>Cada orden pesa según la moneda que movió. Ejemplo: 3 órdenes a 785 <span class="fiat-name">CUP</span>/USD que suman 3000 <span class="fiat-name">CUP</span> y una a 750 de 5000 <span class="fiat-name">CUP</span> dan (785×3000 + 750×5000) ÷ 8000 = <strong>763,13</strong>.</p>
+      <p>Cada orden pesa según la moneda que movió. Ejemplo: 3 órdenes a 785 USD/<span class="fiat-name">CUP</span> que suman 3000 <span class="fiat-name">CUP</span> y una a 750 de 5000 <span class="fiat-name">CUP</span> dan (785×3000 + 750×5000) ÷ 8000 = <strong>763,13</strong>.</p>
       <p>Así la <span data-name="rate">Tasa K</span> solo cambia cuando se completa una orden nueva: no se mueve sola con el paso del tiempo, y cada valor es «la <span data-name="rate">Tasa K</span> tras tal orden». Si la última es de hace más de 24 horas, la cabecera dice de cuándo es.</p>
     </details>
     <details>
       <summary>¿Qué mide la <span data-name="rate">Tasa K</span>?</summary>
-      <p>El precio al que de verdad se cambia la moneda en operaciones con bitcoin. En <span class="fiat-name">CUP</span>/USD es una tasa implícita: los <span class="fiat-name">CUP</span> pagados por cada BTC divididos por el precio del BTC en dólares. No es el precio del dólar en efectivo ni en transferencias: si comprar o vender bitcoin con <span class="fiat-name">CUP</span> lleva un sobreprecio propio, también está en la <span data-name="rate">Tasa K</span>. <span class="fiat-name">CUP</span>/BTC y <span class="fiat-name">CUP</span>/sat no pasan por el dólar.</p>
-      <p>Casi todas las órdenes son a precio de mercado: el nodo calcula los sats con su precio de referencia (casi siempre el de Yadio) y la prima que pone quien publica la orden, así que su precio es aproximadamente <code>referencia ÷ (1 − prima)</code>. Por eso la <span data-name="rate">Tasa K</span> sigue a esa referencia, y lo que queda por encima o por debajo de ella («sobre Yadio» en la cabecera) son sobre todo las primas con las que se está operando. Las órdenes a precio fijo (🔒 en el libro de órdenes) no dependen de ella.</p>
+      <p>El precio al que de verdad se cambia la moneda en operaciones con bitcoin. En USD/<span class="fiat-name">CUP</span> es una tasa implícita: los <span class="fiat-name">CUP</span> pagados por cada BTC divididos por el precio del BTC en dólares. No es el precio del dólar en efectivo ni en transferencias: si comprar o vender bitcoin con <span class="fiat-name">CUP</span> lleva un sobreprecio propio, también está en la <span data-name="rate">Tasa K</span>. BTC/<span class="fiat-name">CUP</span> y sat/<span class="fiat-name">CUP</span> no pasan por el dólar.</p>
+      <p>Los precios se escriben como en los mercados de divisas, base/cotización: USD/<span class="fiat-name">CUP</span> = 1000 quiere decir que 1 USD cuesta 1000 <span class="fiat-name">CUP</span>. En una plataforma es activo/moneda: lo que cuesta una unidad del activo.</p>
+      <p>Casi todas las órdenes son a precio de mercado: el nodo calcula los sats con su precio de referencia (casi siempre el de Yadio) y la prima que pone quien publica la orden, así que su precio es aproximadamente <code>referencia ÷ (1 − prima)</code>. Por eso la <span data-name="rate">Tasa K</span> sigue a esa referencia, y lo que queda por encima o por debajo de ella (el porcentaje bajo la referencia en la cabecera) son sobre todo las primas con las que se está operando. Las órdenes a precio fijo (🔒 en el libro de órdenes) no dependen de ella.</p>
       <p>Las compras y las ventas de BTC se cierran a precios distintos, porque cada lado pone su prima; la <span data-name="rate">Tasa K</span> las pondera todas juntas por su monto. En la ventana de la <span data-name="rate">Tasa K</span> de ahora:</p>
       <ul class="rate-breakdown"></ul>
       <p class="muted">Es solo información: la <span data-name="rate">Tasa K</span> no cambia. Lo mismo se ve al pasar el ratón sobre ella. «Sin saber» son órdenes con prima 0 de las que no se vio la versión <code>pending</code>, la única que dice si eran a precio fijo o a mercado (con prima distinta de 0 son siempre a mercado: Mostro no admite prima con precio fijo).</p>
@@ -218,11 +226,11 @@
       <summary>¿Cómo se calcula el precio de cada orden?</summary>
       <p><code>precio = moneda pagada ÷ BTC recibidos ÷ BTC/USD</code>, con el BTC/USD del momento en que se tomó la orden, que es cuando Mostro fija los sats (si no se vio ese momento, el de cuando se completó).</p>
       <p>Si el sitio tiene su servidor, cada orden trae el BTC/USD que este le asignó y guardó: el que publicaba su nodo en ese momento (su <code>mostro-rates</code> firmado) o, si no lo hay (órdenes de antes de que el servidor las archivara, o un nodo que no publica sus precios), el de Coinbase en ese minuto, y si falla, el de Yadio. Sin servidor, la página usa la vela horaria de Coinbase y, si no responde, el BTC/USD actual, y avisa de que el USD es aproximado.</p>
-      <p>Por eso entre las órdenes con el BTC/USD de Coinbase y las que llevan el del nodo puede verse un pequeño salto en <span class="fiat-name">CUP</span>/USD: el nodo combina sus propias fuentes de precio y Coinbase es un solo mercado, aunque suelen diferir menos de un 0,1 %. No es un movimiento del mercado: <span class="fiat-name">CUP</span>/BTC y <span class="fiat-name">CUP</span>/sat no cambian, porque salen solo del evento de la orden.</p>
+      <p>Por eso entre las órdenes con el BTC/USD de Coinbase y las que llevan el del nodo puede verse un pequeño salto en USD/<span class="fiat-name">CUP</span>: el nodo combina sus propias fuentes de precio y Coinbase es un solo mercado, aunque suelen diferir menos de un 0,1 %. No es un movimiento del mercado: BTC/<span class="fiat-name">CUP</span> y sat/<span class="fiat-name">CUP</span> no cambian, porque salen solo del evento de la orden.</p>
     </details>
     <details>
-      <summary>¿Qué es <span class="fiat-name">CUP</span>/sat?</summary>
-      <p>Cuántos <span class="fiat-name">CUP</span> cuesta 1 sat: <code><span class="fiat-name">CUP</span> pagados ÷ sats</code> de cada orden. Sale directamente del evento de la orden, sin usar el precio de BTC/USD de Coinbase ni de Yadio, así que es la medida más directa y fácil de comprobar. <span class="fiat-name">CUP</span>/BTC es lo mismo multiplicado por 100 millones.</p>
+      <summary>¿Qué es sat/<span class="fiat-name">CUP</span>?</summary>
+      <p>Cuántos <span class="fiat-name">CUP</span> cuesta 1 sat: <code><span class="fiat-name">CUP</span> pagados ÷ sats</code> de cada orden. Sale directamente del evento de la orden, sin usar el precio de BTC/USD de Coinbase ni de Yadio, así que es la medida más directa y fácil de comprobar. BTC/<span class="fiat-name">CUP</span> es lo mismo multiplicado por 100 millones.</p>
     </details>
     <details>
       <summary>¿Qué muestran Precio, Velas y Ponderado?</summary>
@@ -231,7 +239,7 @@
         <li><strong>Velas</strong>: apertura, máximo, mínimo y cierre de cada periodo.</li>
         <li><strong>Ponderado</strong>: el precio ponderado de las 24 horas anteriores a cada punto. Con un punto por orden, es la <span data-name="rate">Tasa K</span> tras esa orden; por periodo, el de las 24 horas hasta su cierre (o hasta ahora, en el actual), que se mueve con el tiempo y difiere de la <span data-name="rate">Tasa K</span> si el periodo cerró sin órdenes.</li>
       </ul>
-      <p>Los periodos van de 1 hora a 1 año (1h, 4h, 1D, 1W, 1M, 1Y) y siguen el calendario hasta ahora, también los periodos sin órdenes, sin volumen: en <strong>Precio</strong> y <strong>Velas</strong> se dibujan planos, al precio del anterior; en <strong>Ponderado</strong>, la línea sigue mientras haya órdenes en sus 24 horas anteriores y se corta cuando no queda ninguna. El volumen se ve en la parte baja de la gráfica y, al pasar el ratón, la leyenda muestra los valores de ese punto.</p>
+      <p>Los periodos van de 1 hora a 1 año (1h, 4h, 1D, 1W, 1M, 1Y) y siguen el calendario hasta ahora, también los periodos sin órdenes, sin volumen: en <strong>Precio</strong> y <strong>Velas</strong> se dibujan planos, al precio del anterior; en <strong>Ponderado</strong>, la línea sigue mientras haya órdenes en sus 24 horas anteriores y se corta cuando no queda ninguna. El volumen se ve en la parte baja de la gráfica y, al pasar el ratón, la leyenda muestra los valores de ese punto. El menú <strong>Vista</strong> muestra u oculta la leyenda y el par de fondo.</p>
     </details>
     <details>
       <summary>¿De dónde salen los datos?</summary>
@@ -240,7 +248,7 @@
     </details>
     <details>
       <summary>¿Cómo compruebo una orden?</summary>
-      <p>Haz clic en una orden de la tabla «Órdenes ejecutadas», o en su punto de la gráfica en modo <strong>Orden</strong>. Se abre su evento Nostr firmado: el JSON completo, su id y si la firma se verificó. Puedes copiarlo o verificarlo en Nostr Inspect, otra web que lo busca directamente en los relays. En las órdenes abiertas, el enlace muestra siempre su versión actual.</p>
+      <p>Haz clic en una orden de la tabla «Órdenes ejecutadas», o en su punto de la gráfica (o en la leyenda) en modo <strong>Orden</strong>. Se abre su evento Nostr firmado: el JSON completo, su id y si la firma se verificó. Puedes copiarlo o verificarlo en Nostr Inspect, otra web que lo busca directamente en los relays. En las órdenes abiertas, el enlace muestra siempre su versión actual.</p>
     </details>
     <details>
       <summary>¿Quién firma la <span data-name="rate">Tasa K</span> y cómo lo compruebo?</summary>
@@ -295,13 +303,14 @@
       <summary>What is the <span data-name="rate">Tasa K</span>?</summary>
       <p>It is the volume-weighted price of orders <strong>completed</strong> in the 24 hours that end at the last completed order, not of published ads:</p>
       <p><code><span data-name="rate">Tasa K</span> = Σ(price × amount) ÷ Σ amount</code></p>
-      <p>Each order weighs by the currency it moved. Example: 3 orders at 785 <span class="fiat-name">CUP</span>/USD totalling 3,000 <span class="fiat-name">CUP</span> and one at 750 for 5,000 <span class="fiat-name">CUP</span> give (785×3000 + 750×5000) ÷ 8000 = <strong>763.13</strong>.</p>
+      <p>Each order weighs by the currency it moved. Example: 3 orders at 785 USD/<span class="fiat-name">CUP</span> totalling 3,000 <span class="fiat-name">CUP</span> and one at 750 for 5,000 <span class="fiat-name">CUP</span> give (785×3000 + 750×5000) ÷ 8000 = <strong>763.13</strong>.</p>
       <p>So the <span data-name="rate">Tasa K</span> changes only when a new order is completed: it doesn't move by itself as time passes, and each value is «the <span data-name="rate">Tasa K</span> after that order». If the last one is more than 24 hours old, the header says how old.</p>
     </details>
     <details>
       <summary>What does the <span data-name="rate">Tasa K</span> measure?</summary>
-      <p>The price at which the currency is actually exchanged in bitcoin trades. In <span class="fiat-name">CUP</span>/USD it is an implied rate: the <span class="fiat-name">CUP</span> paid for each BTC divided by the price of BTC in dollars. It is not the price of cash dollars or transfers: if buying or selling bitcoin with <span class="fiat-name">CUP</span> carries a premium of its own, it is in the <span data-name="rate">Tasa K</span> too. <span class="fiat-name">CUP</span>/BTC and <span class="fiat-name">CUP</span>/sat don't go through the dollar.</p>
-      <p>Almost all orders are at market price: the node calculates the sats with its reference price (almost always Yadio's) and the premium set by whoever publishes the order, so their price is roughly <code>reference ÷ (1 − premium)</code>. That is why the <span data-name="rate">Tasa K</span> follows that reference, and what lies above or below it («above Yadio» in the header) is mostly the premiums people are trading at. Fixed-price orders (🔒 in the order book) don't depend on it.</p>
+      <p>The price at which the currency is actually exchanged in bitcoin trades. In USD/<span class="fiat-name">CUP</span> it is an implied rate: the <span class="fiat-name">CUP</span> paid for each BTC divided by the price of BTC in dollars. It is not the price of cash dollars or transfers: if buying or selling bitcoin with <span class="fiat-name">CUP</span> carries a premium of its own, it is in the <span data-name="rate">Tasa K</span> too. BTC/<span class="fiat-name">CUP</span> and sat/<span class="fiat-name">CUP</span> don't go through the dollar.</p>
+      <p>Prices are written as in currency markets, base/quote: USD/<span class="fiat-name">CUP</span> = 1000 means that 1 USD costs 1000 <span class="fiat-name">CUP</span>. On a platform it is asset/currency: what one unit of the asset costs.</p>
+      <p>Almost all orders are at market price: the node calculates the sats with its reference price (almost always Yadio's) and the premium set by whoever publishes the order, so their price is roughly <code>reference ÷ (1 − premium)</code>. That is why the <span data-name="rate">Tasa K</span> follows that reference, and what lies above or below it (the percentage under the reference in the header) is mostly the premiums people are trading at. Fixed-price orders (🔒 in the order book) don't depend on it.</p>
       <p>BTC buys and sells close at different prices, because each side sets its premium; the <span data-name="rate">Tasa K</span> weighs them all together by their amount. In the window of the current <span data-name="rate">Tasa K</span>:</p>
       <ul class="rate-breakdown"></ul>
       <p class="muted">This is for information only: the <span data-name="rate">Tasa K</span> doesn't change. The same shows when hovering over it. «Unknown» are orders with premium 0 whose <code>pending</code> version wasn't seen, the only one that says whether they were at fixed or market price (with a premium other than 0 they are always at market: Mostro doesn't allow a premium with a fixed price).</p>
@@ -310,11 +319,11 @@
       <summary>How is the price of each order calculated?</summary>
       <p><code>price = currency paid ÷ BTC received ÷ BTC/USD</code>, using the BTC/USD of the moment the order was taken, which is when Mostro fixes the sats (if that moment wasn't seen, the moment it was completed).</p>
       <p>If the site has its server, each order comes with the BTC/USD the server gave it and stored: the one its node published at that moment (its signed <code>mostro-rates</code>) or, without it (orders from before the server archived them, or a node that doesn't publish its prices), Coinbase's for that minute, and if that fails, Yadio's. Without a server, the page uses Coinbase's hourly candle and, if it doesn't respond, the current BTC/USD, and warns that USD is approximate.</p>
-      <p>So between the orders with Coinbase's BTC/USD and those with the node's there may be a small jump in <span class="fiat-name">CUP</span>/USD: the node combines its own price sources and Coinbase is a single market, although they usually differ by less than 0.1%. It is not a market move: <span class="fiat-name">CUP</span>/BTC and <span class="fiat-name">CUP</span>/sat don't change, because they come only from the order's event.</p>
+      <p>So between the orders with Coinbase's BTC/USD and those with the node's there may be a small jump in USD/<span class="fiat-name">CUP</span>: the node combines its own price sources and Coinbase is a single market, although they usually differ by less than 0.1%. It is not a market move: BTC/<span class="fiat-name">CUP</span> and sat/<span class="fiat-name">CUP</span> don't change, because they come only from the order's event.</p>
     </details>
     <details>
-      <summary>What is <span class="fiat-name">CUP</span>/sat?</summary>
-      <p>How many <span class="fiat-name">CUP</span> 1 sat costs: <code><span class="fiat-name">CUP</span> paid ÷ sats</code> of each order. It comes straight from the order event, without the BTC/USD price from Coinbase or Yadio, so it is the most direct measure and the easiest to check. <span class="fiat-name">CUP</span>/BTC is the same multiplied by 100 million.</p>
+      <summary>What is sat/<span class="fiat-name">CUP</span>?</summary>
+      <p>How many <span class="fiat-name">CUP</span> 1 sat costs: <code><span class="fiat-name">CUP</span> paid ÷ sats</code> of each order. It comes straight from the order event, without the BTC/USD price from Coinbase or Yadio, so it is the most direct measure and the easiest to check. BTC/<span class="fiat-name">CUP</span> is the same multiplied by 100 million.</p>
     </details>
     <details>
       <summary>What do Price, Candles and Weighted show?</summary>
@@ -323,7 +332,7 @@
         <li><strong>Candles</strong>: open, high, low and close of each period.</li>
         <li><strong>Weighted</strong>: the weighted price of the 24 hours before each point. With one point per order, it is the <span data-name="rate">Tasa K</span> after that order; per period, that of the 24 hours up to its close (or now, in the current one), which moves with time and differs from the <span data-name="rate">Tasa K</span> if the period closed without orders.</li>
       </ul>
-      <p>Periods go from 1 hour to 1 year (1h, 4h, 1D, 1W, 1M, 1Y) and follow the calendar up to now, also the periods without orders, without volume: in <strong>Price</strong> and <strong>Candles</strong> they are drawn flat, at the previous one's price; in <strong>Weighted</strong>, the line goes on while there are orders in its previous 24 hours and breaks when none is left. Volume is shown at the bottom of the chart and, when hovering, the legend shows that point's values.</p>
+      <p>Periods go from 1 hour to 1 year (1h, 4h, 1D, 1W, 1M, 1Y) and follow the calendar up to now, also the periods without orders, without volume: in <strong>Price</strong> and <strong>Candles</strong> they are drawn flat, at the previous one's price; in <strong>Weighted</strong>, the line goes on while there are orders in its previous 24 hours and breaks when none is left. Volume is shown at the bottom of the chart and, when hovering, the legend shows that point's values. The <strong>View</strong> menu shows or hides the legend and the pair in the background.</p>
     </details>
     <details>
       <summary>Where does the data come from?</summary>
@@ -332,7 +341,7 @@
     </details>
     <details>
       <summary>How do I check an order?</summary>
-      <p>Click an order in the «Executed orders» table or the order book, or its point on the chart in <strong>Order</strong> mode. Its signed Nostr event opens: the full JSON, its id and whether the signature was verified. You can copy it or verify it on Nostr Inspect, a separate site that fetches it straight from the relays. For open orders, the link always shows their current version.</p>
+      <p>Click an order in the «Executed orders» table or the order book, or its point on the chart (or the legend) in <strong>Order</strong> mode. Its signed Nostr event opens: the full JSON, its id and whether the signature was verified. You can copy it or verify it on Nostr Inspect, a separate site that fetches it straight from the relays. For open orders, the link always shows their current version.</p>
     </details>
     <details>
       <summary>Who signs the <span data-name="rate">Tasa K</span> and how do I check it?</summary>
