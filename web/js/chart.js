@@ -126,7 +126,10 @@ function renderPair() {
 }
 function applyView() {
   document.getElementById('legend').hidden = !viewPref.legend;
-  document.querySelectorAll('[data-view]').forEach(b => b.classList.toggle('on', !!viewPref[b.dataset.view]));
+  document.querySelectorAll('[data-view]').forEach(b => {
+    b.classList.toggle('on', !!viewPref[b.dataset.view]);
+    b.setAttribute('aria-pressed', String(!!viewPref[b.dataset.view]));
+  });
   document.getElementById('viewSummary').textContent = `${t('Vista')} ▾`;
   renderPair();
 }
@@ -301,7 +304,11 @@ export function renderChart(trades) {
     { time: p.time, value: p.vol, color: C(p.up ? '--up-vol' : '--down-vol') }));
 
   view = { info: new Map(points.map(p => [p.time, p])), last: points.at(-1)?.time ?? null, tf: state.tf };
-  renderLegend();
+  // A held legend keeps its point while it is still on the chart (a click opens what it shows); if it is
+  // gone (another view, timeframe or filter), it is released
+  const held = legendHeld && legendTime != null && view.info.has(legendTime) ? legendTime : undefined;
+  if (legendHeld && legendTime != null && held === undefined) holdLegend(false);
+  renderLegend(held);
   // Fit to all the data unless the visitor has moved or zoomed the chart in this view: otherwise
   // every render (a new order, the refresh every minute) would lose their zoom
   const fitKey = [state.fiat, state.unit, state.asset, mode, state.tf, [...state.nodeSel], [...(state.pmSel || [])].sort()].join('|');
