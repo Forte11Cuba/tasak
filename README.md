@@ -374,11 +374,12 @@ their average premium) or at fixed price. Market or fixed comes from the order's
 without it, from a premium other than 0 (Mostro doesn't allow a premium with a fixed price); orders with
 premium 0 whose `pending` version wasn't seen are counted as unknown.
 
-The chart has three modes:
+The chart has three modes over time, and a fourth tab with the order book now:
 
 - **Price**: one point per executed order, or per period (1h, 4h, 1D, 1W, 1M, 1Y) with that period's weighted price.
 - **Candles**: open, high, low and close of each period.
 - **Weighted**: at each point, the volume-weighted price of the previous 24 hours, `Σ(price × amount) ÷ Σ amount`. With one point per order, the 24 hours up to that order: the Tasa K after it. Per period, the 24 hours up to the period's close (or now, in the current one): it does move with time, and differs from the Tasa K when the period closed without an order.
+- **Depth**: the open orders of the order book, with the same filters: the price on the horizontal axis and the cumulative amount in currency on the vertical one, buyers (green) adding up from the best price downwards and sellers (red) upwards, with a line at the Tasa K. Where both overlap, the book is crossed. An order with a range counts by its maximum, as the order book's depth bar. It opens at ±20 % around the Tasa K (wider if the best prices are further out); only the orders between half and double the rate are drawn, and those outside, or without a price (market orders without the node's prices or Yadio's; on a platform, those with a premium), are left out and counted in the legend. Hovering shows each side's amount up to that price, and a click opens the signed event of the order of that step.
 
 Prices are written as currency pairs, base/quote, as in the markets: USD/CUP, BTC/CUP or sat/CUP (how
 many CUP one USD, BTC or sat costs) and, on a platform, the asset's (QUSD/CUP). The header shows volumes
@@ -569,7 +570,8 @@ itself through the premiums.
 | `web/` | the site, the folder to publish |
 | `web/index.html` | the rate: chart, order book and executed orders |
 | `web/node.html` | Mostro node information |
-| `web/js/` | the pages' modules: relay client (`nostr-client.js`) and event store (`event-store.js`) shared by both pages, chart, panels, prices and state, and another platform's page (`platform.js`) |
+| `web/js/` | the pages' modules: relay client (`nostr-client.js`) and event store (`event-store.js`) shared by both pages, chart, panels, prices and state, the depth chart (`depth.js`, its data in `depth-curve.js`) and another platform's page (`platform.js`) |
+| `web/test/` | tests of the pages' pure modules that the server doesn't use (`node --test 'web/test/*.test.js'`): the depth chart's data |
 | `web/css/` | styles of each page |
 | `web/i18n.js` | language (Spanish / English): dictionary and text translation |
 | `web/common.js`, `web/common.css` | configuration, formatting, colours and node card, shared by both pages |
@@ -579,7 +581,7 @@ itself through the premiums.
 | `server/` | the tasaK server in Rust (`tasak`): reads `.env`, generates `web/config.js`, serves `web/` and archives the node's events; its systemd service is `server/tasak.service`. `src/logic/` is the logic of `shared/` in Rust, checked with the same vectors (`server/tests/shared_vectors.rs`); `server/tests/config-cases.json` is the `web/config.js` each `.env` must give (`cargo test`) |
 | `Dockerfile`, `docker-compose.yml`, `Caddyfile` | the Docker image (`tasak` with `web/` and `shared/`) and an example deployment, with Caddy for HTTPS (see [Docker](#docker)) |
 | `.github/workflows/release.yml` | publishes a version when a `vX.Y.Z` tag is pushed (it must match `server/Cargo.toml`): the static binaries and the Docker image (amd64 and arm64, in GHCR), after checking that they run; run by hand, or in a pull request that changes it, it only builds and checks |
-| `.github/workflows/ci.yml` | the checks run on every pull request and every push to `main`: `cargo fmt`, `clippy` and `cargo test` of the server, `node --test` of `shared/`, `tools/reference.mjs` and `tools/snapshot.mjs` in headless Chrome (after `tasak build`), and the Docker image (it builds, starts and serves the site) |
+| `.github/workflows/ci.yml` | the checks run on every pull request and every push to `main`: `cargo fmt`, `clippy` and `cargo test` of the server, `node --test` of `shared/` and `web/test/`, `tools/reference.mjs` and `tools/snapshot.mjs` in headless Chrome (after `tasak build`), and the Docker image (it builds, starts and serves the site) |
 | `tools/` | development checks in headless Chrome (Node, no dependencies); `node tools/reference.mjs` checks that `web/` computes the values in `shared/test/expected.json` from fixed data, without the server; `node tools/snapshot.mjs`, with a server's snapshot and a signed rate |
 
 ## Languages

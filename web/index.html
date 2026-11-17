@@ -118,6 +118,7 @@
           <button data-mode="line" data-i18n>Precio</button>
           <button data-mode="candles" data-i18n>Velas</button>
           <button data-mode="avg" title="Precio ponderado por volumen de las 24 horas anteriores a cada punto: Σ(precio × monto) ÷ Σ monto" data-i18n-title data-i18n>Ponderado</button>
+          <button data-mode="depth" title="El libro de órdenes ahora: el monto acumulado de compradores y vendedores a cada precio" data-i18n-title data-i18n>Profundidad</button>
         </span>
         <span class="sep"></span>
         <details class="menu tf" id="tfMenu">
@@ -147,7 +148,10 @@
         </details>
         <button class="icon-btn" id="fsBtn" title="Pantalla completa" aria-label="Pantalla completa" data-i18n-title>⛶</button>
       </div>
+      <div class="charts">
       <div class="chart" id="chart"><div class="legend num" id="legend"></div><div class="vol-tag" id="volTag"><span>Vol.</span><button id="volEye" aria-label="Ocultar volumen" title="Ocultar volumen"></button></div><div class="empty" data-i18n>Cargando órdenes de los relays…</div><div class="tz-tag num" id="tzTag"></div></div>
+      <div class="chart off" id="depth"><div class="legend num" id="depthLegend"></div><div class="empty" data-i18n>Cargando…</div></div>
+      </div>
     </section>
   </div>
 
@@ -240,6 +244,11 @@
         <li><strong>Ponderado</strong>: el precio ponderado de las 24 horas anteriores a cada punto. Con un punto por orden, es la <span data-name="rate">Tasa K</span> tras esa orden; por periodo, el de las 24 horas hasta su cierre (o hasta ahora, en el actual), que se mueve con el tiempo y difiere de la <span data-name="rate">Tasa K</span> si el periodo cerró sin órdenes.</li>
       </ul>
       <p>Los periodos van de 1 hora a 1 año (1h, 4h, 1D, 1W, 1M, 1Y) y siguen el calendario hasta ahora, también los periodos sin órdenes, sin volumen: en <strong>Precio</strong> y <strong>Velas</strong> se dibujan planos, al precio del anterior; en <strong>Ponderado</strong>, la línea sigue mientras haya órdenes en sus 24 horas anteriores y se corta cuando no queda ninguna. El volumen se ve en la parte baja de la gráfica y, al pasar el ratón, la leyenda muestra los valores de ese punto. El menú <strong>Vista</strong> muestra u oculta la leyenda y el par de fondo.</p>
+    </details>
+    <details>
+      <summary>¿Qué muestra Profundidad?</summary>
+      <p>El libro de órdenes ahora, como la «Profundidad» de los exchanges: el precio en el eje horizontal y, en el vertical, el monto acumulado en <span class="fiat-name">CUP</span> desde el mejor precio hacia fuera. Los compradores (verde) suman hacia los precios más bajos y los vendedores (rojo) hacia los más altos; la línea azul es la <span data-name="rate">Tasa K</span>. Si las dos áreas se solapan, el libro está cruzado: hay compradores por encima de vendedores.</p>
+      <p>Usa las mismas órdenes y filtros que el libro de órdenes. Una orden con rango (por ejemplo 19.500–130.000) cuenta por su máximo, así que la liquidez queda algo exagerada. Se abre a ±20 % alrededor de la <span data-name="rate">Tasa K</span>, o más ancha si el mejor comprador o vendedor está más lejos; solo dibuja las órdenes entre la mitad y el doble de la tasa, y las de fuera de esa escala o sin precio (a precio de mercado sin precios del nodo ni de Yadio; en una plataforma, las que llevan prima) no se dibujan: la leyenda dice cuántas. Al pasar el ratón ves cuánto hay de cada lado hasta ese precio; un clic abre el evento firmado de la orden de ese escalón, y el doble clic vuelve a la vista inicial.</p>
     </details>
     <details>
       <summary>¿En qué hora están las fechas?</summary>
@@ -338,6 +347,11 @@
         <li><strong>Weighted</strong>: the weighted price of the 24 hours before each point. With one point per order, it is the <span data-name="rate">Tasa K</span> after that order; per period, that of the 24 hours up to its close (or now, in the current one), which moves with time and differs from the <span data-name="rate">Tasa K</span> if the period closed without orders.</li>
       </ul>
       <p>Periods go from 1 hour to 1 year (1h, 4h, 1D, 1W, 1M, 1Y) and follow the calendar up to now, also the periods without orders, without volume: in <strong>Price</strong> and <strong>Candles</strong> they are drawn flat, at the previous one's price; in <strong>Weighted</strong>, the line goes on while there are orders in its previous 24 hours and breaks when none is left. Volume is shown at the bottom of the chart and, when hovering, the legend shows that point's values. The <strong>View</strong> menu shows or hides the legend and the pair in the background.</p>
+    </details>
+    <details>
+      <summary>What does Depth show?</summary>
+      <p>The order book now, like the «Depth» of the exchanges: the price on the horizontal axis and, on the vertical one, the cumulative amount in <span class="fiat-name">CUP</span> from the best price outwards. Buyers (green) add up towards the lower prices and sellers (red) towards the higher ones; the blue line is the <span data-name="rate">Tasa K</span>. If both areas overlap, the book is crossed: there are buyers above sellers.</p>
+      <p>It uses the same orders and filters as the order book. An order with a range (for example 19,500–130,000) counts by its maximum, so the liquidity is somewhat overstated. It opens at ±20 % around the <span data-name="rate">Tasa K</span>, or wider if the best buyer or seller is further out; it only draws the orders between half and double the rate, and those out of that scale or without a price (at market price without the node's prices or Yadio's; on a platform, those with a premium) are not drawn: the legend says how many. Hovering shows how much there is on each side up to that price; a click opens the signed event of the order of that step, and a double click goes back to the initial view.</p>
     </details>
     <details>
       <summary>What time zone are the dates in?</summary>

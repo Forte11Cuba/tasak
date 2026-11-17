@@ -132,7 +132,13 @@ setInterval(renderTzTag, 60e3);
 const viewPref = (() => {
   try { return { legend: true, pair: true, ...JSON.parse(localStorage.getItem('tasak.chartView')) }; } catch { return { legend: true, pair: true }; }
 })();
-const watermark = LightweightCharts.createTextWatermark(chartC.chart.panes()[0], { horzAlign: 'center', vertAlign: 'center', lines: [] });
+// (the depth chart adds its own: the same pair is its price axis)
+const watermarks = [];
+export function addPairWatermark(pane) {
+  watermarks.push(LightweightCharts.createTextWatermark(pane, { horzAlign: 'center', vertAlign: 'center', lines: [] }));
+  pairKey = '';
+  renderPair();
+}
 let pairKey = '';
 function renderPair() {
   const name = state.fiat ? unitName() : '';
@@ -140,10 +146,11 @@ function renderPair() {
   const key = [name, size, viewPref.pair, C('--watermark')].join('|');
   if (key === pairKey) return;
   pairKey = key;
-  watermark.applyOptions({ visible: viewPref.pair, lines: [{ text: name, color: C('--watermark'), fontSize: size, fontStyle: 'bold' }] });
+  for (const w of watermarks) w.applyOptions({ visible: viewPref.pair, lines: [{ text: name, color: C('--watermark'), fontSize: size, fontStyle: 'bold' }] });
 }
+addPairWatermark(chartC.chart.panes()[0]);
 function applyView() {
-  document.getElementById('legend').hidden = !viewPref.legend;
+  for (const el of document.querySelectorAll('.legend')) el.hidden = !viewPref.legend;
   document.querySelectorAll('[data-view]').forEach(b => {
     b.classList.toggle('on', !!viewPref[b.dataset.view]);
     b.setAttribute('aria-pressed', String(!!viewPref[b.dataset.view]));
@@ -280,7 +287,11 @@ export function renderChart(trades) {
   chartC.line.applyOptions({ visible: mode === 'line', pointMarkersVisible: !state.tf });
   chartC.candles.applyOptions({ visible: mode === 'candles' });
   chartC.avg.applyOptions({ visible: mode === 'avg' });
-  document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', b.dataset.mode === mode));
+  // «Depth» is shown instead of this chart, which keeps its mode, timeframe and zoom underneath
+  document.querySelectorAll('[data-mode]').forEach(b => b.classList.toggle('on', state.depth ? b.dataset.mode === 'depth' : b.dataset.mode === mode));
+  chartC.el.classList.toggle('off', state.depth);
+  document.getElementById('depth').classList.toggle('off', !state.depth);
+  document.getElementById('tfMenu').hidden = state.depth;
   document.querySelectorAll('[data-tf]').forEach(b => {
     b.classList.toggle('on', Number(b.dataset.tf) === state.tf);
     b.hidden = mode === 'candles' && b.dataset.tf === '0';
