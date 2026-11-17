@@ -26,9 +26,10 @@ fn js_trim(s: &str) -> &str {
 /// "
 /// ```
 ///
-/// PLATFORMS and OTHER_PLATFORMS have one entry per line (`name: npub1…, npub1…`), so their lines are
-/// joined with `;`, which also separates their entries on one line
-const LISTS: [&str; 7] = [
+/// PLATFORMS, OTHER_PLATFORMS and PLATFORM_HIDDEN_PAYMENT_METHODS have one entry per line
+/// (`name: npub1…, npub1…` or `name: method, method`), so their lines are joined with `;`, which also
+/// separates their entries on one line
+const LISTS: [&str; 8] = [
     "MOSTRO_PUBKEYS",
     "OTHER_MOSTRO_PUBKEYS",
     "PLATFORMS",
@@ -36,9 +37,10 @@ const LISTS: [&str; 7] = [
     "RELAYS",
     "SOCIAL_LINKS",
     "HIDDEN_PAYMENT_METHODS",
+    "PLATFORM_HIDDEN_PAYMENT_METHODS",
 ];
 
-const PLATFORM_LISTS: [&str; 2] = ["PLATFORMS", "OTHER_PLATFORMS"];
+const PLATFORM_LISTS: [&str; 3] = ["PLATFORMS", "OTHER_PLATFORMS", "PLATFORM_HIDDEN_PAYMENT_METHODS"];
 
 /// The .env format: KEY=value lines, # comments, optional quotes around the value; later lines win.
 /// A list can span several lines (see LISTS). The errors: a list whose closing quote is missing
@@ -119,6 +121,9 @@ pub struct Config {
     pub platforms: Vec<Platform>,
     /// Guest platforms: read live from the relays by the browser, not archived
     pub other_platforms: Vec<Platform>,
+    /// The payment methods never chosen by default on each platform's page (its rate is of one method
+    /// at a time), as it publishes them; the test orders never are
+    pub platform_hidden_payment_methods: Vec<PlatformMethods>,
     pub relays: Vec<String>,
     /// Empty: the most traded currency on the node and the visitor's browser time zone
     pub fiat: String,
@@ -136,6 +141,14 @@ pub struct Config {
 pub struct Platform {
     pub name: String,
     pub pubkeys: Vec<String>,
+}
+
+/// An entry of PLATFORM_HIDDEN_PAYMENT_METHODS: a platform (its name as in PLATFORMS or OTHER_PLATFORMS)
+/// and its methods
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct PlatformMethods {
+    pub name: String,
+    pub methods: Vec<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -172,6 +185,33 @@ fn platforms(s: Option<String>) -> Vec<Platform> {
         .collect()
 }
 
+/// PLATFORM_HIDDEN_PAYMENT_METHODS: `name: method, method; name: method`. Comma separated only: methods
+/// may contain spaces («bank transfer»). An entry without a name keeps an empty one (an error)
+fn platform_methods(s: Option<String>) -> Vec<PlatformMethods> {
+    let methods = |m: &str| {
+        m.split(',')
+            .map(js_trim)
+            .filter(|s| !s.is_empty())
+            .map(str::to_string)
+            .collect()
+    };
+    s.unwrap_or_default()
+        .split(';')
+        .map(js_trim)
+        .filter(|e| !e.is_empty())
+        .map(|e| match e.split_once(':') {
+            Some((name, m)) => PlatformMethods {
+                name: js_trim(name).to_string(),
+                methods: methods(m),
+            },
+            None => PlatformMethods {
+                name: String::new(),
+                methods: methods(e),
+            },
+        })
+        .collect()
+}
+
 /// /^[a-z0-9][a-z0-9.-]*$/i
 fn valid_platform_name(n: &str) -> bool {
     n.bytes().next().is_some_and(|b| b.is_ascii_alphanumeric())
@@ -184,7 +224,7 @@ pub fn build_config(get: impl Fn(&str) -> Option<String>, web: &Path) -> (Config
     let or_empty = |k: &str| get(k).unwrap_or_default();
     let or_default = |k: &str, d: &str| get(k).filter(|v| !v.is_empty()).unwrap_or_else(|| d.to_string());
     let one_of = |k: &str, allowed: &[&str]| get(k).filter(|v| allowed.contains(&v.as_str())).unwrap_or_default();
-    let config = Config {
+    let mut config = Config {
         site_name: or_default("SITE_NAME", "tasaK"),
         rate_name: or_default("RATE_NAME", "Tasa K"),
         logo: or_empty("LOGO"),
@@ -196,6 +236,7 @@ pub fn build_config(get: impl Fn(&str) -> Option<String>, web: &Path) -> (Config
         other_mostros: list(get("OTHER_MOSTRO_PUBKEYS")),
         platforms: platforms(get("PLATFORMS")),
         other_platforms: platforms(get("OTHER_PLATFORMS")),
+        platform_hidden_payment_methods: platform_methods(get("PLATFORM_HIDDEN_PAYMENT_METHODS")),
         relays: list(get("RELAYS")),
         fiat: or_empty("FIAT").to_uppercase(),
         time_zone: or_empty("TIMEZONE"),
@@ -248,6 +289,28 @@ pub fn build_config(get: impl Fn(&str) -> Option<String>, web: &Path) -> (Config
         }
         for k in p.pubkeys.iter().filter(|k| !valid_pubkey(k)) {
             errors.push(format!("invalid pubkey: {k}"));
+        }
+    }
+    // Each entry names a platform of PLATFORMS or OTHER_PLATFORMS, once; written as it is named there
+    let all: Vec<&Platform> = config.platforms.iter().chain(&config.other_platforms).collect();
+    let mut named = std::collections::HashSet::new();
+    for entry in &mut config.platform_hidden_payment_methods {
+        let var = "PLATFORM_HIDDEN_PAYMENT_METHODS";
+        if entry.name.is_empty() {
+            errors.push(format!(
+                "{var}: an entry has no name (name: method, method): {}",
+                entry.methods.join(", ")
+            ));
+        } else if let Some(p) = all.iter().find(|p| p.name.eq_ignore_ascii_case(&entry.name)) {
+            if !named.insert(p.name.to_ascii_lowercase()) {
+                errors.push(format!("{var}: {} is listed twice", entry.name));
+            }
+            entry.name = p.name.clone();
+        } else {
+            errors.push(format!(
+                "{var}: {} is not a platform of PLATFORMS or OTHER_PLATFORMS",
+                entry.name
+            ));
         }
     }
     if config.relays.is_empty() {

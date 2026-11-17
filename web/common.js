@@ -32,7 +32,26 @@ const CONFIG = (() => {
   const urlNodes = list('mostro').length > 0;
   const siteMostros = hexList(base.mostros || []);
   const relays = list('relays').length ? list('relays') : base.relays || [];
+  // Other P2P platforms (kind 35353): those of PLATFORMS (archived by the server) and OTHER_PLATFORMS
+  // (guests), each with its name in .env and its pubkeys; the methods never chosen by default on each one,
+  // as it publishes them (PLATFORM_HIDDEN_PAYMENT_METHODS; the test orders always)
+  const platforms = [[base.platforms, true], [base.otherPlatforms, false]].flatMap(([ps, archived]) =>
+    (ps || []).filter(p => /^[a-z0-9][a-z0-9.-]*$/i.test(p?.name || ''))
+      .map(p => ({ name: p.name, keys: hexList(p.pubkeys || []), archived })))
+    .filter(p => p.keys.length);
+  const hiddenOf = name => (base.platformHiddenPaymentMethods || [])
+    .find(h => h.name?.toLowerCase() === name.toLowerCase())?.methods || ['Pruebas'];
+  // ?platform=<name>&key=<npub>: the page of a platform, and of one of its pubkeys (the first one by
+  // default). It goes before ?mostro=. An unknown name or key leaves `platformError`
+  const platformName = qs.get('platform');
+  const found = platformName && platforms.find(p => p.name.toLowerCase() === platformName.toLowerCase());
+  const key = found && (qs.get('key') ? toHex(qs.get('key')) : found.keys[0]);
+  const platform = found && found.keys.includes(key)
+    ? { name: found.name, key, keys: found.keys, archived: found.archived, hiddenPaymentMethods: hiddenOf(found.name) } : null;
   return {
+    platforms,
+    platform,
+    platformError: !!platformName && !platform,
     fromEnv: !!window.TASAK_CONFIG,
     // The URL changes the node: what describes the .env nodes doesn't apply (community, currency, signed
     // rate, the server's snapshot)
@@ -58,7 +77,7 @@ const CONFIG = (() => {
     hiddenPaymentMethods: urlNodes ? ['Pruebas'] : base.hiddenPaymentMethods || ['Pruebas', 'Otros'],
     // Without a configured currency, the page picks the most traded one on the node; the .env one
     // belongs to the .env nodes, so it doesn't apply if the URL changes the node
-    fiat: (qs.get('fiat') || (urlNodes ? '' : base.fiat) || '').toUpperCase(),
+    fiat: (qs.get('fiat') || (urlNodes || platformName ? '' : base.fiat) || '').toUpperCase(),
     tz: base.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
     // The key that signs the site's Tasa K (hex): its rate is about the .env's nodes, so it doesn't
     // apply if the URL changes the node

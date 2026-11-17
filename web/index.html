@@ -29,13 +29,22 @@
   <div class="brand-box">
     <div class="brand" data-name="site">tasa<span>K</span></div>
   </div>
-  <div class="stat node-stat">
-    <span class="label node-label"><span data-i18n>Nodo</span> <a class="node-info" id="nodeBtn2" href="node.html" title="Información del nodo Mostro: comisión, condiciones, comunidad y redes" aria-label="Información del nodo Mostro: comisión, condiciones, comunidad y redes" data-i18n-title>ⓘ</a></span>
+  <!-- The platform (Mostro, then each one of PLATFORMS and OTHER_PLATFORMS) and, next to it, which of its
+       nodes or accounts: only with other platforms in .env -->
+  <div class="stat node-stat" id="platformStat" hidden>
+    <span class="label" data-i18n>Plataforma</span>
+    <details class="menu node-menu" id="platformMenu">
+      <summary id="platformSummary" title="Elegir plataforma" data-i18n-title>—</summary>
+      <div class="pop node-pop"><div id="platformList"></div></div>
+    </details>
+  </div>
+  <div class="stat node-stat" id="nodeStat">
+    <span class="label node-label"><span id="nodeLabel" data-i18n>Nodo</span> <a class="node-info mostro-only" id="nodeBtn2" href="node.html" title="Información del nodo Mostro: comisión, condiciones, comunidad y redes" aria-label="Información del nodo Mostro: comisión, condiciones, comunidad y redes" data-i18n-title>ⓘ</a></span>
     <details class="menu node-menu" id="nodeMenu">
       <summary id="nodeSummary" title="Elegir nodo Mostro" data-i18n-title>—</summary>
       <div class="pop node-pop">
         <div id="nodes"></div>
-        <form class="node-form" id="nodeForm">
+        <form class="node-form mostro-only" id="nodeForm">
           <input id="nodeInput" type="text" autocomplete="off" spellcheck="false">
           <button type="submit" data-i18n>Ver</button>
         </form>
@@ -78,11 +87,21 @@
 <div class="filters">
   <span class="label" data-i18n>Moneda</span>
   <select id="fiat"></select>
-  <span class="tabs" id="units">
+  <select id="asset" class="platform-only" aria-label="Activo" hidden></select>
+  <span class="tabs mostro-only" id="units">
     <button data-unit="usd" class="on">/USD</button>
     <button data-unit="btc">/BTC</button>
     <button data-unit="sat">/sat</button>
   </span>
+  <details class="menu mostro-only" id="pmMenu">
+    <summary id="pmSummary">Método de pago ▾</summary>
+    <div class="pop">
+      <p data-lang="es">Órdenes que entran en la gráfica, las tablas y «Tu selección»; la <span data-name="rate">Tasa K</span> usa siempre los métodos por defecto. Números: <strong>completadas · abiertas</strong> (las abiertas están en el libro de órdenes).</p>
+      <p data-lang="en">Orders included in the chart, the tables and «Your selection»; the <span data-name="rate">Tasa K</span> always uses the default methods. Numbers: <strong>completed · open</strong> (open ones are in the order book).</p>
+      <div class="chips" id="pms"></div>
+    </div>
+  </details>
+  <select id="pmSelect" class="platform-only" hidden></select>
   <span class="selection" id="selection" hidden>
     <span class="label" data-i18n>Tu selección</span>
     <strong class="num" id="selRate">—</strong>
@@ -117,14 +136,6 @@
             <button data-tf="2592000" data-i18n>1 mes</button>
             <div class="tf-group" data-i18n>Años</div>
             <button data-tf="31536000" data-i18n>1 año</button>
-          </div>
-        </details>
-        <details class="menu" id="pmMenu">
-          <summary id="pmSummary">Método de pago ▾</summary>
-          <div class="pop">
-            <p data-lang="es">Órdenes que entran en la gráfica, las tablas y «Tu selección»; la <span data-name="rate">Tasa K</span> usa siempre los métodos por defecto. Números: <strong>completadas · abiertas</strong> (las abiertas están en el libro de órdenes).</p>
-            <p data-lang="en">Orders included in the chart, the tables and «Your selection»; the <span data-name="rate">Tasa K</span> always uses the default methods. Numbers: <strong>completed · open</strong> (open ones are in the order book).</p>
-            <div class="chips" id="pms"></div>
           </div>
         </details>
         <button class="icon-btn" id="fsBtn" title="Pantalla completa" aria-label="Pantalla completa" data-i18n-title>⛶</button>
@@ -169,8 +180,10 @@
     <button class="icon-btn" id="evClose" aria-label="Cerrar" title="Cerrar" data-i18n-title>✕</button>
   </div>
   <div class="faq-body">
-    <p class="muted ev-note" data-lang="es">Cada orden, abierta o completada, es un evento firmado por el nodo Mostro y publicado en los relays (NIP-69, kind 38383). Con él cualquiera puede comprobar la orden y recalcular la tasa.</p>
-    <p class="muted ev-note" data-lang="en">Every order, open or completed, is an event signed by the Mostro node and published on relays (NIP-69, kind 38383). With it anyone can check the order and recompute the rate.</p>
+    <p class="muted ev-note mostro-only" data-lang="es">Cada orden, abierta o completada, es un evento firmado por el nodo Mostro y publicado en los relays (NIP-69, kind 38383). Con él cualquiera puede comprobar la orden y recalcular la tasa.</p>
+    <p class="muted ev-note mostro-only" data-lang="en">Every order, open or completed, is an event signed by the Mostro node and published on relays (NIP-69, kind 38383). With it anyone can check the order and recompute the rate.</p>
+    <p class="muted ev-note platform-only" data-lang="es" hidden>Cada orden abierta y cada operación (la ejecución de una orden) es un evento firmado por la plataforma y publicado en los relays (kind 35353, NIP propuesto en nostr-protocol/nips#2541). La tasa sale solo de las operaciones: precio = monto en moneda ÷ monto del activo.</p>
+    <p class="muted ev-note platform-only" data-lang="en" hidden>Every open order and every trade (the execution of an order) is an event signed by the platform and published on relays (kind 35353, NIP proposed in nostr-protocol/nips#2541). The rate comes from the trades only: price = fiat amount ÷ asset amount.</p>
     <dl class="ev-meta" id="evMeta"></dl>
     <pre class="ev-json num" id="evJson"></pre>
     <div class="ev-actions">
@@ -269,6 +282,13 @@
       <p><code>?mostro=npub…,npub…&amp;relays=wss://…&amp;fiat=…&amp;lang=es</code></p>
       <p>Un nodo que no es de este sitio se lee solo de los relays, con el historial que guarden: el archivo de este sitio y su <span data-name="rate">Tasa K</span> firmada son de los nodos del sitio. Su <span data-name="rate">Tasa K</span> la calcula tu navegador con todos los métodos de pago salvo las órdenes de prueba: los métodos que este sitio excluye son las reglas de su propio mercado.</p>
     </details>
+    <details>
+      <summary>¿Qué son las otras plataformas del selector?</summary>
+      <p>Plataformas P2P que no son Mostro y publican en Nostr sus órdenes y operaciones de otros activos (saldos propios, monedas estables…) contra la moneda local, firmadas con su clave (kind 35353, un NIP propuesto en <a href="https://github.com/nostr-protocol/nips/pull/2541" target="_blank" rel="noopener">nostr-protocol/nips#2541</a>). Quien despliega el sitio elige cuáles se ofrecen en el selector «Plataforma», junto al de nodo, que en una plataforma lista las cuentas que publican por ella (si tiene más de una).</p>
+      <p>Su <span data-name="rate">Tasa K</span> se calcula igual, Σ(precio × monto) ÷ Σ monto en las 24 horas que terminan en la última operación, pero solo con sus <strong>operaciones</strong> (cada ejecución de una orden): precio = monto en moneda ÷ monto del activo, nunca el precio anunciado en la orden. Hay una por plataforma, activo, moneda y método de pago, sin mezclarlas: un saldo dentro de una plataforma no es lo mismo que el mismo activo en una cadena de bloques ni que el saldo de otra plataforma, y cada método es un mercado con su propio precio. Se ve un método a la vez: el de más operaciones, u otro que elijas en el selector de método, junto a la moneda.</p>
+      <p>No cuentan las operaciones que la plataforma retira con una petición de borrado (NIP-09) ni los eventos que no siguen el formato del NIP (se cuentan al pasar el ratón por el estado de la conexión). Las órdenes de la propia plataforma (<code>maker = platform</code>) cuentan como las demás. Los métodos de pago son los que publica la plataforma, tal cual; quien despliega el sitio puede hacer que algunos no se muestren por defecto.</p>
+      <p>Las lee tu navegador de los relays: toda la historia de operaciones y órdenes que guardan, sin sats ni precio en dólares. Este sitio no firma la tasa de una plataforma y no cuenta en su <span data-name="rate">Tasa K</span> oficial. La firma de cada evento prueba que la plataforma lo publicó, no que la operación ocurrió.</p>
+    </details>
   </div>
 <div class="faq-body" data-lang="en">
     <details open>
@@ -353,6 +373,13 @@
       <p>Yes. Whoever deploys the site configures its nodes in the <code>.env</code> file, and also other nodes it offers in the node selector, next to the <span data-name="rate">Tasa K</span>. There you can also paste any node's npub, or change it in the URL:</p>
       <p><code>?mostro=npub…,npub…&amp;relays=wss://…&amp;fiat=…&amp;lang=en</code></p>
       <p>A node that isn't this site's is read from the relays alone, with the history they keep: this site's archive and its signed <span data-name="rate">Tasa K</span> are about the site's nodes. Its <span data-name="rate">Tasa K</span> is calculated by your browser with every payment method but the test orders: the methods this site leaves out are the rules of its own market.</p>
+    </details>
+    <details>
+      <summary>What are the other platforms of the selector?</summary>
+      <p>P2P platforms that aren't Mostro and publish on Nostr their orders and trades of other assets (their own balances, stablecoins…) against the local currency, signed with their key (kind 35353, a NIP proposed in <a href="https://github.com/nostr-protocol/nips/pull/2541" target="_blank" rel="noopener">nostr-protocol/nips#2541</a>). Whoever deploys the site chooses which ones the «Platform» selector offers, next to the node selector, which on a platform lists the accounts that publish for it (if it has more than one).</p>
+      <p>Their <span data-name="rate">Tasa K</span> is calculated the same way, Σ(price × amount) ÷ Σ amount over the 24 hours that end at the last trade, but only from their <strong>trades</strong> (each execution of an order): price = fiat amount ÷ asset amount, never the price advertised in the order. There is one per platform, asset, currency and payment method, never mixed: a balance inside a platform is not the same as the same asset on a blockchain, nor as another platform's balance, and each method is a market with its own price. One method is shown at a time: the most traded one, or another you choose in the method selector, next to the currency.</p>
+      <p>Trades the platform withdraws with a deletion request (NIP-09) don't count, nor do events that don't follow the NIP's format (counted when hovering over the connection status). Orders published by the platform itself (<code>maker = platform</code>) count as any other. Payment methods are the ones the platform publishes, as they are; whoever deploys the site can keep some from being shown by default.</p>
+      <p>Your browser reads them from the relays: the whole history of trades and orders they keep, without sats or a dollar price. This site doesn't sign a platform's rate, and it doesn't count in its official <span data-name="rate">Tasa K</span>. Each event's signature proves the platform published it, not that the trade happened.</p>
     </details>
   </div>
 </dialog>
