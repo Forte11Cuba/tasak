@@ -127,6 +127,7 @@ export function fetchProfiles({ urls, authors, verify, ms = 8000 }) {
           found.set(ev.pubkey, {
             name: typeof c?.name === 'string' ? c.name : '',
             picture: typeof c?.picture === 'string' ? c.picture : '',
+            nip05: typeof c?.nip05 === 'string' ? c.nip05 : '',
           });
         } else if (d[0] === 'EOSE' || d[0] === 'CLOSED') end();
       };
@@ -134,4 +135,113 @@ export function fetchProfiles({ urls, authors, verify, ms = 8000 }) {
       ws.onclose = end;
     }
   });
+}
+
+// Connection to the relays for a P2P platform (kind 35353): the whole history they keep of its trades,
+// available orders and deletions, as with the nodes, and then what is new, live; its profile (kind 0)
+// once. Each kind is paged backwards with `until` until a page comes back empty, at most PAGE events per
+// query and with a pause between pages, since relays cut off clients that ask too fast. A relay that refuses the kind (CLOSED, e.g. «kind not allowed») is `refused`, not down:
+// it isn't retried and doesn't count. Only events of `author`, of those kinds and with a valid signature
+// are handed over (onEvent(ev, live)).
+const PAGE_PAUSE = 1000;
+export function createPlatformPool({ urls, author, verify, onEvent, onUpdate, onStatus }) {
+  const pool = {
+    live: 0,         // relays with the history loaded and subscribed live
+    refused: 0,      // relays that don't accept kind 35353
+    rejected: 0,     // events with an invalid signature
+    total: urls.length,
+    // Still loading: no relay has its history yet, or one that has events of the platform is still
+    // paging through it (an empty relay finishing first doesn't mean there is nothing)
+    get loading() { return pool.live === 0 || [...paging.values()].some(got => got > 0); },
+    start: () => urls.forEach(url => connect(url)),
+  };
+  const paging = new Map();   // url -> events received from its history, while it pages
+  const seen = new Set();
+  let newest = 0;   // created_at of the newest kind 35353 received: on reconnecting, only what is newer
+  // The history, one query after another: available orders first (a page or two: the relay keeps only
+  // the newest version of each, so those still pending), so the order book doesn't wait for the trades;
+  // then the trades and the deletions of its trades
+  const HISTORY = [
+    { kinds: [35353], '#z': ['order'], '#s': ['pending'] },
+    { kinds: [35353], '#z': ['trade'] },
+    { kinds: [5], '#k': ['35353'] },
+  ];
+  const accept = ev => {
+    if (!ev || seen.has(ev.id) || ev.pubkey !== author || ![0, 5, 35353].includes(ev.kind)) return false;
+    if (verify && !verify(ev)) { pool.rejected++; return false; }
+    seen.add(ev.id);
+    return true;
+  };
+
+  function connect(url, attempt = 0) {
+    let ws;
+    try { ws = new WebSocket(url); } catch { return; }
+    let step = 0, page = 0, count = 0, oldest = Infinity, prevOldest = Infinity, until = null;
+    let isLive = false, refused = false, changed = false;
+    const startedAt = Math.floor(Date.now() / 1000);
+    // On reconnecting, only what is newer than what came
+    const since = newest ? { since: newest - 3600 } : {};
+    const sub = () => `h${step}-${page}`;
+    const ask = () => {
+      count = 0; oldest = Infinity;
+      ws.send(JSON.stringify(['REQ', sub(), { ...HISTORY[step], authors: [author], ...since, limit: PAGE, ...(until ? { until } : {}) }]));
+    };
+    ws.onopen = () => {
+      paging.set(url, 0);
+      ws.send(JSON.stringify(['REQ', 'meta', { kinds: [0], authors: [author] }]));
+      ask();
+    };
+    ws.onmessage = msg => {
+      let d;
+      try { d = JSON.parse(msg.data); } catch { return; }
+      if (d[0] === 'EVENT') {
+        if (d[1] === sub()) { count++; oldest = Math.min(oldest, d[2]?.created_at ?? Infinity); paging.set(url, (paging.get(url) || 0) + 1); }
+        if (d[2]?.kind === 35353) newest = Math.max(newest, d[2].created_at || 0);
+        if (accept(d[2]) && onEvent(d[2], isLive)) {
+          if (isLive) onUpdate();
+          else changed = true;
+        }
+      } else if (d[0] === 'EOSE' && d[1] === 'meta') {
+        ws.send(JSON.stringify(['CLOSE', 'meta']));
+      } else if (d[0] === 'EOSE' && d[1] === sub()) {
+        ws.send(JSON.stringify(['CLOSE', d[1]]));
+        // What came so far is shown while the rest loads
+        if (changed) { changed = false; onUpdate(); }
+        // The next page, until one comes back empty (or doesn't go further back)
+        if (count > 0 && oldest < prevOldest) { prevOldest = oldest; until = oldest - 1; page++; }
+        else { step++; page = 0; until = null; prevOldest = Infinity; }
+        if (step < HISTORY.length) { setTimeout(() => ws.readyState === 1 && ask(), PAGE_PAUSE); return; }
+        goLive();
+      } else if (d[0] === 'CLOSED' && d[1] !== 'meta') {
+        // Too many queries: the same one again, later
+        if (d[1] === sub() && /^rate-limited/i.test(d[2] || '')) { setTimeout(() => ws.readyState === 1 && ask(), 10 * PAGE_PAUSE); return; }
+        // A deletion query refused (some relays don't index #k): the rest goes on without it
+        if (d[1] === sub() && step === 2) { step++; goLive(); return; }
+        refused = true;
+        pool.refused++;
+        console.warn(url, 'refuses the platform events:', d[2]);
+        ws.close();
+      }
+    };
+    function goLive() {
+      paging.delete(url);
+      ws.send(JSON.stringify(['REQ', 'live',
+        { kinds: [35353], authors: [author], since: startedAt - 60 },
+        { kinds: [5], authors: [author], '#k': ['35353'], since: startedAt - 60 }]));
+      isLive = true;
+      pool.live++;
+      onStatus();
+    }
+    ws.onclose = () => {
+      paging.delete(url);
+      if (isLive) pool.live--;
+      onStatus();
+      if (refused) return;
+      const next = isLive ? 0 : attempt + 1;
+      setTimeout(() => connect(url, next), Math.min(60000, 5000 * 2 ** next));
+    };
+    ws.onerror = () => ws.close();
+  }
+
+  return pool;
 }

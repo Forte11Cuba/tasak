@@ -1,8 +1,8 @@
 // The chart: price, candles or weighted, with the volume in its own resizable pane, and its legend.
 import { WEEK, MONTH, YEAR } from '../shared/time.js';
 import { chartPoints } from '../shared/rate.js';
-import { state } from './state.js';
-import { fmtPrice, fmtPct } from './format.js';
+import { state, assetTicker } from './state.js';
+import { fmtPrice, fmtPct, fmtAmt } from './format.js';
 import { openEvent } from './event-dialog.js';
 
 const css = getComputedStyle(document.documentElement);
@@ -176,8 +176,9 @@ function renderLegend(time) {
   } else if (p.order) {
     const o = p.order;
     el.innerHTML = `
-      <div class="row">${when}${kv(t('Precio'), fmtPrice(o.price), cls)}${fmtChg(p.chg)}<span class="muted">${t(o.side === 'buy' ? 'compra de BTC' : 'venta de BTC')}</span></div>
-      <div class="row">${kv('Vol', fmtInt(o.size) + ' ' + state.fiat)}${kv('Sats', fmtInt(o.amt))}<span class="muted">${esc(o.pm.join(', '))}</span></div>
+      <div class="row">${when}${kv(t('Precio'), fmtPrice(o.price), cls)}${fmtChg(p.chg)}<span class="muted">${CONFIG.platform
+        ? t(o.side === 'buy' ? 'compra de {a}' : 'venta de {a}', { a: esc(assetTicker()) }) : t(o.side === 'buy' ? 'compra de BTC' : 'venta de BTC')}</span></div>
+      <div class="row">${kv('Vol', fmtInt(o.size) + ' ' + state.fiat)}${CONFIG.platform ? kv(esc(assetTicker()), fmtAmt(o.amt)) : kv('Sats', fmtInt(o.amt))}<span class="muted">${esc(o.pm.join(', '))}</span></div>
       ${evRow(o)}`;
   } else if (state.mode === 'candles') {
     el.innerHTML = `
@@ -193,7 +194,7 @@ function renderLegend(time) {
 const TF_SHORT = { 0: 'Orden', 3600: '1h', 14400: '4h', 86400: '1D', 604800: '1W', 2592000: '1M', 31536000: '1Y' };
 
 export function renderChart(trades) {
-  setEmpty(chartC, !trades.length, state.live ? t('No hay órdenes completadas con estos filtros') : null);
+  setEmpty(chartC, !trades.length, t(state.loading ? 'Cargando órdenes de los relays…' : 'No hay órdenes completadas con estos filtros'));
   const mode = state.mode;
   if (mode === 'candles' && !state.tf) state.tf = 86400;   // candles need a period
   // A marker per point only in «Each order» (each one is an order): by period, the flat stretches without
@@ -245,7 +246,7 @@ export function renderChart(trades) {
   renderLegend();
   // Fit to all the data unless the visitor has moved or zoomed the chart in this view: otherwise
   // every render (a new order, the refresh every minute) would lose their zoom
-  const fitKey = [state.fiat, state.unit, mode, state.tf, [...state.nodeSel], [...(state.pmSel || [])].sort()].join('|');
+  const fitKey = [state.fiat, state.unit, state.asset, mode, state.tf, [...state.nodeSel], [...(state.pmSel || [])].sort()].join('|');
   if (fitKey !== chartFit.key) chartFit = { key: fitKey, moved: false };
   if (!chartFit.moved) fitView();
   positionVolTag();

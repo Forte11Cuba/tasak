@@ -64,6 +64,8 @@ header {
 .node-row .name { flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .node-row .check { color: var(--accent); }
 .node-pop hr { border: 0; border-top: 1px solid var(--line); margin: 4px 0; }
+/* «Platform → who publishes»: the name of each group (Mostro, then each platform of .env) */
+.node-group { padding: 4px 12px 2px; color: var(--muted); font-size: 11px; letter-spacing: .04em; text-transform: uppercase; }
 .node-form { display: flex; gap: 6px; padding: 8px 12px 4px; margin-top: 4px; border-top: 1px solid var(--line); }
 .node-form input {
   flex: 1; min-width: 0; background: var(--bg); color: var(--text); border: 1px solid var(--line);
@@ -115,6 +117,8 @@ select {
 }
 .chip.on { border-color: var(--accent); color: var(--text); background: var(--accent-bg); }
 .chip .c { opacity: .6; margin-left: 4px; }
+/* A platform's payment method, one at a time: the longest names cut, whole on hover */
+#pmSelect { max-width: 220px; text-overflow: ellipsis; }
 .sep { width: 1px; height: 18px; background: var(--line); margin: 0 8px; }
 [hidden] { display: none !important; }
 
@@ -148,8 +152,8 @@ main {
 }
 .icon-btn:hover { color: var(--text); }
 
-/* Dropdown menu of the payment method filter */
-.menu { position: relative; margin-left: auto; }
+/* Dropdown menus: the payment methods (in the bar, with the currency) and the timeframe */
+.menu { position: relative; }
 .menu > summary {
   list-style: none; cursor: pointer; color: var(--muted); font-size: 12px;
   border: 1px solid var(--line); border-radius: 4px; padding: 3px 9px;
@@ -163,6 +167,10 @@ main {
   box-shadow: 0 8px 24px var(--shadow);
 }
 .menu .pop p { margin: 0 0 8px; color: var(--muted); font-size: 11px; }
+/* The methods filter everything (chart, tables, order book): next to the currency, opening rightwards */
+#pmMenu .pop { left: 0; right: auto; }
+/* The chart's own controls on the left, full screen on the right */
+#fsBtn { margin-left: auto; }
 .menu .pop .chips { display: flex; flex-wrap: wrap; gap: 6px; }
 /* Timeframe dropdown, like TradingView's */
 .menu.tf { margin-left: 0; }

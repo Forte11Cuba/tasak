@@ -274,8 +274,9 @@ OTHER_MOSTRO_PUBKEYS="
 | `LANGUAGE` | Idioma por defecto, `es` o `en` (vacío = el del navegador). Cada visitante puede cambiarlo con ES · EN |
 | `MOSTRO_PUBKEYS` | Nodos a visualizar, en hex o npub, separados por coma (obligatorio): los del sitio, archivados y parte de su Tasa K |
 | `OTHER_MOSTRO_PUBKEYS` | Otros nodos que los visitantes pueden elegir en el selector de nodos, en este orden, en hex o npub (opcional): se leen en vivo de los relays, sin archivarlos ni contarlos en la Tasa K del sitio. El ejemplo trae los demás nodos de confianza de la app de Mostro |
-| `PLATFORMS` | Otras plataformas P2P cuyas órdenes y operaciones archiva el servidor (opcional): una por línea, un nombre que eliges y sus claves, `nombre: npub1…, npub1…`. Archiva sus eventos kind 38383 (bitcoin, NIP-69) y 35353 (otros activos, propuesto en [nostr-protocol/nips#2541](https://github.com/nostr-protocol/nips/pull/2541)) y las peticiones de borrado de esas operaciones; no cuentan en la Tasa K y el sitio aún no los muestra |
-| `OTHER_PLATFORMS` | Otras plataformas P2P que se leen en vivo de los relays, como `OTHER_MOSTRO_PUBKEYS` (opcional): mismo formato que `PLATFORMS`, sin archivarlas. Cada nombre y cada clave, una sola vez entre las dos listas. El sitio aún no las muestra |
+| `PLATFORMS` | Otras plataformas P2P cuyas órdenes y operaciones archiva el servidor (opcional): una por línea, un nombre que eliges y sus claves, `nombre: npub1…, npub1…`. Archiva sus eventos kind 38383 (bitcoin, NIP-69) y 35353 (otros activos, propuesto en [nostr-protocol/nips#2541](https://github.com/nostr-protocol/nips/pull/2541)) y las peticiones de borrado de esas operaciones. No cuentan en la Tasa K: el selector de nodos ofrece cada una con su propia tasa (ver [Otras plataformas](#otras-plataformas)) |
+| `OTHER_PLATFORMS` | Otras plataformas P2P que se leen en vivo de los relays, como `OTHER_MOSTRO_PUBKEYS` (opcional): mismo formato que `PLATFORMS`, sin archivarlas. Cada nombre y cada clave, una sola vez entre las dos listas. El selector de nodos las ofrece como las de `PLATFORMS` |
+| `PLATFORM_HIDDEN_PAYMENT_METHODS` | Métodos de pago que nunca se eligen por defecto en la página de cada plataforma, cuya tasa es de un método a la vez (opcional): una por línea, el nombre de la plataforma como en `PLATFORMS` u `OTHER_PLATFORMS` y sus métodos tal como los publica, `nombre: método, método`. Los visitantes pueden elegirlos igualmente; `Pruebas` nunca es el de por defecto. Los métodos que no publica se ignoran; un nombre que no es una plataforma es un error |
 | `RELAYS` | Relays a los que conectarse, separados por coma (obligatorio; `wss://`) |
 | `FIAT` | Moneda que se muestra al abrir (vacío = la más usada en el nodo) |
 | `TIMEZONE` | Zona horaria de fechas y velas, p. ej. `America/Caracas` (vacío = la del navegador) |
@@ -384,9 +385,45 @@ La gráfica tiene tres modos:
 - **Velas**: apertura, máximo, mínimo y cierre de cada periodo.
 - **Ponderado**: en cada punto, el precio ponderado por volumen de las 24 horas anteriores, `Σ(precio × monto) ÷ Σ monto`. Con un punto por orden, las 24 horas hasta esa orden: la Tasa K tras ella. Por periodo, las 24 horas hasta el cierre del periodo (o hasta ahora, en el actual): ese sí se mueve con el tiempo, y difiere de la Tasa K cuando el periodo cerró sin órdenes.
 
-El volumen va en la parte baja de la gráfica y, al pasar el ratón, la leyenda de arriba muestra los valores de ese punto. La gráfica se puede ampliar y desplazar (el zoom se mantiene aunque lleguen órdenes nuevas; doble clic para volver a verlo todo) y expandir a pantalla completa. El filtro por método de pago está en el menú «Método de pago».
+El volumen va en la parte baja de la gráfica y, al pasar el ratón, la leyenda de arriba muestra los valores de ese punto. La gráfica se puede ampliar y desplazar (el zoom se mantiene aunque lleguen órdenes nuevas; doble clic para volver a verlo todo) y expandir a pantalla completa. El filtro por método de pago es el menú «Método de pago», junto a la moneda: vale para la gráfica, las tablas y el libro de órdenes.
 
 Los métodos de `HIDDEN_PAYMENT_METHODS` quedan fuera por defecto; se pueden activar desde el menú.
+
+### Otras plataformas
+
+`PLATFORMS` y `OTHER_PLATFORMS` añaden otras plataformas P2P que publican en Nostr sus órdenes y
+operaciones de activos que no son bitcoin (saldos propios, monedas estables…) contra monedas locales: kind
+35353, propuesto en [nostr-protocol/nips#2541](https://github.com/nostr-protocol/nips/pull/2541). El
+selector de nodos muestra primero Mostro y después cada plataforma, con el nombre del `.env`, y debajo sus
+claves (el nombre de su perfil o el dominio de su NIP-05). Cada una abre su propia página
+(`?platform=nombre`, y `&key=npub…` para una clave que no sea la primera).
+
+Esa página funciona como la de un nodo, con estas diferencias:
+
+- **La tasa** es por plataforma, activo, moneda y método de pago, sin mezclarlos, con la misma fórmula y ventana que la
+  Tasa K (las 24 horas que terminan en la última operación), pero solo con **operaciones**, cada ejecución
+  de una orden: precio = `fa ÷ amt`, nunca el `price` ni la `premium` de la orden. El activo se identifica
+  como dice el NIP: los tokens por capa, red y contrato; los activos nativos por capa, red y ticker; los
+  saldos en la propia plataforma (`layer = internal`) por la clave de la plataforma, la red y el ticker.
+- **Fuera**: las operaciones retiradas con una petición de borrado NIP-09 y los eventos que no siguen el
+  NIP (se cuentan en el tooltip del estado de la conexión). También se comprueban las órdenes abiertas; las
+  demás versiones de una orden solo las reemplazan. Las órdenes de la propia plataforma (`maker =
+  platform`) cuentan como las demás; la ventana del evento lo indica.
+- **Un método de pago a la vez**, como la moneda y el activo: cada método es un mercado con su propio
+  precio (una transferencia bancaria y un saldo móvil pueden ir a precios muy distintos), así que promediar
+  dos los mezclaría. La página muestra el método con más operaciones; el visitante elige otro
+  en el selector de método, junto a la moneda y el activo. Los métodos son cada valor de `pm` tal como lo publica la plataforma, no la lista de
+  la app de Mostro; las órdenes de prueba se detectan por el texto, como en Mostro.
+  `PLATFORM_HIDDEN_PAYMENT_METHODS` fija los que nunca se muestran por defecto.
+- **El libro de órdenes** muestra solo las disponibles: `pending`, sin `expires_at` ni `expiration`
+  vencidos. Una orden con prima no tiene precio (el NIP no publica el precio de mercado de la plataforma):
+  «—», al final.
+- **Sin sats ni precio en dólares**: la unidad es el activo (`CUP/QUSD`), el volumen va en la moneda y en el
+  activo, y no hay precio de referencia.
+- **Se lee en vivo en el navegador**: toda la historia que guardan los relays de sus operaciones, órdenes
+  disponibles y borrados, como con los nodos, página a página y con pausa (los relays cortan a quien
+  pregunta muy rápido). Un relay que rechaza el kind 35353 no cuenta como caído. Este sitio no firma la
+  tasa de una plataforma.
 
 ## Seguridad
 
@@ -532,13 +569,13 @@ se la devolvería a sí mismo a través de las primas.
 | `web/` | el sitio, la carpeta que se publica |
 | `web/index.html` | la tasa: gráfica, libro de órdenes y órdenes ejecutadas |
 | `web/node.html` | información del nodo Mostro |
-| `web/js/` | los módulos de las páginas: cliente de relays (`nostr-client.js`) y almacén de eventos (`event-store.js`), compartidos por las dos páginas, gráfica, paneles, precios y estado |
+| `web/js/` | los módulos de las páginas: cliente de relays (`nostr-client.js`) y almacén de eventos (`event-store.js`), compartidos por las dos páginas, gráfica, paneles, precios y estado, y la página de otra plataforma (`platform.js`) |
 | `web/css/` | estilos de cada página |
 | `web/i18n.js` | idioma (español / inglés): diccionario y traducción de textos |
 | `web/common.js`, `web/common.css` | configuración, formato, colores y tarjeta del nodo, compartidos por las dos páginas |
 | `web/vendor/` | librerías copiadas (sin depender de CDN) y la lista de métodos de pago por moneda de la app de Mostro (`mostro-payment-methods.js`) |
-| `shared/` | lógica pura de la tasa (módulos ES: métodos de pago, órdenes, precios del nodo (`mostro-rates`), zonas horarias y periodos, unidades, Tasa K y velas), que usan las páginas (`tasak` la copia a `web/shared/`) |
-| `shared/test/` | pruebas de `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), datos reales fijos (`fixtures/`), los valores de referencia que el código debe reproducir (`expected.json`) y casos escritos a mano (`cases.json`): los vectores que también pasa la versión en Rust de esta lógica (`server/src/logic/`) |
+| `shared/` | lógica pura de la tasa (módulos ES: métodos de pago, órdenes, precios del nodo (`mostro-rates`), zonas horarias y periodos, unidades, Tasa K y velas, órdenes y operaciones de otras plataformas (`p2p.js`)), que usan las páginas (`tasak` la copia a `web/shared/`) |
+| `shared/test/` | pruebas de `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), datos reales fijos (`fixtures/`), los valores de referencia que el código debe reproducir (`expected.json`) y casos escritos a mano (`cases.json`): los vectores que también pasa la versión en Rust de esta lógica (`server/src/logic/`). `p2p.js` aún no tiene versión en Rust: el servidor no calcula nada con las otras plataformas |
 | `server/` | el servidor de tasaK en Rust (`tasak`): lee el `.env`, genera `web/config.js`, sirve `web/` y archiva los eventos del nodo; su servicio de systemd es `server/tasak.service`. `src/logic/` es la lógica de `shared/` en Rust, comprobada con los mismos vectores (`server/tests/shared_vectors.rs`); `server/tests/config-cases.json` es el `web/config.js` que debe salir de cada `.env` (`cargo test`) |
 | `Dockerfile`, `docker-compose.yml`, `Caddyfile` | la imagen de Docker (`tasak` con `web/` y `shared/`) y un despliegue de ejemplo, con Caddy para HTTPS (ver [Docker](#docker)) |
 | `.github/workflows/release.yml` | publica una versión al empujar una etiqueta `vX.Y.Z` (debe coincidir con `server/Cargo.toml`): los binarios estáticos y la imagen de Docker (amd64 y arm64, en GHCR), tras comprobar que funcionan; lanzada a mano, o en un pull request que la cambie, solo compila y comprueba |

@@ -271,8 +271,9 @@ OTHER_MOSTRO_PUBKEYS="
 | `LANGUAGE` | Default language, `es` or `en` (empty = the browser language). Visitors can switch it with ES · EN |
 | `MOSTRO_PUBKEYS` | Nodes to show, in hex or npub, comma separated (required): the site's, archived and part of its Tasa K |
 | `OTHER_MOSTRO_PUBKEYS` | Other nodes visitors can pick in the node selector, in this order, hex or npub (optional): read live from the relays, not archived nor part of the site's Tasa K. The example has the Mostro app's other trusted nodes |
-| `PLATFORMS` | Other P2P platforms whose orders and trades the server archives (optional): one per line, a name you choose and its keys, `name: npub1…, npub1…`. It archives their kind 38383 (bitcoin, NIP-69) and 35353 (other assets, proposed in [nostr-protocol/nips#2541](https://github.com/nostr-protocol/nips/pull/2541)) events and the deletions of those trades; they are not part of the Tasa K, and the site doesn't show them yet |
-| `OTHER_PLATFORMS` | Other P2P platforms read live from the relays, like `OTHER_MOSTRO_PUBKEYS` (optional): same format as `PLATFORMS`, not archived. A name or a key only once in both lists. The site doesn't show them yet |
+| `PLATFORMS` | Other P2P platforms whose orders and trades the server archives (optional): one per line, a name you choose and its keys, `name: npub1…, npub1…`. It archives their kind 38383 (bitcoin, NIP-69) and 35353 (other assets, proposed in [nostr-protocol/nips#2541](https://github.com/nostr-protocol/nips/pull/2541)) events and the deletions of those trades. They are not part of the Tasa K: the node selector offers each one with its own rate (see [Other platforms](#other-platforms)) |
+| `OTHER_PLATFORMS` | Other P2P platforms read live from the relays, like `OTHER_MOSTRO_PUBKEYS` (optional): same format as `PLATFORMS`, not archived. A name or a key only once in both lists. Offered in the node selector like `PLATFORMS` |
+| `PLATFORM_HIDDEN_PAYMENT_METHODS` | Payment methods never chosen by default on each platform's page, whose rate is of one method at a time (optional): one per line, the platform's name as in `PLATFORMS` or `OTHER_PLATFORMS` and its methods as it publishes them, `name: method, method`. Visitors can still choose them; `Pruebas` is never the default. Methods it doesn't publish are ignored; a name that isn't a platform is an error |
 | `RELAYS` | Relays to connect to, comma separated (required; `wss://`) |
 | `FIAT` | Currency shown on load (empty = the most traded one on the node) |
 | `TIMEZONE` | Time zone for dates and candles, e.g. `America/Caracas` (empty = the browser's) |
@@ -381,9 +382,44 @@ The chart has three modes:
 
 Volume is shown at the bottom of the chart and, when hovering, the legend at the top shows that point's
 values. The chart can be zoomed and scrolled (the zoom is kept when new orders arrive; double-click to see
-everything again) and can go full screen. The payment method filter is in the «Payment method» menu.
+everything again) and can go full screen. The payment method filter is the «Payment method» menu, next to the currency: it applies to the chart, the tables and the order book.
 
 The methods in `HIDDEN_PAYMENT_METHODS` are left out by default; they can be enabled from that menu.
+
+### Other platforms
+
+`PLATFORMS` and `OTHER_PLATFORMS` add other P2P platforms that publish on Nostr their orders and trades
+of assets other than bitcoin (their own balances, stablecoins…) against fiat currencies: kind 35353,
+proposed in [nostr-protocol/nips#2541](https://github.com/nostr-protocol/nips/pull/2541). The node
+selector shows Mostro first and then each platform, by the name given in `.env`, with its keys below
+(their profile's name, or the domain of its NIP-05). Each one opens its own page (`?platform=name`, and
+`&key=npub…` for a key other than the first).
+
+That page works like a node's, with these differences:
+
+- **The rate** is per platform, asset, currency and payment method, never mixed, with the same formula and window as the
+  Tasa K (the 24 hours that end at the last trade) but only from **trades**, each execution of an order:
+  price = `fa ÷ amt`, never the order's `price` or `premium`. The asset is identified as the NIP says:
+  tokens by layer, network and contract; native assets by layer, network and ticker; balances on the
+  platform's own ledger (`layer = internal`) by the platform's key, network and ticker.
+- **Left out**: trades withdrawn with a NIP-09 deletion request, and events that don't follow the NIP
+  (counted in the connection status's tooltip). Open orders are checked too; the other versions of an
+  order only replace them. Orders made by the platform itself (`maker = platform`) count as any other;
+  the event's window says so.
+- **One payment method at a time**, like the currency and the asset: each method is a market with its own
+  price (a bank transfer and a mobile balance can trade at very different prices), so averaging two
+  would mix them. The page shows the most traded method; the visitor picks another one in the method
+  selector, next to the currency and the asset. Methods are each `pm` value as the platform publishes it, not the Mostro app's list; test orders
+  are detected by their text as in Mostro. `PLATFORM_HIDDEN_PAYMENT_METHODS` sets the ones never shown
+  by default.
+- **The order book** shows only available orders: `pending`, with neither `expires_at` nor `expiration`
+  elapsed. An order with a premium has no price (the NIP doesn't publish the platform's market price):
+  «—», last.
+- **No sats nor dollar price**: the unit is the asset (`CUP/QUSD`), the volume is in the currency and the
+  asset, and there is no reference price.
+- **Read live in the browser**: the whole history the relays keep of its trades, available orders and
+  deletions, as with the nodes, page by page with a pause (relays cut off clients that ask too fast). A
+  relay that refuses kind 35353 doesn't count as down. This site doesn't sign a platform's rate.
 
 ## Security
 
@@ -521,13 +557,13 @@ itself through the premiums.
 | `web/` | the site, the folder to publish |
 | `web/index.html` | the rate: chart, order book and executed orders |
 | `web/node.html` | Mostro node information |
-| `web/js/` | the pages' modules: relay client (`nostr-client.js`) and event store (`event-store.js`) shared by both pages, chart, panels, prices and state |
+| `web/js/` | the pages' modules: relay client (`nostr-client.js`) and event store (`event-store.js`) shared by both pages, chart, panels, prices and state, and another platform's page (`platform.js`) |
 | `web/css/` | styles of each page |
 | `web/i18n.js` | language (Spanish / English): dictionary and text translation |
 | `web/common.js`, `web/common.css` | configuration, formatting, colours and node card, shared by both pages |
 | `web/vendor/` | copied libraries (no CDN) and the Mostro app's payment methods per currency (`mostro-payment-methods.js`) |
-| `shared/` | pure logic of the rate (ES modules: payment methods, orders, the node's prices (`mostro-rates`), time zones and periods, units, Tasa K and candles), used by the pages (`tasak` copies it to `web/shared/`) |
-| `shared/test/` | tests of `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), fixed real data (`fixtures/`), the reference values the code must reproduce (`expected.json`) and hand-written cases (`cases.json`): the vectors that the Rust version of this logic (`server/src/logic/`) passes too |
+| `shared/` | pure logic of the rate (ES modules: payment methods, orders, the node's prices (`mostro-rates`), time zones and periods, units, Tasa K and candles, other platforms' orders and trades (`p2p.js`)), used by the pages (`tasak` copies it to `web/shared/`) |
+| `shared/test/` | tests of `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), fixed real data (`fixtures/`), the reference values the code must reproduce (`expected.json`) and hand-written cases (`cases.json`): the vectors that the Rust version of this logic (`server/src/logic/`) passes too. `p2p.js` has no Rust version yet: the server computes nothing with the other platforms |
 | `server/` | the tasaK server in Rust (`tasak`): reads `.env`, generates `web/config.js`, serves `web/` and archives the node's events; its systemd service is `server/tasak.service`. `src/logic/` is the logic of `shared/` in Rust, checked with the same vectors (`server/tests/shared_vectors.rs`); `server/tests/config-cases.json` is the `web/config.js` each `.env` must give (`cargo test`) |
 | `Dockerfile`, `docker-compose.yml`, `Caddyfile` | the Docker image (`tasak` with `web/` and `shared/`) and an example deployment, with Caddy for HTTPS (see [Docker](#docker)) |
 | `.github/workflows/release.yml` | publishes a version when a `vX.Y.Z` tag is pushed (it must match `server/Cargo.toml`): the static binaries and the Docker image (amd64 and arm64, in GHCR), after checking that they run; run by hand, or in a pull request that changes it, it only builds and checks |

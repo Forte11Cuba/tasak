@@ -36,6 +36,11 @@ export const state = {
   profiles: new Map(),
   profilesAsked: false,
   sigs: 'cargando',
+  // The page of a P2P platform (?platform=): the chosen asset (its identity, see shared/p2p.js) and the
+  // assets traded in the chosen currency
+  asset: null,
+  assetAuto: true,
+  assets: [],
   // From the server's snapshot (api/snapshot.json), if there is one
   serverBtcUsd: new Map(),   // order key -> { usd, source, at }: the BTC/USD the server gave it
   signedRate: null,          // the Tasa K signed with the key of config.js (ratePubkey)
@@ -61,4 +66,14 @@ export const nodeName = k => state.nodeNames.get(k) || state.profiles.get(k)?.na
 export const nodePicture = k => {
   const pic = state.nodeMeta.get(k)?.profile?.picture || state.profiles.get(k)?.picture;
   return pic && /^https:\/\//.test(pic) ? pic : '';
+};
+
+// Ticker of the chosen asset of a platform (QUSD, USDT…)
+export const assetTicker = () => (state.assets.find(a => a.id === state.asset)?.c || '…').toUpperCase();
+// Name of a platform's pubkey: its profile's name or, without one, the domain of its NIP-05 (as its
+// profile says, not checked: the key comes from .env)
+export const publisherName = k => {
+  const p = state.profiles.get(k);
+  const domain = p?.nip05?.split('@').pop();
+  return p?.name || (domain && /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(domain) ? domain.toLowerCase() : '') || shortKey(k);
 };
