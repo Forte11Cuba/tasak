@@ -160,15 +160,42 @@ const fmtInt = n => Math.round(n).toLocaleString(LOCALE);
 const fmtTime = ts => new Date(ts * 1000).toLocaleString(LOCALE, {
   timeZone: CONFIG.tz, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
 });
-// The offset of the visitor's time zone at `ts` (now by default), from Intl, so that it follows daylight
-// saving time and half hours: UTC−5, UTC+5:30, UTC
+// The offset of the visitor's time zone at `ts` (now by default), so that it follows daylight saving time
+// and half hours: UTC−5, UTC+5:30, UTC. From Intl's shortOffset (GMT-5); browsers without it (Chrome < 95,
+// Safari < 15.4, Firefox < 91: old phones' WebViews) throw RangeError, and then it is computed like
+// tzOffset in shared/time.js: the zone's calendar fields minus UTC. The formatter is made only once
+let tzFormat = null;
 const tzOffsetName = (ts = Date.now() / 1000) => {
-  const part = new Intl.DateTimeFormat('en-US', { timeZone: CONFIG.tz, timeZoneName: 'shortOffset' })
-    .formatToParts(new Date(ts * 1000)).find(p => p.type === 'timeZoneName');
-  return (part?.value || 'GMT').replace('GMT', 'UTC').replace('-', '−');
+  if (!tzFormat) {
+    try {
+      tzFormat = { short: new Intl.DateTimeFormat('en-US', { timeZone: CONFIG.tz, timeZoneName: 'shortOffset' }) };
+    } catch {
+      tzFormat = { fields: new Intl.DateTimeFormat('en-US', { timeZone: CONFIG.tz, hourCycle: 'h23', year: 'numeric',
+        month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' }) };
+    }
+  }
+  const s = Math.floor(ts);
+  let minutes;
+  if (tzFormat.short) {
+    const part = tzFormat.short.formatToParts(new Date(s * 1000)).find(p => p.type === 'timeZoneName')?.value || '';
+    const m = part.match(/([+-])(\d+)(?::(\d+))?/);
+    minutes = m ? (m[1] === '-' ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3] || 0)) : 0;
+  } else {
+    const p = {};
+    for (const { type, value } of tzFormat.fields.formatToParts(new Date(s * 1000))) p[type] = Number(value);
+    minutes = Math.round((Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) / 1000 - s) / 60);
+  }
+  if (!minutes) return 'UTC';
+  const a = Math.abs(minutes);
+  return `UTC${minutes < 0 ? '−' : '+'}${Math.floor(a / 60)}${a % 60 ? ':' + String(a % 60).padStart(2, '0') : ''}`;
 };
 // Which time zone the dates are in, for tooltips
-const tzNote = ts => t('Horas en tu zona horaria: {zone} ({offset})', { zone: CONFIG.tz, offset: tzOffsetName(ts) });
+const tzNote = ts => {
+  const offset = tzOffsetName(ts);
+  // UTC, not «UTC (UTC)»
+  return offset === CONFIG.tz ? t('Horas en tu zona horaria: {zone}', { zone: offset })
+    : t('Horas en tu zona horaria: {zone} ({offset})', { zone: CONFIG.tz, offset });
+};
 
 // ---------- Node information: profile (0), information (38385) and relays (10002) ----------
 const META_KINDS = [0, 38385, 10002];

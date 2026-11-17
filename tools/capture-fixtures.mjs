@@ -19,6 +19,8 @@ if (!archive) {
   process.exit(1);
 }
 mkdirSync(dir, { recursive: true });
+let previousMeta = null;
+try { previousMeta = JSON.parse(readFileSync(new URL('meta.json', dir), 'utf8')); } catch {}
 
 // --- Events: unique by id, only what web/index.html reads (orders and node metadata) ---
 // (each archive line is {"relay", "recibido", "evento"}, the archiver's format)
@@ -82,9 +84,9 @@ write('yadio.json', yadio);
 write('config.json', config);
 write('meta.json', {
   now,
-  // The visitor's browser time zone, which the page's dates and candles follow: this machine's (TZ=… to
-  // choose another one)
-  browserTimeZone: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+  // The visitor's browser time zone, which the page's dates and candles follow: the previous fixtures' one,
+  // so that capturing them in another country doesn't change expected.json silently; TZ=… to choose another
+  browserTimeZone: process.env.TZ || previousMeta?.browserTimeZone || 'UTC',
   capturedAt: new Date().toISOString(),
   events: { file: archive.split('/').pop(), total: events.length, orders: orders.length },
   btcusd: { source: 'Coinbase BTC-USD candles granularity=3600 (close)', hours: Object.keys(btcusd).length },
