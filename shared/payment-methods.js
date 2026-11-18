@@ -15,10 +15,13 @@ export const normPm = s => s.normalize('NFD').replace(/[̀-ͯ]/g, '')
 // Methods of a currency; `lists` is { CUP: [...], ..., default: [...] }
 export const pmListFor = (lists, fiat) => lists[fiat] || lists.default || FALLBACK_LIST;
 
+// Whether a method's text says the order is a test («prueba», «test», «no tomar»)
+export const isTestPm = raw => /prueba|\btest\b|no tomar/.test(normPm(raw));
+
 // Method of the list that a free text refers to
 export function pmKey(raw, list) {
   const s = normPm(raw);
-  if (/prueba|\btest\b|no tomar/.test(s)) return TESTS;
+  if (isTestPm(raw)) return TESTS;
   const norm = list.map(m => ({ m, n: normPm(m) }));
   // 1) equal («Cash» → Cash, not Cash App); 2) the text contains the method, the longest one
   // («360 CUP de saldo móvil 📲» → Saldo móvil); 3) the text is part of a single method («Clásica»)

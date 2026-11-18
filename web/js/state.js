@@ -29,6 +29,7 @@ export const state = {
   // 'line' = price, 'candles' = candles, 'avg' = weighted; by default the price of each order,
   // or the last view chosen in this browser
   mode: 'line',
+  depth: false,        // «Depth» tab: the order book now, instead of the chart over time
   tf: 0,               // chart period in seconds; 0 = one point per order
   pmSel: null,         // Set of active methods; null = defaults
   nodeSel: new Set(CONFIG.mostros),
@@ -36,6 +37,11 @@ export const state = {
   profiles: new Map(),
   profilesAsked: false,
   sigs: 'cargando',
+  // The page of a P2P platform (?platform=): the chosen asset (its identity, see shared/p2p.js) and the
+  // assets traded in the chosen currency
+  asset: null,
+  assetAuto: true,
+  assets: [],
   // From the server's snapshot (api/snapshot.json), if there is one
   serverBtcUsd: new Map(),   // order key -> { usd, source, at }: the BTC/USD the server gave it
   signedRate: null,          // the Tasa K signed with the key of config.js (ratePubkey)
@@ -46,14 +52,15 @@ export const state = {
   snapshotMissing: 0,        // completed orders of that period the relays have and it doesn't
 };
 
-// Last chart view chosen (mode and timeframe)
+// Last chart view chosen (mode, timeframe and whether «Depth» was open)
 try {
   const v = JSON.parse(localStorage.getItem('tasak.view'));
   if (['line', 'candles', 'avg'].includes(v?.mode)) state.mode = v.mode;
   if ([0, 3600, 14400, 86400, 604800, 2592000, 31536000].includes(v?.tf)) state.tf = v.tf;
+  state.depth = v?.depth === true;
 } catch {}
 
-export const saveView = () => { try { localStorage.setItem('tasak.view', JSON.stringify({ mode: state.mode, tf: state.tf })); } catch {} };
+export const saveView = () => { try { localStorage.setItem('tasak.view', JSON.stringify({ mode: state.mode, tf: state.tf, depth: state.depth })); } catch {} };
 
 export const shortKey = k => k.slice(0, 8) + '…';
 export const nodeName = k => state.nodeNames.get(k) || state.profiles.get(k)?.name || shortKey(k);
@@ -61,4 +68,14 @@ export const nodeName = k => state.nodeNames.get(k) || state.profiles.get(k)?.na
 export const nodePicture = k => {
   const pic = state.nodeMeta.get(k)?.profile?.picture || state.profiles.get(k)?.picture;
   return pic && /^https:\/\//.test(pic) ? pic : '';
+};
+
+// Ticker of the chosen asset of a platform (QUSD, USDT…)
+export const assetTicker = () => (state.assets.find(a => a.id === state.asset)?.c || '…').toUpperCase();
+// Name of a platform's pubkey: its profile's name or, without one, the domain of its NIP-05 (as its
+// profile says, not checked: the key comes from .env)
+export const publisherName = k => {
+  const p = state.profiles.get(k);
+  const domain = p?.nip05?.split('@').pop();
+  return p?.name || (domain && /^[a-z0-9.-]+\.[a-z]{2,}$/i.test(domain) ? domain.toLowerCase() : '') || shortKey(k);
 };

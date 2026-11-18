@@ -40,7 +40,7 @@ jobs:
         with:
           node-version: 24
       - name: node --test
-        run: node --test 'shared/test/*.test.js'
+        run: node --test 'shared/test/*.test.js' 'web/test/*.test.js'
       - name: tasak build
         run: |
           cp .env.example .env

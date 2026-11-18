@@ -6,10 +6,12 @@ import { state, store, saveView, HIDDEN_PM } from './state.js';
 import { createRelayPool, fetchProfiles } from './nostr-client.js';
 import { ensurePrices, loadBtcHistory, marketFor, unitPrice } from './prices.js';
 import { chartC, view, renderChart, setEmpty, applyChartTheme } from './chart.js';
+import { renderDepth, applyDepthTheme, depth } from './depth.js';
 import { setStatus, renderStats, renderSelection, renderTrades, renderBook, renderFilters, updatePair, nodeUrl } from './panels.js';
 import { openEvent } from './event-dialog.js';
 import { fetchSnapshot, applySnapshot } from './snapshot.js';
 import { pmListFor } from '../shared/payment-methods.js';
+import { P, p2p, startPlatform, platformTrades, platformBook } from './platform.js';
 
 // ---------- Data: the node's relays ----------
 // Signatures are verified with nostr-tools (vendor/); if it didn't load, we go on unverified and say so
@@ -27,11 +29,20 @@ const relays = createRelayPool({
     return true;
   },
   onUpdate: () => scheduleRender(),
-  onStatus: () => setStatus(),
+  // A relay that goes live or drops: the order book stops or starts saying it is loading
+  onStatus: () => { setStatus(); scheduleRender(); },
 });
+// On a platform's page (?platform=), its own connection instead of the nodes' (started at the end)
+let platformPool = null;
+const pool = () => P ? platformPool : relays;
 Object.defineProperties(state, {
-  live: { get: () => relays.live, enumerable: true },
-  rejected: { get: () => relays.rejected, enumerable: true },
+  live: { get: () => pool()?.live ?? 0, enumerable: true },
+  rejected: { get: () => pool()?.rejected ?? 0, enumerable: true },
+  refused: { get: () => pool()?.refused ?? 0, enumerable: true },
+  // Still loading the history: then an empty table or book says so, not that there are no orders. On a
+  // platform, until the relays with its events have paged through them; with the nodes, until a relay
+  // is live or the server's snapshot came
+  loading: { get: () => P ? platformPool?.loading ?? true : !relays.live && !state.snapshotAt, enumerable: true },
 });
 
 // ---------- Data: the server's snapshot, if there is one ----------
@@ -130,6 +141,7 @@ function scheduleRender() {
       renderQueued = false;
       renderFilters();
       updatePair();
+      if (P) return renderPlatform();
       await ensurePrices();
       if (state.unit === 'usd') {
         // Coinbase only for the orders without the server's BTC/USD
@@ -141,11 +153,26 @@ function scheduleRender() {
       const tasa = renderStats(getOfficialTrades(), trades);
       renderSelection(trades, tasa);
       renderTrades(trades);
-      renderBook(tasa, getBook());
+      const book = getBook();
+      renderBook(tasa, book);
+      renderDepth(tasa, book);
       state.snapshotMissing = snapshotMissing();
       setStatus();
     })
     .catch(e => console.error(e));
+}
+
+// A platform's page: no prices to load (its rate is currency per asset, from its trades) nor snapshot
+function renderPlatform() {
+  // The rate and the rest, of the same trades: the visitor chooses currency, asset and method
+  const trades = platformTrades();
+  renderChart(trades);
+  const tasa = renderStats(trades, trades);
+  renderTrades(trades);
+  const book = platformBook();
+  renderBook(tasa, book);
+  renderDepth(tasa, book);
+  setStatus();
 }
 
 document.getElementById('pms').onclick = e => {
@@ -174,8 +201,26 @@ document.getElementById('nodes').onclick = e => {
 document.getElementById('fiat').onchange = e => {
   state.fiat = e.target.value;
   state.fiatAuto = false;
+  state.assetAuto = true;
   state.pmSel = null;
   state.pmKnown = null;
+  scheduleRender();
+};
+// A platform's asset, instead of the unit
+document.getElementById('asset').onchange = e => {
+  state.asset = e.target.value;
+  state.assetAuto = false;
+  state.pmSel = null;
+  state.pmKnown = null;
+  scheduleRender();
+};
+document.getElementById('asset').setAttribute('aria-label', t('Activo'));
+// A platform's payment method: one at a time, each one is a market with its own price
+const pmSelect = document.getElementById('pmSelect');
+pmSelect.setAttribute('aria-label', t('Método de pago'));
+pmSelect.onchange = () => {
+  state.pmSel = new Set([pmSelect.value]);
+  state.pmChosen = true;
   scheduleRender();
 };
 document.querySelectorAll('[data-unit]').forEach(b => b.onclick = () => {
@@ -190,19 +235,21 @@ document.querySelectorAll('[data-tf]').forEach(b => b.onclick = () => {
   scheduleRender();
 });
 document.querySelectorAll('[data-mode]').forEach(b => b.onclick = () => {
-  state.mode = b.dataset.mode;
+  // «Depth» doesn't change the chart over time: its mode stays for when the visitor comes back
+  state.depth = b.dataset.mode === 'depth';
+  if (!state.depth) state.mode = b.dataset.mode;
   if (state.mode === 'candles' && !state.tf) state.tf = 86400;
   saveView();
   scheduleRender();
 });
 
 // On a theme change the chart takes the new colours and is drawn again
-document.addEventListener('themechange', () => { applyChartTheme(); scheduleRender(); });
+document.addEventListener('themechange', () => { applyChartTheme(); applyDepthTheme(); scheduleRender(); });
 
 // Click on an executed order or one in the order book: its Nostr event
 for (const id of ['trades', 'book']) document.getElementById(id).onclick = e => {
   const tr = e.target.closest('tr[data-key]');
-  const o = tr && state.orders.get(tr.dataset.key);
+  const o = tr && (P ? p2p.docs : state.orders).get(tr.dataset.key);
   if (o) openEvent(o);
 };
 
@@ -245,19 +292,30 @@ applyBookFrac();
 // The node page keeps the URL parameters (same node and relays)
 document.getElementById('nodeBtn2').href = 'node.html' + location.search;
 
-// Node selector: the names and pictures of the nodes not shown, asked for the first time it opens
+// Node and platform selectors: the names and pictures of the nodes and accounts not shown, asked for the
+// first time one opens
 const nodeMenu = document.getElementById('nodeMenu');
-nodeMenu.addEventListener('toggle', () => {
-  if (!nodeMenu.open || state.profilesAsked) return;
+// A platform with a single account: nothing to choose
+nodeMenu.querySelector('summary').addEventListener('click', e => { if (P && P.keys.length < 2) e.preventDefault(); });
+for (const menu of [nodeMenu, document.getElementById('platformMenu')]) menu.addEventListener('toggle', () => {
+  if (!menu.open || state.profilesAsked) return;
   state.profilesAsked = true;
-  const authors = [...CONFIG.siteMostros, ...CONFIG.otherMostros].filter(k => !CONFIG.mostros.includes(k));
+  // On a platform's page no node is loaded: all of them; the platforms' pubkeys always
+  const nodes = [...CONFIG.siteMostros, ...CONFIG.otherMostros].filter(k => P || !CONFIG.mostros.includes(k));
+  const authors = [...new Set([...nodes, ...CONFIG.platforms.flatMap(p => p.keys)])].filter(k => k !== P?.key);
   fetchProfiles({ urls: CONFIG.relays, authors, verify: verifyEvent }).then(found => {
     for (const [k, p] of found) state.profiles.set(k, p);
     if (found.size) scheduleRender();
   });
 });
-// Another node than the site's: its rate isn't the site's (other methods, not signed), on hover
-if (CONFIG.urlNodes) {
+// A platform: its rate isn't the site's (its trades, computed here, not signed), on hover
+if (P) {
+  document.getElementById('nodeLabel').textContent = t('Cuenta');
+  const label = document.getElementById('rateLabel');
+  label.classList.add('guest');
+  label.title = t('Otra plataforma P2P, no un nodo Mostro: la {rate} de {p} se calcula en este navegador con sus operaciones firmadas de los relays, por activo, moneda y método de pago, y este sitio no la firma', { rate: CONFIG.rateName, p: P.name });
+} else if (CONFIG.urlNodes) {
+  // Another node than the site's: its rate isn't the site's (other methods, not signed), on hover
   const label = document.getElementById('rateLabel');
   label.classList.add('guest');
   label.title = t('Nodo que no es de este sitio: la {rate} se calcula en este navegador con sus órdenes de los relays, con todos los métodos de pago salvo las pruebas, y este sitio no la firma', { rate: CONFIG.rateName });
@@ -332,12 +390,27 @@ document.addEventListener('keydown', e => {
 // The page's state and functions, for the checks in tools/ (headless Chrome) and for debugging
 // from the console: module variables are not global
 window.tasak = {
-  state, store, relays, chartC, getTrades, getBook, renderFilters, renderChart, scheduleRender,
-  get view() { return view; }, get rendering() { return rendering; }, get renderQueued() { return renderQueued; },
+  state, store, relays, p2p, get platformPool() { return platformPool; }, chartC, getTrades, getBook, renderFilters, renderChart, scheduleRender,
+  get view() { return view; }, get depth() { return depth; }, get rendering() { return rendering; }, get renderQueued() { return renderQueued; },
 };
 
 updatePair();
-if (!CONFIG.mostros.length || !CONFIG.relays.length) {
+if (CONFIG.platformError) {
+  const msg = t('Plataforma desconocida: {p}', { p: new URLSearchParams(location.search).get('platform') });
+  setStatus(msg);
+  setEmpty(chartC, true, msg);
+} else if (P && !CONFIG.relays.length) {
+  const msg = t('Configuración sin nodos o sin relays válidos');
+  setStatus(msg);
+  setEmpty(chartC, true, msg);
+} else if (P) {
+  // A relay that finishes or drops changes whether it is still loading: drawn again too
+  platformPool = startPlatform({ verify: verifyEvent, onUpdate: () => scheduleRender(), onStatus: () => { setStatus(); scheduleRender(); } });
+  setStatus();
+  scheduleRender();
+  // Expires book orders and moves the 24 h window
+  setInterval(scheduleRender, 60 * 1000);
+} else if (!CONFIG.mostros.length || !CONFIG.relays.length) {
   const msg = CONFIG.fromEnv
     ? t('Configuración sin nodos o sin relays válidos')
     : t('Falta config.js: ejecuta «tasak build» o pasa ?mostro=…&relays=… en la URL');

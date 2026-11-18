@@ -12,12 +12,21 @@
 // - clock and time zone: fixtures/meta.json (now and the visitor's time zone);
 // - any other host is unreachable.
 //
+// It also opens «Depth» and checks that its cumulative amounts come from the order book the page computes
+// (depthCheck); expected.json doesn't change, the default view is still Price + Each order.
+//
+// Then it loads the page again with the browser in another time zone (OTHER_ZONE): dates and candles
+// follow the visitor's zone, so the times shown and the chart's periods change, and must be those of
+// shared/ for that zone; the Tasa K, the prices and the orders must not change.
+//
 // cases.buggyOffsets is not checked: it froze a bug of the old tzOffset that is fixed now (the
 // correct values are in cases.json); --write keeps it as it was.
 import { readFileSync, writeFileSync, existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { serve, openChrome } from './cdp.mjs';
 import { simulation } from './simulation.mjs';
+import { chartPoints } from '../shared/rate.js';
+import { TIMEFRAMES } from '../shared/time.js';
 
 const root = new URL('../', import.meta.url);
 const fixture = n => JSON.parse(readFileSync(new URL(`shared/test/fixtures/${n}`, root), 'utf8'));
@@ -25,6 +34,8 @@ const meta = fixture('meta.json');
 const FIX = { events: fixture('events.json'), btcusd: fixture('btcusd.json'), yadio: fixture('yadio.json'), now: meta.now };
 const expectedFile = new URL('shared/test/expected.json', root);
 const write = process.argv.includes('--write');
+// +14 h from Havana: the day changes
+const OTHER_ZONE = 'Asia/Tokyo';
 
 
 // Runs in the page once it has loaded the fixtures: reads what the site computed. The page's
@@ -138,6 +149,57 @@ async function extract() {
   return r;
 }
 
+// «Depth» on the same fixtures, in every unit: each side's cumulative amount at its outermost point is
+// the sum of the book's priced orders in scale, at the second best order it is that of the two best ones,
+// and the orders left out are counted. Then back to the default view (remembered in this browser)
+async function depthCheck() {
+  const T = window.tasak;
+  const settle = async () => {
+    for (let i = 0; i < 100; i++) {
+      await T.rendering;
+      await new Promise(r => setTimeout(r, 20));
+      if (!T.renderQueued) { await T.rendering; return; }
+    }
+  };
+  const problems = [], seen = [];
+  document.querySelector('[data-mode=depth]').click();
+  await settle();
+  if (!document.getElementById('chart').classList.contains('off') || document.getElementById('depth').classList.contains('off')) {
+    problems.push("«Depth» doesn't replace the chart");
+  }
+  const unit0 = T.state.unit;
+  for (const unit of ['usd', 'btc', 'sat']) {
+    T.state.unit = unit;
+    T.scheduleRender();
+    await settle();
+    const book = T.getBook(), c = T.depth.curve, at = `${T.state.fiat}/${unit}`;
+    if (!c.points.length) { problems.push(`${at}: no points`); continue; }
+    const priced = o => o.price != null;
+    const inScale = o => priced(o) && o.price >= c.center / 2 && o.price <= c.center * 2;
+    const noPrice = [...book.asks, ...book.bids].filter(o => !priced(o)).length;
+    const outside = [...book.asks, ...book.bids].filter(o => priced(o) && !inScale(o)).length;
+    if (c.noPrice !== noPrice || c.outside !== outside) problems.push(`${at}: left out ${c.noPrice}/${c.outside}, the book says ${noPrice}/${outside}`);
+    for (const [name, key, outer, edge] of [['asks', 'ask', c.points.at(-1), (x, p) => x >= p], ['bids', 'bid', c.points[0], (x, p) => x <= p]]) {
+      const os = book[name].filter(inScale);
+      const sum = os.reduce((s, o) => s + o.size, 0);
+      if ((outer[key]?.cum ?? 0) !== sum) problems.push(`${at} ${name}: ${outer[key]?.cum} at the outermost point, the book adds up to ${sum}`);
+      if (os.length < 2) { seen.push(`${at} ${name}: ${os.length} order(s), ${sum}`); continue; }
+      // The grid point of the second best order (the first one at or beyond its price)
+      const pts = key === 'ask' ? c.points : c.points.slice().reverse();
+      const g = pts.find(p => edge(p.x, os[1].price));
+      // Orders further out that fall on the same step of the grid count there too
+      const same = os.slice(2).filter(o => edge(g.x, o.price));
+      const want = os[0].size + os[1].size + same.reduce((s, o) => s + o.size, 0);
+      if (g[key]?.cum !== want) problems.push(`${at} ${name}: ${g[key]?.cum} at the second best order (${os[1].price}), not ${want}`);
+      seen.push(`${at} ${name}: ${os[0].size} + ${os[1].size}${same.length ? ` + ${same.length} on the same step` : ''} = ${g[key].cum} at the second best, ${sum} in all`);
+    }
+  }
+  T.state.unit = unit0;
+  document.querySelector('[data-mode=line]').click();
+  await settle();
+  return { problems, seen };
+}
+
 // Paths where two JSON values differ (at most `max`)
 function differences(a, b, path = '', out = [], max = 20) {
   if (out.length >= max) return out;
@@ -156,18 +218,31 @@ const server = await serve(web, { '/config.js': `window.TASAK_CONFIG = ${JSON.st
 const chrome = await openChrome(['--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1']);
 try {
   const p = await chrome.newPage();
-  await p.cmd('Emulation.setTimezoneOverride', { timezoneId: meta.browserTimeZone });
   await p.cmd('Emulation.setDeviceMetricsOverride', { width: 1400, height: 900, deviceScaleFactor: 1, mobile: false });
   await p.cmd('Page.addScriptToEvaluateOnNewDocument', { source: `(${simulation})(${JSON.stringify(FIX)});` });
-  await p.goto(`${server.url}/index.html?lang=es`);
-  await p.waitFor('window.tasak && tasak.state.live === CONFIG.relays.length');
-  const r = await p.evaluate(`(${extract})()`);
+  // The page with the browser in `timeZone`: what it computed, the zone it uses and the zone's tag
+  const run = async timeZone => {
+    p.errors.length = 0;
+    await p.cmd('Emulation.setTimezoneOverride', { timezoneId: timeZone });
+    await p.goto(`${server.url}/index.html?lang=es`);
+    await p.waitFor('window.tasak && tasak.state.live === CONFIG.relays.length');
+    const r = await p.evaluate(`(${extract})()`);
+    const depth = await p.evaluate(`(${depthCheck})()`);
+    if (depth.problems.length) {
+      console.error(`DIFFERENT in «Depth» (${timeZone}):\n  ${depth.problems.join('\n  ')}`);
+      process.exitCode = 1;
+    }
+    const page = await p.evaluate(`({ tz: CONFIG.tz, tag: document.getElementById('tzTag').textContent })`);
+    // Images of the node's profile are external: failing to load them is expected here
+    const errors = p.errors.filter(e => !/ERR_NAME_NOT_RESOLVED|Failed to load resource/.test(e));
+    if (errors.length) throw new Error(`errors in the page (${timeZone}):\n  ` + errors.join('\n  '));
+    return { r, page, depth };
+  };
+  const { r, page, depth } = await run(meta.browserTimeZone);
+  if (!depth.problems.length) console.log(`«Depth» adds up the order book:\n  ${depth.seen.join('\n  ')}`);
 
   const out = process.argv.indexOf('--screenshot');
   if (out > 0) writeFileSync(process.argv[out + 1], await p.screenshot());
-  // Images of the node's profile are external: failing to load them is expected here
-  const errors = p.errors.filter(e => !/ERR_NAME_NOT_RESOLVED|Failed to load resource/.test(e));
-  if (errors.length) throw new Error('errors in the page:\n  ' + errors.join('\n  '));
 
   const previous = existsSync(expectedFile) ? JSON.parse(readFileSync(expectedFile, 'utf8')) : null;
   const actual = {
@@ -192,6 +267,46 @@ try {
     } else {
       console.log(`same as expected.json: ${r.orders.length} orders, currencies ${Object.keys(r.currencies).join(', ')}`);
     }
+  }
+
+  // In another zone: the same rate, prices and orders; other times, and the candles of shared/ for that zone
+  const other = await run(OTHER_ZONE);
+  const o = other.r;
+  const problems = [];
+  if (page.tz !== meta.browserTimeZone || other.page.tz !== OTHER_ZONE) {
+    problems.push(`the page doesn't use the browser's time zone: ${page.tz}, ${other.page.tz}`);
+  }
+  const { sLastSub, sVolSub, ...header } = o.header;
+  const { sLastSub: sLastSub0, sVolSub: sVolSub0, ...header0 } = r.header;
+  problems.push(...differences(header, header0, '.header'), ...differences(o.orders, r.orders, '.orders'),
+    ...differences(o.view, r.view, '.view'));
+  if (sLastSub === sLastSub0) problems.push(`.header.sLastSub: the time of the last order didn't change (${sLastSub})`);
+  let candles = 0;
+  for (const [fiat, c] of Object.entries(r.currencies)) {
+    for (const [unit, u] of Object.entries(c.units)) {
+      const ou = o.currencies[fiat]?.units[unit];
+      const at = `.currencies.${fiat}.units.${unit}`;
+      if (!ou) { problems.push(`${at}: missing`); continue; }
+      const same = ({ approximateUsd, rateTo, rate, previousRate, orders24h, volume24h, book, trades }) =>
+        ({ approximateUsd, rateTo, rate, previousRate, orders24h, volume24h, book, trades: trades.map(({ chartTime, ...t }) => t) });
+      problems.push(...differences(same(ou), same(u), at));
+      const trades = ou.trades.map(({ key, ts, size, price }) => ({ key, ts, size, price }));
+      for (const tf of [0, ...TIMEFRAMES]) {
+        const want = chartPoints(trades, { tf, tz: OTHER_ZONE, now: meta.now, withEmpty: true }).map(p => ({ time: p.time,
+          value: p.value ?? null, vol: p.vol, n: p.n, avg: p.avg ?? null, avgN: p.avgN ?? null, avgVol: p.avgVol ?? null,
+          empty: !!p.empty, key: p.order?.key ?? null }));
+        problems.push(...differences(ou.points[tf], want, `${at}.points.${tf}`));
+        if (tf === 86400 && u.points[tf].length && JSON.stringify(ou.points[tf]) !== JSON.stringify(u.points[tf])) candles++;
+      }
+    }
+  }
+  if (!candles) problems.push(`the daily candles are the same in ${meta.browserTimeZone} and ${OTHER_ZONE}`);
+  if (problems.length) {
+    console.error(`DIFFERENT in ${OTHER_ZONE}:\n  ${problems.slice(0, 20).join('\n  ')}`);
+    process.exitCode = 1;
+  } else {
+    console.log(`in ${OTHER_ZONE} (${other.page.tag}; ${page.tag} in ${meta.browserTimeZone}): the same rate, prices and orders;`
+      + ` last order «${sLastSub}» instead of «${sLastSub0}», and the candles of shared/ for that zone`);
   }
 } finally {
   chrome.close();

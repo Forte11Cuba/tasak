@@ -127,6 +127,7 @@ export function fetchProfiles({ urls, authors, verify, ms = 8000 }) {
           found.set(ev.pubkey, {
             name: typeof c?.name === 'string' ? c.name : '',
             picture: typeof c?.picture === 'string' ? c.picture : '',
+            nip05: typeof c?.nip05 === 'string' ? c.nip05 : '',
           });
         } else if (d[0] === 'EOSE' || d[0] === 'CLOSED') end();
       };
@@ -134,4 +135,140 @@ export function fetchProfiles({ urls, authors, verify, ms = 8000 }) {
       ws.onclose = end;
     }
   });
+}
+
+// Connection to the relays for a P2P platform (kind 35353): the whole history they keep of its trades,
+// available orders and deletions, as with the nodes, and then what is new, live; its profile (kind 0)
+// once. Each kind is paged backwards with `until` until a page comes back empty, at most PAGE events per
+// query and with a pause between pages, since relays cut off clients that ask too fast. A relay that
+// refuses the kind (CLOSED, e.g. «kind not allowed») is `refused`, not down: it isn't retried and doesn't
+// count. Only events of `author`, of those kinds and with a valid signature are handed over
+// (onEvent(ev, live)).
+const PAGE_PAUSE = 1000;
+const LOADING_MS = 120 * 1000;
+export function createPlatformPool({ urls, author, verify, onEvent, onUpdate, onStatus }) {
+  const pool = {
+    live: 0,         // relays with the history loaded and subscribed live
+    refused: 0,      // relays that don't accept kind 35353
+    rejected: 0,     // events with an invalid signature
+    total: urls.length,
+    // Still loading: no relay has its history yet, or one that has events of the platform hasn't got to
+    // the end of it, also while it reconnects (an empty relay finishing first doesn't mean there is
+    // nothing). At most LOADING_MS: a relay that never comes back doesn't keep the page waiting
+    get loading() {
+      if (Date.now() - openedAt > LOADING_MS) return false;
+      return pool.live === 0 || [...withData].some(url => !completed.has(url));
+    },
+    start: () => urls.forEach(url => connect(url)),
+  };
+  const openedAt = Date.now();
+  const withData = new Set();   // relays whose history brought events of the platform
+  const seen = new Set();
+  let newest = 0;   // created_at of the newest kind 35353 accepted (author and signature checked)
+  // Relays that got to the end of their history: on reconnecting, only what is newer. One that was cut
+  // off while paging starts again from the beginning, or the older part would be lost
+  const completed = new Set();
+  // The history, one query after another: available orders first (a page or two: the relay keeps only
+  // the newest version of each, so those still pending), so the order book doesn't wait for the trades;
+  // then the trades and the deletions of its trades
+  const HISTORY = [
+    { kinds: [35353], '#z': ['order'], '#s': ['pending'] },
+    { kinds: [35353], '#z': ['trade'] },
+    { kinds: [5], '#k': ['35353'] },
+  ];
+  const accept = ev => {
+    if (!ev || seen.has(ev.id) || ev.pubkey !== author || ![0, 5, 35353].includes(ev.kind)) return false;
+    if (verify && !verify(ev)) { pool.rejected++; return false; }
+    seen.add(ev.id);
+    return true;
+  };
+
+  function connect(url, attempt = 0) {
+    let ws;
+    try { ws = new WebSocket(url); } catch { return; }
+    let step = 0, page = 0, count = 0, fresh = 0, oldest = Infinity, until = null;
+    let isLive = false, refused = false, changed = false, noDeletions = false, closedByRelay = false;
+    const got = new Set();   // ids of this connection's history
+    const startedAt = Math.floor(Date.now() / 1000);
+    // On reconnecting, only what is newer than what came, and every new version of the orders, not only
+    // the pending ones: an order taken or canceled meanwhile must leave the book
+    const resume = completed.has(url) && newest > 0;
+    const since = resume ? { since: newest - 3600 } : {};
+    const steps = resume ? [{ kinds: [35353], '#z': ['order'] }, ...HISTORY.slice(1)] : HISTORY;
+    const sub = () => `h${step}-${page}`;
+    const ask = () => {
+      count = 0; fresh = 0; oldest = Infinity;
+      ws.send(JSON.stringify(['REQ', sub(), { ...steps[step], authors: [author], ...since, limit: PAGE, ...(until ? { until } : {}) }]));
+    };
+    ws.onopen = () => {
+      ws.send(JSON.stringify(['REQ', 'meta', { kinds: [0], authors: [author] }]));
+      ask();
+    };
+    ws.onmessage = msg => {
+      let d;
+      try { d = JSON.parse(msg.data); } catch { return; }
+      if (d[0] === 'EVENT') {
+        if (d[1] === sub()) {
+          count++;
+          oldest = Math.min(oldest, d[2]?.created_at ?? Infinity);
+          if (d[2]?.id && !got.has(d[2].id)) { got.add(d[2].id); fresh++; withData.add(url); }
+        }
+        if (!accept(d[2])) return;
+        if (d[2].kind === 35353) newest = Math.max(newest, d[2].created_at);
+        if (onEvent(d[2], isLive)) {
+          if (isLive) onUpdate();
+          else changed = true;
+        }
+      } else if (d[0] === 'EOSE' && d[1] === 'meta') {
+        ws.send(JSON.stringify(['CLOSE', 'meta']));
+      } else if (d[0] === 'EOSE' && d[1] === sub()) {
+        ws.send(JSON.stringify(['CLOSE', d[1]]));
+        // What came so far is shown while the rest loads
+        if (changed) { changed = false; onUpdate(); }
+        // The next page. Several events can share a second (a platform publishes in batches) and a page
+        // can end in the middle of them: the next one asks again up to that second, included, and goes
+        // below it only once it brings nothing new. Until a page comes back empty or with nothing new
+        if (fresh > 0) { until = oldest; page++; }
+        else if (count > 0 && until === oldest) { until = oldest - 1; page++; }
+        else { step++; page = 0; until = null; }
+        if (step < steps.length) { setTimeout(() => ws.readyState === 1 && ask(), PAGE_PAUSE); return; }
+        goLive();
+      } else if (d[0] === 'CLOSED' && d[1] !== 'meta') {
+        // Too many queries: the same one again, later
+        if (d[1] === sub() && /^rate-limited/i.test(d[2] || '')) { setTimeout(() => ws.readyState === 1 && ask(), 10 * PAGE_PAUSE); return; }
+        // A deletion query refused (some relays don't index #k): the rest goes on without it, also live
+        if (d[1] === sub() && step === 2) { noDeletions = true; step++; goLive(); return; }
+        // Refused only if the relay says it doesn't take these events («kind not allowed», blocked,
+        // restricted): then it isn't retried. Any other reason (an error, too many subscriptions…) is
+        // passing: the connection is closed and tried again later, as when it drops
+        if (/kind|not allowed|blocked|restricted|auth-required/i.test(d[2] || '')) {
+          refused = true;
+          pool.refused++;
+          console.warn(url, 'refuses the platform events:', d[2]);
+        }
+        closedByRelay = true;
+        ws.close();
+      }
+    };
+    function goLive() {
+      completed.add(url);
+      ws.send(JSON.stringify(['REQ', 'live', { kinds: [35353], authors: [author], since: startedAt - 60 },
+        ...(noDeletions ? [] : [{ kinds: [5], authors: [author], '#k': ['35353'], since: startedAt - 60 }])]));
+      isLive = true;
+      pool.live++;
+      onStatus();
+    }
+    ws.onclose = () => {
+      if (isLive) pool.live--;
+      onStatus();
+      if (refused) return;
+      // Back to the shortest wait only if it got to live and the relay didn't close it: one that keeps
+      // closing it (too many subscriptions…) is retried less and less often
+      const next = isLive && !closedByRelay ? 0 : attempt + 1;
+      setTimeout(() => connect(url, next), Math.min(60000, 5000 * 2 ** next));
+    };
+    ws.onerror = () => ws.close();
+  }
+
+  return pool;
 }

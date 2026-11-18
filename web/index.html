@@ -29,13 +29,22 @@
   <div class="brand-box">
     <div class="brand" data-name="site">tasa<span>K</span></div>
   </div>
-  <div class="stat node-stat">
-    <span class="label node-label"><span data-i18n>Nodo</span> <a class="node-info" id="nodeBtn2" href="node.html" title="Información del nodo Mostro: comisión, condiciones, comunidad y redes" aria-label="Información del nodo Mostro: comisión, condiciones, comunidad y redes" data-i18n-title>ⓘ</a></span>
+  <!-- The platform (Mostro, then each one of PLATFORMS and OTHER_PLATFORMS) and, next to it, which of its
+       nodes or accounts: only with other platforms in .env -->
+  <div class="stat node-stat" id="platformStat" hidden>
+    <span class="label" data-i18n>Plataforma</span>
+    <details class="menu node-menu" id="platformMenu">
+      <summary id="platformSummary" title="Elegir plataforma" data-i18n-title>—</summary>
+      <div class="pop node-pop"><div id="platformList"></div></div>
+    </details>
+  </div>
+  <div class="stat node-stat" id="nodeStat">
+    <span class="label node-label"><span id="nodeLabel" data-i18n>Nodo</span> <a class="node-info mostro-only" id="nodeBtn2" href="node.html" title="Información del nodo Mostro: comisión, condiciones, comunidad y redes" aria-label="Información del nodo Mostro: comisión, condiciones, comunidad y redes" data-i18n-title>ⓘ</a></span>
     <details class="menu node-menu" id="nodeMenu">
       <summary id="nodeSummary" title="Elegir nodo Mostro" data-i18n-title>—</summary>
       <div class="pop node-pop">
         <div id="nodes"></div>
-        <form class="node-form" id="nodeForm">
+        <form class="node-form mostro-only" id="nodeForm">
           <input id="nodeInput" type="text" autocomplete="off" spellcheck="false">
           <button type="submit" data-i18n>Ver</button>
         </form>
@@ -78,11 +87,21 @@
 <div class="filters">
   <span class="label" data-i18n>Moneda</span>
   <select id="fiat"></select>
-  <span class="tabs" id="units">
-    <button data-unit="usd" class="on">/USD</button>
-    <button data-unit="btc">/BTC</button>
-    <button data-unit="sat">/sat</button>
+  <select id="asset" class="platform-only" aria-label="Activo" hidden></select>
+  <span class="tabs mostro-only" id="units">
+    <button data-unit="usd" class="on">USD/</button>
+    <button data-unit="btc">BTC/</button>
+    <button data-unit="sat">sat/</button>
   </span>
+  <details class="menu mostro-only" id="pmMenu">
+    <summary id="pmSummary">Método de pago ▾</summary>
+    <div class="pop">
+      <p data-lang="es">Órdenes que entran en la gráfica, las tablas y «Tu selección»; la <span data-name="rate">Tasa K</span> usa siempre los métodos por defecto. Números: <strong>completadas · abiertas</strong> (las abiertas están en el libro de órdenes).</p>
+      <p data-lang="en">Orders included in the chart, the tables and «Your selection»; the <span data-name="rate">Tasa K</span> always uses the default methods. Numbers: <strong>completed · open</strong> (open ones are in the order book).</p>
+      <div class="chips" id="pms"></div>
+    </div>
+  </details>
+  <select id="pmSelect" class="platform-only" hidden></select>
   <span class="selection" id="selection" hidden>
     <span class="label" data-i18n>Tu selección</span>
     <strong class="num" id="selRate">—</strong>
@@ -99,6 +118,7 @@
           <button data-mode="line" data-i18n>Precio</button>
           <button data-mode="candles" data-i18n>Velas</button>
           <button data-mode="avg" title="Precio ponderado por volumen de las 24 horas anteriores a cada punto: Σ(precio × monto) ÷ Σ monto" data-i18n-title data-i18n>Ponderado</button>
+          <button data-mode="depth" title="El libro de órdenes ahora: el monto acumulado de compradores y vendedores a cada precio" data-i18n-title data-i18n>Profundidad</button>
         </span>
         <span class="sep"></span>
         <details class="menu tf" id="tfMenu">
@@ -119,17 +139,19 @@
             <button data-tf="31536000" data-i18n>1 año</button>
           </div>
         </details>
-        <details class="menu" id="pmMenu">
-          <summary id="pmSummary">Método de pago ▾</summary>
-          <div class="pop">
-            <p data-lang="es">Órdenes que entran en la gráfica, las tablas y «Tu selección»; la <span data-name="rate">Tasa K</span> usa siempre los métodos por defecto. Números: <strong>completadas · abiertas</strong> (las abiertas están en el libro de órdenes).</p>
-            <p data-lang="en">Orders included in the chart, the tables and «Your selection»; the <span data-name="rate">Tasa K</span> always uses the default methods. Numbers: <strong>completed · open</strong> (open ones are in the order book).</p>
-            <div class="chips" id="pms"></div>
+        <details class="menu tf view-menu" id="viewMenu">
+          <summary id="viewSummary" title="Qué se ve sobre la gráfica" data-i18n-title>Vista ▾</summary>
+          <div class="pop tf-pop view-pop">
+            <button data-view="legend" data-i18n>Datos del punto</button>
+            <button data-view="pair" data-i18n>Par de fondo</button>
           </div>
         </details>
         <button class="icon-btn" id="fsBtn" title="Pantalla completa" aria-label="Pantalla completa" data-i18n-title>⛶</button>
       </div>
-      <div class="chart" id="chart"><div class="legend num" id="legend"></div><div class="vol-tag" id="volTag"><span>Vol.</span><button id="volEye" aria-label="Ocultar volumen" title="Ocultar volumen"></button></div><div class="empty" data-i18n>Cargando órdenes de los relays…</div></div>
+      <div class="charts">
+      <div class="chart" id="chart"><div class="legend num" id="legend"></div><div class="vol-tag" id="volTag"><span>Vol.</span><button id="volEye" aria-label="Ocultar volumen" title="Ocultar volumen"></button></div><div class="empty" data-i18n>Cargando órdenes de los relays…</div><div class="tz-tag num" id="tzTag"></div></div>
+      <div class="chart off" id="depth"><div class="legend num" id="depthLegend"></div><div class="empty" data-i18n>Cargando…</div></div>
+      </div>
     </section>
   </div>
 
@@ -169,8 +191,10 @@
     <button class="icon-btn" id="evClose" aria-label="Cerrar" title="Cerrar" data-i18n-title>✕</button>
   </div>
   <div class="faq-body">
-    <p class="muted ev-note" data-lang="es">Cada orden, abierta o completada, es un evento firmado por el nodo Mostro y publicado en los relays (NIP-69, kind 38383). Con él cualquiera puede comprobar la orden y recalcular la tasa.</p>
-    <p class="muted ev-note" data-lang="en">Every order, open or completed, is an event signed by the Mostro node and published on relays (NIP-69, kind 38383). With it anyone can check the order and recompute the rate.</p>
+    <p class="muted ev-note mostro-only" data-lang="es">Cada orden, abierta o completada, es un evento firmado por el nodo Mostro y publicado en los relays (NIP-69, kind 38383). Con él cualquiera puede comprobar la orden y recalcular la tasa.</p>
+    <p class="muted ev-note mostro-only" data-lang="en">Every order, open or completed, is an event signed by the Mostro node and published on relays (NIP-69, kind 38383). With it anyone can check the order and recompute the rate.</p>
+    <p class="muted ev-note platform-only" data-lang="es" hidden>Cada orden abierta y cada operación (la ejecución de una orden) es un evento firmado por la plataforma y publicado en los relays (kind 35353, NIP propuesto en nostr-protocol/nips#2541). La tasa sale solo de las operaciones: precio = monto en moneda ÷ monto del activo.</p>
+    <p class="muted ev-note platform-only" data-lang="en" hidden>Every open order and every trade (the execution of an order) is an event signed by the platform and published on relays (kind 35353, NIP proposed in nostr-protocol/nips#2541). The rate comes from the trades only: price = fiat amount ÷ asset amount.</p>
     <dl class="ev-meta" id="evMeta"></dl>
     <pre class="ev-json num" id="evJson"></pre>
     <div class="ev-actions">
@@ -190,13 +214,14 @@
       <summary>¿Qué es la <span data-name="rate">Tasa K</span>?</summary>
       <p>Es el precio ponderado por volumen de las órdenes <strong>completadas</strong> en las 24 horas que terminan en la última orden completada, no de anuncios publicados:</p>
       <p><code><span data-name="rate">Tasa K</span> = Σ(precio × monto) ÷ Σ monto</code></p>
-      <p>Cada orden pesa según la moneda que movió. Ejemplo: 3 órdenes a 785 <span class="fiat-name">CUP</span>/USD que suman 3000 <span class="fiat-name">CUP</span> y una a 750 de 5000 <span class="fiat-name">CUP</span> dan (785×3000 + 750×5000) ÷ 8000 = <strong>763,13</strong>.</p>
+      <p>Cada orden pesa según la moneda que movió. Ejemplo: 3 órdenes a 785 USD/<span class="fiat-name">CUP</span> que suman 3000 <span class="fiat-name">CUP</span> y una a 750 de 5000 <span class="fiat-name">CUP</span> dan (785×3000 + 750×5000) ÷ 8000 = <strong>763,13</strong>.</p>
       <p>Así la <span data-name="rate">Tasa K</span> solo cambia cuando se completa una orden nueva: no se mueve sola con el paso del tiempo, y cada valor es «la <span data-name="rate">Tasa K</span> tras tal orden». Si la última es de hace más de 24 horas, la cabecera dice de cuándo es.</p>
     </details>
     <details>
       <summary>¿Qué mide la <span data-name="rate">Tasa K</span>?</summary>
-      <p>El precio al que de verdad se cambia la moneda en operaciones con bitcoin. En <span class="fiat-name">CUP</span>/USD es una tasa implícita: los <span class="fiat-name">CUP</span> pagados por cada BTC divididos por el precio del BTC en dólares. No es el precio del dólar en efectivo ni en transferencias: si comprar o vender bitcoin con <span class="fiat-name">CUP</span> lleva un sobreprecio propio, también está en la <span data-name="rate">Tasa K</span>. <span class="fiat-name">CUP</span>/BTC y <span class="fiat-name">CUP</span>/sat no pasan por el dólar.</p>
-      <p>Casi todas las órdenes son a precio de mercado: el nodo calcula los sats con su precio de referencia (casi siempre el de Yadio) y la prima que pone quien publica la orden, así que su precio es aproximadamente <code>referencia ÷ (1 − prima)</code>. Por eso la <span data-name="rate">Tasa K</span> sigue a esa referencia, y lo que queda por encima o por debajo de ella («sobre Yadio» en la cabecera) son sobre todo las primas con las que se está operando. Las órdenes a precio fijo (🔒 en el libro de órdenes) no dependen de ella.</p>
+      <p>El precio al que de verdad se cambia la moneda en operaciones con bitcoin. En USD/<span class="fiat-name">CUP</span> es una tasa implícita: los <span class="fiat-name">CUP</span> pagados por cada BTC divididos por el precio del BTC en dólares. No es el precio del dólar en efectivo ni en transferencias: si comprar o vender bitcoin con <span class="fiat-name">CUP</span> lleva un sobreprecio propio, también está en la <span data-name="rate">Tasa K</span>. BTC/<span class="fiat-name">CUP</span> y sat/<span class="fiat-name">CUP</span> no pasan por el dólar.</p>
+      <p>Los precios se escriben como en los mercados de divisas, base/cotización: USD/<span class="fiat-name">CUP</span> = 1000 quiere decir que 1 USD cuesta 1000 <span class="fiat-name">CUP</span>. En una plataforma es activo/moneda: lo que cuesta una unidad del activo.</p>
+      <p>Casi todas las órdenes son a precio de mercado: el nodo calcula los sats con su precio de referencia (casi siempre el de Yadio) y la prima que pone quien publica la orden, así que su precio es aproximadamente <code>referencia ÷ (1 − prima)</code>. Por eso la <span data-name="rate">Tasa K</span> sigue a esa referencia, y lo que queda por encima o por debajo de ella (el porcentaje bajo la referencia en la cabecera) son sobre todo las primas con las que se está operando. Las órdenes a precio fijo (🔒 en el libro de órdenes) no dependen de ella.</p>
       <p>Las compras y las ventas de BTC se cierran a precios distintos, porque cada lado pone su prima; la <span data-name="rate">Tasa K</span> las pondera todas juntas por su monto. En la ventana de la <span data-name="rate">Tasa K</span> de ahora:</p>
       <ul class="rate-breakdown"></ul>
       <p class="muted">Es solo información: la <span data-name="rate">Tasa K</span> no cambia. Lo mismo se ve al pasar el ratón sobre ella. «Sin saber» son órdenes con prima 0 de las que no se vio la versión <code>pending</code>, la única que dice si eran a precio fijo o a mercado (con prima distinta de 0 son siempre a mercado: Mostro no admite prima con precio fijo).</p>
@@ -205,11 +230,11 @@
       <summary>¿Cómo se calcula el precio de cada orden?</summary>
       <p><code>precio = moneda pagada ÷ BTC recibidos ÷ BTC/USD</code>, con el BTC/USD del momento en que se tomó la orden, que es cuando Mostro fija los sats (si no se vio ese momento, el de cuando se completó).</p>
       <p>Si el sitio tiene su servidor, cada orden trae el BTC/USD que este le asignó y guardó: el que publicaba su nodo en ese momento (su <code>mostro-rates</code> firmado) o, si no lo hay (órdenes de antes de que el servidor las archivara, o un nodo que no publica sus precios), el de Coinbase en ese minuto, y si falla, el de Yadio. Sin servidor, la página usa la vela horaria de Coinbase y, si no responde, el BTC/USD actual, y avisa de que el USD es aproximado.</p>
-      <p>Por eso entre las órdenes con el BTC/USD de Coinbase y las que llevan el del nodo puede verse un pequeño salto en <span class="fiat-name">CUP</span>/USD: el nodo combina sus propias fuentes de precio y Coinbase es un solo mercado, aunque suelen diferir menos de un 0,1 %. No es un movimiento del mercado: <span class="fiat-name">CUP</span>/BTC y <span class="fiat-name">CUP</span>/sat no cambian, porque salen solo del evento de la orden.</p>
+      <p>Por eso entre las órdenes con el BTC/USD de Coinbase y las que llevan el del nodo puede verse un pequeño salto en USD/<span class="fiat-name">CUP</span>: el nodo combina sus propias fuentes de precio y Coinbase es un solo mercado, aunque suelen diferir menos de un 0,1 %. No es un movimiento del mercado: BTC/<span class="fiat-name">CUP</span> y sat/<span class="fiat-name">CUP</span> no cambian, porque salen solo del evento de la orden.</p>
     </details>
     <details>
-      <summary>¿Qué es <span class="fiat-name">CUP</span>/sat?</summary>
-      <p>Cuántos <span class="fiat-name">CUP</span> cuesta 1 sat: <code><span class="fiat-name">CUP</span> pagados ÷ sats</code> de cada orden. Sale directamente del evento de la orden, sin usar el precio de BTC/USD de Coinbase ni de Yadio, así que es la medida más directa y fácil de comprobar. <span class="fiat-name">CUP</span>/BTC es lo mismo multiplicado por 100 millones.</p>
+      <summary>¿Qué es sat/<span class="fiat-name">CUP</span>?</summary>
+      <p>Cuántos <span class="fiat-name">CUP</span> cuesta 1 sat: <code><span class="fiat-name">CUP</span> pagados ÷ sats</code> de cada orden. Sale directamente del evento de la orden, sin usar el precio de BTC/USD de Coinbase ni de Yadio, así que es la medida más directa y fácil de comprobar. BTC/<span class="fiat-name">CUP</span> es lo mismo multiplicado por 100 millones.</p>
     </details>
     <details>
       <summary>¿Qué muestran Precio, Velas y Ponderado?</summary>
@@ -218,7 +243,17 @@
         <li><strong>Velas</strong>: apertura, máximo, mínimo y cierre de cada periodo.</li>
         <li><strong>Ponderado</strong>: el precio ponderado de las 24 horas anteriores a cada punto. Con un punto por orden, es la <span data-name="rate">Tasa K</span> tras esa orden; por periodo, el de las 24 horas hasta su cierre (o hasta ahora, en el actual), que se mueve con el tiempo y difiere de la <span data-name="rate">Tasa K</span> si el periodo cerró sin órdenes.</li>
       </ul>
-      <p>Los periodos van de 1 hora a 1 año (1h, 4h, 1D, 1W, 1M, 1Y) y siguen el calendario hasta ahora, también los periodos sin órdenes, sin volumen: en <strong>Precio</strong> y <strong>Velas</strong> se dibujan planos, al precio del anterior; en <strong>Ponderado</strong>, la línea sigue mientras haya órdenes en sus 24 horas anteriores y se corta cuando no queda ninguna. El volumen se ve en la parte baja de la gráfica y, al pasar el ratón, la leyenda muestra los valores de ese punto.</p>
+      <p>Los periodos van de 1 hora a 1 año (1h, 4h, 1D, 1W, 1M, 1Y) y siguen el calendario hasta ahora, también los periodos sin órdenes, sin volumen: en <strong>Precio</strong> y <strong>Velas</strong> se dibujan planos, al precio del anterior; en <strong>Ponderado</strong>, la línea sigue mientras haya órdenes en sus 24 horas anteriores y se corta cuando no queda ninguna. El volumen se ve en la parte baja de la gráfica y, al pasar el ratón, la leyenda muestra los valores de ese punto. El menú <strong>Vista</strong> muestra u oculta la leyenda y el par de fondo.</p>
+    </details>
+    <details>
+      <summary>¿Qué muestra Profundidad?</summary>
+      <p>El libro de órdenes ahora, como la «Profundidad» de los exchanges: el precio en el eje horizontal y, en el vertical, el monto acumulado en <span class="fiat-name">CUP</span> desde el mejor precio hacia fuera. Los compradores (verde) suman hacia los precios más bajos y los vendedores (rojo) hacia los más altos; la línea azul es la <span data-name="rate">Tasa K</span>. Si las dos áreas se solapan, el libro está cruzado: hay compradores por encima de vendedores.</p>
+      <p>Usa las mismas órdenes y filtros que el libro de órdenes. Una orden con rango (por ejemplo 19.500–130.000) cuenta por su máximo, así que la liquidez queda algo exagerada. Se abre a ±20 % alrededor de la <span data-name="rate">Tasa K</span>, o más ancha si el mejor comprador o vendedor está más lejos; solo dibuja las órdenes entre la mitad y el doble de la tasa, y las de fuera de esa escala o sin precio (a precio de mercado sin precios del nodo ni de Yadio; en una plataforma, las que llevan prima) no se dibujan: la leyenda dice cuántas. Al pasar el ratón ves cuánto hay de cada lado hasta ese precio; un clic abre el evento firmado de la orden de ese escalón, y el doble clic vuelve a la vista inicial.</p>
+    </details>
+    <details>
+      <summary>¿En qué hora están las fechas?</summary>
+      <p>En la zona horaria de tu navegador: cada visitante ve las horas de su país. La esquina de la gráfica, bajo el eje de precios, dice su desfase con UTC (por ejemplo, UTC−5), y al pasar el ratón por ella, por la hora de la última orden o por la columna «Hora» se ve el nombre de la zona.</p>
+      <p>Los periodos de la gráfica también siguen tu calendario: un día de 1D empieza a tu medianoche, y la semana, el mes y el año, en tu zona. Por eso dos personas en países distintos pueden ver velas diarias distintas, con otro volumen por periodo. La <span data-name="rate">Tasa K</span> es la misma para todos: son las 24 horas que terminan en la última orden, sin calendario.</p>
     </details>
     <details>
       <summary>¿De dónde salen los datos?</summary>
@@ -227,7 +262,7 @@
     </details>
     <details>
       <summary>¿Cómo compruebo una orden?</summary>
-      <p>Haz clic en una orden de la tabla «Órdenes ejecutadas», o en su punto de la gráfica en modo <strong>Orden</strong>. Se abre su evento Nostr firmado: el JSON completo, su id y si la firma se verificó. Puedes copiarlo o verificarlo en Nostr Inspect, otra web que lo busca directamente en los relays. En las órdenes abiertas, el enlace muestra siempre su versión actual.</p>
+      <p>Haz clic en una orden de la tabla «Órdenes ejecutadas», o en su punto de la gráfica (o en la leyenda) en modo <strong>Orden</strong>. Se abre su evento Nostr firmado: el JSON completo, su id y si la firma se verificó. Puedes copiarlo o verificarlo en Nostr Inspect, otra web que lo busca directamente en los relays. En las órdenes abiertas, el enlace muestra siempre su versión actual.</p>
     </details>
     <details>
       <summary>¿Quién firma la <span data-name="rate">Tasa K</span> y cómo lo compruebo?</summary>
@@ -269,19 +304,27 @@
       <p><code>?mostro=npub…,npub…&amp;relays=wss://…&amp;fiat=…&amp;lang=es</code></p>
       <p>Un nodo que no es de este sitio se lee solo de los relays, con el historial que guarden: el archivo de este sitio y su <span data-name="rate">Tasa K</span> firmada son de los nodos del sitio. Su <span data-name="rate">Tasa K</span> la calcula tu navegador con todos los métodos de pago salvo las órdenes de prueba: los métodos que este sitio excluye son las reglas de su propio mercado.</p>
     </details>
+    <details>
+      <summary>¿Qué son las otras plataformas del selector?</summary>
+      <p>Plataformas P2P que no son Mostro y publican en Nostr sus órdenes y operaciones de otros activos (saldos propios, monedas estables…) contra la moneda local, firmadas con su clave (kind 35353, un NIP propuesto en <a href="https://github.com/nostr-protocol/nips/pull/2541" target="_blank" rel="noopener">nostr-protocol/nips#2541</a>). Quien despliega el sitio elige cuáles se ofrecen en el selector «Plataforma», junto al de nodo, que en una plataforma lista las cuentas que publican por ella (si tiene más de una).</p>
+      <p>Su <span data-name="rate">Tasa K</span> se calcula igual, Σ(precio × monto) ÷ Σ monto en las 24 horas que terminan en la última operación, pero solo con sus <strong>operaciones</strong> (cada ejecución de una orden): precio = monto en moneda ÷ monto del activo, nunca el precio anunciado en la orden. Hay una por plataforma, activo, moneda y método de pago, sin mezclarlas: un saldo dentro de una plataforma no es lo mismo que el mismo activo en una cadena de bloques ni que el saldo de otra plataforma, y cada método es un mercado con su propio precio. Se ve un método a la vez: el de más operaciones, u otro que elijas en el selector de método, junto a la moneda.</p>
+      <p>No cuentan las operaciones que la plataforma retira con una petición de borrado (NIP-09) ni los eventos que no siguen el formato del NIP (se cuentan al pasar el ratón por el estado de la conexión). Las órdenes de la propia plataforma (<code>maker = platform</code>) cuentan como las demás. Los métodos de pago son los que publica la plataforma, tal cual; quien despliega el sitio puede hacer que algunos no se muestren por defecto.</p>
+      <p>Las lee tu navegador de los relays: toda la historia de operaciones y órdenes que guardan, sin sats ni precio en dólares. Este sitio no firma la tasa de una plataforma y no cuenta en su <span data-name="rate">Tasa K</span> oficial. La firma de cada evento prueba que la plataforma lo publicó, no que la operación ocurrió.</p>
+    </details>
   </div>
 <div class="faq-body" data-lang="en">
     <details open>
       <summary>What is the <span data-name="rate">Tasa K</span>?</summary>
       <p>It is the volume-weighted price of orders <strong>completed</strong> in the 24 hours that end at the last completed order, not of published ads:</p>
       <p><code><span data-name="rate">Tasa K</span> = Σ(price × amount) ÷ Σ amount</code></p>
-      <p>Each order weighs by the currency it moved. Example: 3 orders at 785 <span class="fiat-name">CUP</span>/USD totalling 3,000 <span class="fiat-name">CUP</span> and one at 750 for 5,000 <span class="fiat-name">CUP</span> give (785×3000 + 750×5000) ÷ 8000 = <strong>763.13</strong>.</p>
+      <p>Each order weighs by the currency it moved. Example: 3 orders at 785 USD/<span class="fiat-name">CUP</span> totalling 3,000 <span class="fiat-name">CUP</span> and one at 750 for 5,000 <span class="fiat-name">CUP</span> give (785×3000 + 750×5000) ÷ 8000 = <strong>763.13</strong>.</p>
       <p>So the <span data-name="rate">Tasa K</span> changes only when a new order is completed: it doesn't move by itself as time passes, and each value is «the <span data-name="rate">Tasa K</span> after that order». If the last one is more than 24 hours old, the header says how old.</p>
     </details>
     <details>
       <summary>What does the <span data-name="rate">Tasa K</span> measure?</summary>
-      <p>The price at which the currency is actually exchanged in bitcoin trades. In <span class="fiat-name">CUP</span>/USD it is an implied rate: the <span class="fiat-name">CUP</span> paid for each BTC divided by the price of BTC in dollars. It is not the price of cash dollars or transfers: if buying or selling bitcoin with <span class="fiat-name">CUP</span> carries a premium of its own, it is in the <span data-name="rate">Tasa K</span> too. <span class="fiat-name">CUP</span>/BTC and <span class="fiat-name">CUP</span>/sat don't go through the dollar.</p>
-      <p>Almost all orders are at market price: the node calculates the sats with its reference price (almost always Yadio's) and the premium set by whoever publishes the order, so their price is roughly <code>reference ÷ (1 − premium)</code>. That is why the <span data-name="rate">Tasa K</span> follows that reference, and what lies above or below it («above Yadio» in the header) is mostly the premiums people are trading at. Fixed-price orders (🔒 in the order book) don't depend on it.</p>
+      <p>The price at which the currency is actually exchanged in bitcoin trades. In USD/<span class="fiat-name">CUP</span> it is an implied rate: the <span class="fiat-name">CUP</span> paid for each BTC divided by the price of BTC in dollars. It is not the price of cash dollars or transfers: if buying or selling bitcoin with <span class="fiat-name">CUP</span> carries a premium of its own, it is in the <span data-name="rate">Tasa K</span> too. BTC/<span class="fiat-name">CUP</span> and sat/<span class="fiat-name">CUP</span> don't go through the dollar.</p>
+      <p>Prices are written as in currency markets, base/quote: USD/<span class="fiat-name">CUP</span> = 1000 means that 1 USD costs 1000 <span class="fiat-name">CUP</span>. On a platform it is asset/currency: what one unit of the asset costs.</p>
+      <p>Almost all orders are at market price: the node calculates the sats with its reference price (almost always Yadio's) and the premium set by whoever publishes the order, so their price is roughly <code>reference ÷ (1 − premium)</code>. That is why the <span data-name="rate">Tasa K</span> follows that reference, and what lies above or below it (the percentage under the reference in the header) is mostly the premiums people are trading at. Fixed-price orders (🔒 in the order book) don't depend on it.</p>
       <p>BTC buys and sells close at different prices, because each side sets its premium; the <span data-name="rate">Tasa K</span> weighs them all together by their amount. In the window of the current <span data-name="rate">Tasa K</span>:</p>
       <ul class="rate-breakdown"></ul>
       <p class="muted">This is for information only: the <span data-name="rate">Tasa K</span> doesn't change. The same shows when hovering over it. «Unknown» are orders with premium 0 whose <code>pending</code> version wasn't seen, the only one that says whether they were at fixed or market price (with a premium other than 0 they are always at market: Mostro doesn't allow a premium with a fixed price).</p>
@@ -290,11 +333,11 @@
       <summary>How is the price of each order calculated?</summary>
       <p><code>price = currency paid ÷ BTC received ÷ BTC/USD</code>, using the BTC/USD of the moment the order was taken, which is when Mostro fixes the sats (if that moment wasn't seen, the moment it was completed).</p>
       <p>If the site has its server, each order comes with the BTC/USD the server gave it and stored: the one its node published at that moment (its signed <code>mostro-rates</code>) or, without it (orders from before the server archived them, or a node that doesn't publish its prices), Coinbase's for that minute, and if that fails, Yadio's. Without a server, the page uses Coinbase's hourly candle and, if it doesn't respond, the current BTC/USD, and warns that USD is approximate.</p>
-      <p>So between the orders with Coinbase's BTC/USD and those with the node's there may be a small jump in <span class="fiat-name">CUP</span>/USD: the node combines its own price sources and Coinbase is a single market, although they usually differ by less than 0.1%. It is not a market move: <span class="fiat-name">CUP</span>/BTC and <span class="fiat-name">CUP</span>/sat don't change, because they come only from the order's event.</p>
+      <p>So between the orders with Coinbase's BTC/USD and those with the node's there may be a small jump in USD/<span class="fiat-name">CUP</span>: the node combines its own price sources and Coinbase is a single market, although they usually differ by less than 0.1%. It is not a market move: BTC/<span class="fiat-name">CUP</span> and sat/<span class="fiat-name">CUP</span> don't change, because they come only from the order's event.</p>
     </details>
     <details>
-      <summary>What is <span class="fiat-name">CUP</span>/sat?</summary>
-      <p>How many <span class="fiat-name">CUP</span> 1 sat costs: <code><span class="fiat-name">CUP</span> paid ÷ sats</code> of each order. It comes straight from the order event, without the BTC/USD price from Coinbase or Yadio, so it is the most direct measure and the easiest to check. <span class="fiat-name">CUP</span>/BTC is the same multiplied by 100 million.</p>
+      <summary>What is sat/<span class="fiat-name">CUP</span>?</summary>
+      <p>How many <span class="fiat-name">CUP</span> 1 sat costs: <code><span class="fiat-name">CUP</span> paid ÷ sats</code> of each order. It comes straight from the order event, without the BTC/USD price from Coinbase or Yadio, so it is the most direct measure and the easiest to check. BTC/<span class="fiat-name">CUP</span> is the same multiplied by 100 million.</p>
     </details>
     <details>
       <summary>What do Price, Candles and Weighted show?</summary>
@@ -303,7 +346,17 @@
         <li><strong>Candles</strong>: open, high, low and close of each period.</li>
         <li><strong>Weighted</strong>: the weighted price of the 24 hours before each point. With one point per order, it is the <span data-name="rate">Tasa K</span> after that order; per period, that of the 24 hours up to its close (or now, in the current one), which moves with time and differs from the <span data-name="rate">Tasa K</span> if the period closed without orders.</li>
       </ul>
-      <p>Periods go from 1 hour to 1 year (1h, 4h, 1D, 1W, 1M, 1Y) and follow the calendar up to now, also the periods without orders, without volume: in <strong>Price</strong> and <strong>Candles</strong> they are drawn flat, at the previous one's price; in <strong>Weighted</strong>, the line goes on while there are orders in its previous 24 hours and breaks when none is left. Volume is shown at the bottom of the chart and, when hovering, the legend shows that point's values.</p>
+      <p>Periods go from 1 hour to 1 year (1h, 4h, 1D, 1W, 1M, 1Y) and follow the calendar up to now, also the periods without orders, without volume: in <strong>Price</strong> and <strong>Candles</strong> they are drawn flat, at the previous one's price; in <strong>Weighted</strong>, the line goes on while there are orders in its previous 24 hours and breaks when none is left. Volume is shown at the bottom of the chart and, when hovering, the legend shows that point's values. The <strong>View</strong> menu shows or hides the legend and the pair in the background.</p>
+    </details>
+    <details>
+      <summary>What does Depth show?</summary>
+      <p>The order book now, like the «Depth» of the exchanges: the price on the horizontal axis and, on the vertical one, the cumulative amount in <span class="fiat-name">CUP</span> from the best price outwards. Buyers (green) add up towards the lower prices and sellers (red) towards the higher ones; the blue line is the <span data-name="rate">Tasa K</span>. If both areas overlap, the book is crossed: there are buyers above sellers.</p>
+      <p>It uses the same orders and filters as the order book. An order with a range (for example 19,500–130,000) counts by its maximum, so the liquidity is somewhat overstated. It opens at ±20 % around the <span data-name="rate">Tasa K</span>, or wider if the best buyer or seller is further out; it only draws the orders between half and double the rate, and those out of that scale or without a price (at market price without the node's prices or Yadio's; on a platform, those with a premium) are not drawn: the legend says how many. Hovering shows how much there is on each side up to that price; a click opens the signed event of the order of that step, and a double click goes back to the initial view.</p>
+    </details>
+    <details>
+      <summary>What time zone are the dates in?</summary>
+      <p>In your browser's time zone: each visitor sees the times of their own country. The corner of the chart, below the price axis, shows its offset from UTC (for example, UTC−5), and hovering over it, over the time of the last order or over the «Time» column shows the zone's name.</p>
+      <p>The chart's periods follow your calendar too: a 1D day starts at your midnight, and the week, the month and the year, in your zone. So two people in different countries may see different daily candles, with a different volume per period. The <span data-name="rate">Tasa K</span> is the same for everyone: it is the 24 hours ending at the last order, with no calendar.</p>
     </details>
     <details>
       <summary>Where does the data come from?</summary>
@@ -312,7 +365,7 @@
     </details>
     <details>
       <summary>How do I check an order?</summary>
-      <p>Click an order in the «Executed orders» table or the order book, or its point on the chart in <strong>Order</strong> mode. Its signed Nostr event opens: the full JSON, its id and whether the signature was verified. You can copy it or verify it on Nostr Inspect, a separate site that fetches it straight from the relays. For open orders, the link always shows their current version.</p>
+      <p>Click an order in the «Executed orders» table or the order book, or its point on the chart (or the legend) in <strong>Order</strong> mode. Its signed Nostr event opens: the full JSON, its id and whether the signature was verified. You can copy it or verify it on Nostr Inspect, a separate site that fetches it straight from the relays. For open orders, the link always shows their current version.</p>
     </details>
     <details>
       <summary>Who signs the <span data-name="rate">Tasa K</span> and how do I check it?</summary>
@@ -353,6 +406,13 @@
       <p>Yes. Whoever deploys the site configures its nodes in the <code>.env</code> file, and also other nodes it offers in the node selector, next to the <span data-name="rate">Tasa K</span>. There you can also paste any node's npub, or change it in the URL:</p>
       <p><code>?mostro=npub…,npub…&amp;relays=wss://…&amp;fiat=…&amp;lang=en</code></p>
       <p>A node that isn't this site's is read from the relays alone, with the history they keep: this site's archive and its signed <span data-name="rate">Tasa K</span> are about the site's nodes. Its <span data-name="rate">Tasa K</span> is calculated by your browser with every payment method but the test orders: the methods this site leaves out are the rules of its own market.</p>
+    </details>
+    <details>
+      <summary>What are the other platforms of the selector?</summary>
+      <p>P2P platforms that aren't Mostro and publish on Nostr their orders and trades of other assets (their own balances, stablecoins…) against the local currency, signed with their key (kind 35353, a NIP proposed in <a href="https://github.com/nostr-protocol/nips/pull/2541" target="_blank" rel="noopener">nostr-protocol/nips#2541</a>). Whoever deploys the site chooses which ones the «Platform» selector offers, next to the node selector, which on a platform lists the accounts that publish for it (if it has more than one).</p>
+      <p>Their <span data-name="rate">Tasa K</span> is calculated the same way, Σ(price × amount) ÷ Σ amount over the 24 hours that end at the last trade, but only from their <strong>trades</strong> (each execution of an order): price = fiat amount ÷ asset amount, never the price advertised in the order. There is one per platform, asset, currency and payment method, never mixed: a balance inside a platform is not the same as the same asset on a blockchain, nor as another platform's balance, and each method is a market with its own price. One method is shown at a time: the most traded one, or another you choose in the method selector, next to the currency.</p>
+      <p>Trades the platform withdraws with a deletion request (NIP-09) don't count, nor do events that don't follow the NIP's format (counted when hovering over the connection status). Orders published by the platform itself (<code>maker = platform</code>) count as any other. Payment methods are the ones the platform publishes, as they are; whoever deploys the site can keep some from being shown by default.</p>
+      <p>Your browser reads them from the relays: the whole history of trades and orders they keep, without sats or a dollar price. This site doesn't sign a platform's rate, and it doesn't count in its official <span data-name="rate">Tasa K</span>. Each event's signature proves the platform published it, not that the trade happened.</p>
     </details>
   </div>
 </dialog>

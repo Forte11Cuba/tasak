@@ -72,7 +72,8 @@ async function page(snap, now = NOW, relayEvents = [], { query = '', ready = REA
   return p;
 }
 const header = p => p.evaluate(`({ tasa: document.getElementById('sTasa').textContent, sub: document.getElementById('sTasaSub').innerText,
-  status: document.getElementById('status').innerText, warn: !!document.querySelector('#sTasaSub .warn'),
+  status: document.getElementById('status').innerText, statusTitle: document.getElementById('statusBox').title,
+  oldWarn: !!document.querySelector('#status .warn'), warn: !!document.querySelector('#sTasaSub .warn'),
   // The header must fit in one line at 1500 px
   oneLine: (() => { const t = [...document.querySelector('header').children].map(e => e.getBoundingClientRect().top); return Math.max(...t) - Math.min(...t) < 30; })() })`);
 
@@ -81,7 +82,8 @@ try {
   let p = await page(snapshot());
   let h = await header(p);
   check(h.tasa === expected.header.sTasa && h.sub === expected.header.sTasaSub, 'the snapshot alone draws the expected header', h);
-  check(/· \d+ min/.test(h.status), 'the status says how old the server data is', h.status);
+  // How old the server data is: only on hover while recent; in the header, as a warning, after 10 min
+  check(!/· \d/.test(h.status) && /hace 2 min/.test(h.statusTitle), 'a recent snapshot says its age only on hover', h);
   // The FAQ shows the key of config.js that signs the site's rate, as npub
   const faqKey = await p.evaluate(`({ npub: document.querySelector('.rate-npub').title, short: document.querySelector('.rate-npub').textContent,
     inspect: document.querySelector('.rate-inspect').href,
@@ -92,6 +94,12 @@ try {
     'the FAQ shows the site\'s signing npub, shortened', faqKey);
   check(addr.pubkey === ratePubkey && addr.kind === 30078 && addr.identifier === 'tasak', 'and links its newest rate on Nostr Inspect', addr);
   check(pageErrors(p).length === 0, 'no console errors', pageErrors(p));
+  p.close();
+
+  // 1a. An old snapshot (the server stopped): its age in the header, as a warning
+  p = await page(snapshot({ generated: NOW - 3 * 3600 }));
+  h = await header(p);
+  check(/· 3 h/.test(h.status) && h.oldWarn, 'an old snapshot says its age in the header, as a warning', h);
   p.close();
 
   // 1b. The Content Security Policy of the page is in force: an injected inline script doesn't run

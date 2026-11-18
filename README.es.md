@@ -75,7 +75,7 @@ docker compose pull tasak
 ```
 
 **4. Configura tu nodo.** `cp .env.example .env` y edítalo: `MOSTRO_PUBKEYS`, `OTHER_MOSTRO_PUBKEYS`, `RELAYS`, `FIAT`,
-`TIMEZONE`, `HIDDEN_PAYMENT_METHODS`, tu comunidad… (ver las [variables](#docker)). Deja vacíos
+`HIDDEN_PAYMENT_METHODS`, tu comunidad… (ver las [variables](#docker)). Deja vacíos
 `ARCHIVE_DIR`, `LISTEN` y `SIGNING_KEY_FILE`: los pone Docker. La imagen lleva el `web/` del repositorio;
 para tu propio logo, pon el archivo junto a `docker-compose.yml`, móntalo bajo `tasak:` en el override y
 pon `LOGO=mi-logo.svg`:
@@ -274,9 +274,12 @@ OTHER_MOSTRO_PUBKEYS="
 | `LANGUAGE` | Idioma por defecto, `es` o `en` (vacío = el del navegador). Cada visitante puede cambiarlo con ES · EN |
 | `MOSTRO_PUBKEYS` | Nodos a visualizar, en hex o npub, separados por coma (obligatorio): los del sitio, archivados y parte de su Tasa K |
 | `OTHER_MOSTRO_PUBKEYS` | Otros nodos que los visitantes pueden elegir en el selector de nodos, en este orden, en hex o npub (opcional): se leen en vivo de los relays, sin archivarlos ni contarlos en la Tasa K del sitio. El ejemplo trae los demás nodos de confianza de la app de Mostro |
+| `PLATFORMS` | Otras plataformas P2P cuyas órdenes y operaciones archiva el servidor (opcional): una por línea, un nombre que eliges y sus claves, `nombre: npub1…, npub1…`. Archiva sus eventos kind 38383 (bitcoin, NIP-69) y 35353 (otros activos, propuesto en [nostr-protocol/nips#2541](https://github.com/nostr-protocol/nips/pull/2541)) y las peticiones de borrado de esas operaciones. No cuentan en la Tasa K: el selector de nodos ofrece cada una con su propia tasa (ver [Otras plataformas](#otras-plataformas)) |
+| `OTHER_PLATFORMS` | Otras plataformas P2P que se leen en vivo de los relays, como `OTHER_MOSTRO_PUBKEYS` (opcional): mismo formato que `PLATFORMS`, sin archivarlas. Cada nombre y cada clave, una sola vez entre las dos listas. El selector de nodos las ofrece como las de `PLATFORMS` |
+| `PLATFORM_HIDDEN_PAYMENT_METHODS` | Métodos de pago que nunca se eligen por defecto en la página de cada plataforma, cuya tasa es de un método a la vez (opcional): una por línea, el nombre de la plataforma como en `PLATFORMS` u `OTHER_PLATFORMS` y sus métodos tal como los publica, `nombre: método, método`. Los visitantes pueden elegirlos igualmente; `Pruebas` nunca es el de por defecto. Los métodos que no publica se ignoran; un nombre que no es una plataforma es un error |
 | `RELAYS` | Relays a los que conectarse, separados por coma (obligatorio; `wss://`) |
 | `FIAT` | Moneda que se muestra al abrir (vacío = la más usada en el nodo) |
-| `TIMEZONE` | Zona horaria de fechas y velas, p. ej. `America/Caracas` (vacío = la del navegador) |
+| `TIMEZONE` | Ya no se usa: fechas y velas van en la zona horaria de cada visitante (ver [Tasa K](#tasa-k)). Si un `.env` antiguo aún la tiene, `tasak` avisa al arrancar; quítala |
 | `HIDDEN_PAYMENT_METHODS` | Métodos de pago que no cuentan por defecto, separados por coma (por defecto `Pruebas,Otros`) |
 | `COMMUNITY`, `COMMUNITY_URL` | Comunidad que opera el nodo (opcional) |
 | `SOCIAL_LINKS` | Enlaces a sus redes, separados por coma (opcional; Telegram, X, YouTube, GitHub y Nostr se reconocen solos) |
@@ -317,7 +320,7 @@ completada:
 Tasa K = Σ(precio × monto) ÷ Σ monto
 ```
 
-Ejemplo (en CUP): 3 órdenes a 785 CUP/USD que suman 3000 CUP y una a 750 de 5000 CUP →
+Ejemplo (en CUP): 3 órdenes a 785 USD/CUP que suman 3000 CUP y una a 750 de 5000 CUP →
 (785×3000 + 750×5000) ÷ 8000 = **763,13**.
 
 Así la Tasa K de la cabecera solo cambia cuando se completa una orden nueva: no se mueve sola con el paso
@@ -328,14 +331,14 @@ más abajo.
 
 ### Qué mide
 
-El precio al que de verdad se cambia la moneda en operaciones con bitcoin. En moneda/USD es una tasa
+El precio al que de verdad se cambia la moneda en operaciones con bitcoin. En USD/moneda es una tasa
 implícita: moneda pagada por cada BTC dividida por el BTC/USD. No es el precio del dólar en efectivo ni en
 transferencias: si comprar o vender bitcoin con la moneda lleva un sobreprecio propio, también está en la
-Tasa K. Moneda/BTC y moneda/sat no pasan por el dólar.
+Tasa K. BTC/moneda y sat/moneda no pasan por el dólar.
 
 Casi todas las órdenes son a precio de mercado: el nodo fija los sats con su precio de referencia y la
 prima de la orden, así que su precio es aproximadamente `referencia ÷ (1 − prima)`. Por eso la Tasa K
-sigue a esa referencia, y lo que se separa de ella («sobre Yadio» en la cabecera) son sobre todo las primas
+sigue a esa referencia, y lo que se separa de ella (el porcentaje bajo la referencia en la cabecera) son sobre todo las primas
 con las que se opera. Las órdenes a precio fijo no dependen de ella.
 
 ### Qué órdenes cuentan
@@ -376,15 +379,64 @@ en la FAQ se ven el precio ponderado de las compras y el de las ventas de la ven
 `pending` de la orden o, sin ella, de una prima distinta de 0 (Mostro no admite prima con precio fijo); las
 órdenes con prima 0 de las que no se vio la versión `pending` cuentan como «sin saber».
 
-La gráfica tiene tres modos:
+La gráfica tiene tres modos en el tiempo, y una cuarta pestaña con el libro de órdenes ahora:
 
 - **Precio**: un punto por orden ejecutada, o por periodo (1h, 4h, 1D, 1W, 1M, 1Y) con el precio ponderado del periodo.
 - **Velas**: apertura, máximo, mínimo y cierre de cada periodo.
 - **Ponderado**: en cada punto, el precio ponderado por volumen de las 24 horas anteriores, `Σ(precio × monto) ÷ Σ monto`. Con un punto por orden, las 24 horas hasta esa orden: la Tasa K tras ella. Por periodo, las 24 horas hasta el cierre del periodo (o hasta ahora, en el actual): ese sí se mueve con el tiempo, y difiere de la Tasa K cuando el periodo cerró sin órdenes.
+- **Profundidad**: las órdenes abiertas del libro de órdenes, con los mismos filtros: el precio en el eje horizontal y el monto acumulado en moneda en el vertical, los compradores (verde) sumando desde el mejor precio hacia abajo y los vendedores (rojo) hacia arriba, con una línea en la Tasa K. Donde se solapan, el libro está cruzado. Una orden con rango cuenta por su máximo, como la barra de fondo del libro. Se abre a ±20 % alrededor de la Tasa K (más ancha si los mejores precios quedan más lejos); solo se dibujan las órdenes entre la mitad y el doble de la tasa, y las de fuera, o sin precio (a mercado sin precios del nodo ni de Yadio; en una plataforma, las que llevan prima), quedan fuera y se cuentan en la leyenda. Al pasar el ratón se ve el monto de cada lado hasta ese precio, y un clic abre el evento firmado de la orden de ese escalón.
 
-El volumen va en la parte baja de la gráfica y, al pasar el ratón, la leyenda de arriba muestra los valores de ese punto. La gráfica se puede ampliar y desplazar (el zoom se mantiene aunque lleguen órdenes nuevas; doble clic para volver a verlo todo) y expandir a pantalla completa. El filtro por método de pago está en el menú «Método de pago».
+Los precios se escriben como pares de divisas, base/cotización, como en los mercados: USD/CUP, BTC/CUP o
+sat/CUP (cuántos CUP cuesta un USD, un BTC o un sat) y, en una plataforma, el del activo (QUSD/CUP). La
+cabecera muestra los volúmenes desde un millón en forma compacta (1,74 M CUP), exactos al pasar el ratón.
+
+Las fechas y horas van en la zona horaria de cada visitante, la de su navegador; la esquina de la gráfica,
+bajo el eje de precios, dice su desfase con UTC (UTC−5), y su nombre al pasar el ratón. Los periodos de la
+gráfica también siguen ese calendario (un día de 1D empieza a la medianoche del visitante), así que dos
+visitantes en países distintos pueden ver velas diarias distintas. La Tasa K es la misma para todos: no
+depende de ningún calendario.
+
+El volumen va en la parte baja de la gráfica y, al pasar el ratón, la leyenda de arriba muestra los valores de ese punto; un clic en una orden abre su evento firmado, y «+N» muestra todos sus métodos de pago. El menú «Vista» muestra u oculta la leyenda y el par de fondo de la gráfica. La gráfica se puede ampliar y desplazar (el zoom se mantiene aunque lleguen órdenes nuevas; doble clic para volver a verlo todo) y expandir a pantalla completa. El filtro por método de pago es el menú «Método de pago», junto a la moneda: vale para la gráfica, las tablas y el libro de órdenes.
 
 Los métodos de `HIDDEN_PAYMENT_METHODS` quedan fuera por defecto; se pueden activar desde el menú.
+
+### Otras plataformas
+
+`PLATFORMS` y `OTHER_PLATFORMS` añaden otras plataformas P2P que publican en Nostr sus órdenes y
+operaciones de activos que no son bitcoin (saldos propios, monedas estables…) contra monedas locales: kind
+35353, propuesto en [nostr-protocol/nips#2541](https://github.com/nostr-protocol/nips/pull/2541). La
+cabecera tiene entonces un selector «Plataforma» (Mostro y cada plataforma, con el nombre del `.env`) junto
+al selector de nodo, que solo lista los nodos o cuentas de la plataforma elegida: en una plataforma, sus
+claves, con el nombre de su perfil o el dominio de su NIP-05, y nada si tiene una sola. Los dos conservan su
+ancho, para que la cabecera no se mueva al cambiar de plataforma. Cada plataforma abre su propia página
+(`?platform=nombre`, y `&key=npub…` para una clave que no sea la primera).
+
+Esa página funciona como la de un nodo, con estas diferencias:
+
+- **La tasa** es por plataforma, activo, moneda y método de pago, sin mezclarlos, con la misma fórmula y ventana que la
+  Tasa K (las 24 horas que terminan en la última operación), pero solo con **operaciones**, cada ejecución
+  de una orden: precio = `fa ÷ amt`, nunca el `price` ni la `premium` de la orden. El activo se identifica
+  como dice el NIP: los tokens por capa, red y contrato; los activos nativos por capa, red y ticker; los
+  saldos en la propia plataforma (`layer = internal`) por la clave de la plataforma, la red y el ticker.
+- **Fuera**: las operaciones retiradas con una petición de borrado NIP-09 y los eventos que no siguen el
+  NIP (se cuentan en el tooltip del estado de la conexión). También se comprueban las órdenes abiertas; las
+  demás versiones de una orden solo las reemplazan. Las órdenes de la propia plataforma (`maker =
+  platform`) cuentan como las demás; la ventana del evento lo indica.
+- **Un método de pago a la vez**, como la moneda y el activo: cada método es un mercado con su propio
+  precio (una transferencia bancaria y un saldo móvil pueden ir a precios muy distintos), así que promediar
+  dos los mezclaría. La página muestra el método con más operaciones; el visitante elige otro
+  en el selector de método, junto a la moneda y el activo. Los métodos son cada valor de `pm` tal como lo publica la plataforma, no la lista de
+  la app de Mostro; las órdenes de prueba se detectan por el texto, como en Mostro.
+  `PLATFORM_HIDDEN_PAYMENT_METHODS` fija los que nunca se muestran por defecto.
+- **El libro de órdenes** muestra solo las disponibles: `pending`, sin `expires_at` ni `expiration`
+  vencidos. Una orden con prima no tiene precio (el NIP no publica el precio de mercado de la plataforma):
+  «—», al final.
+- **Sin sats ni precio en dólares**: el par es el del activo (`QUSD/CUP`), el volumen va en la moneda y en el
+  activo, y no hay precio de referencia.
+- **Se lee en vivo en el navegador**: toda la historia que guardan los relays de sus operaciones, órdenes
+  disponibles y borrados, como con los nodos, página a página y con pausa (los relays cortan a quien
+  pregunta muy rápido). Un relay que rechaza el kind 35353 no cuenta como caído. Este sitio no firma la
+  tasa de una plataforma.
 
 ## Seguridad
 
@@ -410,7 +462,7 @@ Servicios externos que usa y qué pasa si están bloqueados:
 | Servicio | Para qué | Si está bloqueado |
 |---|---|---|
 | Relays Nostr | las órdenes, y los precios actuales que publica el nodo (`mostro-rates`: BTC/USD, referencia de la moneda frente al USD, libro de órdenes a precio de mercado) | sin ellos no hay datos (basta con que responda uno) |
-| Yadio | solo si un nodo no publica `mostro-rates` válidos: una estimación de los precios actuales | la moneda/USD no se puede calcular; moneda/BTC y moneda/sat siguen funcionando |
+| Yadio | solo si un nodo no publica `mostro-rates` válidos: una estimación de los precios actuales | USD/moneda no se puede calcular; BTC/moneda y sat/moneda siguen funcionando |
 | Coinbase | BTC/USD histórico por hora, para la moneda/USD (la hora en que se tomó cada orden o, si no se sabe, en que se completó); no hace falta si el servidor del sitio da a cada orden su BTC/USD | se calcula con el BTC/USD actual (el del nodo o el de Yadio) y se avisa de que es aproximado |
 
 ## Archivo
@@ -432,8 +484,8 @@ que publica el nodo, verificado (firma, autor y tipo), en una base de datos SQLi
   su versión vigente, si fue a precio de mercado o fijo, cuándo se tomó y su BTC/USD de ese momento con
   su origen: el `mostro-rates` del nodo o, si no lo hay, Coinbase (velas de 1 minuto) o Yadio.
   Así, las órdenes de antes del archivo (o importadas de la base de datos del nodo) llevan el BTC/USD de
-  Coinbase y las posteriores el del nodo: la moneda/USD puede dar un pequeño salto entre unas y otras
-  (suelen diferir menos de un 0,1 %), mientras que la moneda/BTC y la moneda/sat no cambian, porque salen
+  Coinbase y las posteriores el del nodo: USD/moneda puede dar un pequeño salto entre unas y otras
+  (suelen diferir menos de un 0,1 %), mientras que BTC/moneda y sat/moneda no cambian, porque salen
   solo de los eventos.
 - `btc_prices`: los cierres de BTC/USD de 1 minuto de Coinbase, cada uno pedido una vez y guardado.
 
@@ -441,6 +493,12 @@ Debe estar siempre encendido: lo que pase mientras está apagado se pierde, salv
 cada orden. Cada relay tiene una suscripción en vivo y, cada 5 minutos, una puesta al día de su historial
 reciente que cubre las desconexiones. Ocupa alrededor de 1 MB al día. `ARCHIVE=false` sirve el sitio
 sin archivar.
+
+Con `PLATFORMS` guarda también en `events` todas las versiones de las órdenes y operaciones de las otras
+plataformas (kinds 38383 y 35353) y las peticiones de borrado de esas operaciones. Nunca entran en
+`orders` ni en la Tasa K. Los nodos y las plataformas tienen cada uno su suscripción y su puesta al día:
+un relay que rechaza el kind 35353 sigue enviando los eventos de los nodos, y una plataforma añadida más
+tarde recibe todo el historial que aún tengan los relays.
 
 Para que arranque solo como servicio, ver `server/tasak.service`. Los archivos diarios del antiguo
 archivador en JavaScript (líneas `{"relay", "recibido", "evento"}`) se pueden importar; importarlos dos
@@ -476,7 +534,7 @@ la publica. La primera vez, cuando el archivo se ha puesto al día con todos los
 archivo (o a los 3 minutos, si algún relay no responde), para que una orden firmada en los relays nunca
 salga como sin firma:
 
-- **`/api/tasa.json`**: la tasa en moneda/BTC, moneda/USD y moneda/sat, las 24 h anteriores, su volumen
+- **`/api/tasa.json`**: la tasa en BTC/moneda, USD/moneda y sat/moneda, las 24 h anteriores, su volumen
   y sus órdenes, su ventana, cuándo se actualizó y el id del evento firmado. Para bots, hojas de cálculo
   y aplicaciones que no hablan Nostr.
 - **Un evento Nostr firmado**, si hay `SIGNING_KEY_FILE`: kind 30078 con `d = tasak`, contenido
@@ -531,17 +589,18 @@ se la devolvería a sí mismo a través de las primas.
 | `web/` | el sitio, la carpeta que se publica |
 | `web/index.html` | la tasa: gráfica, libro de órdenes y órdenes ejecutadas |
 | `web/node.html` | información del nodo Mostro |
-| `web/js/` | los módulos de las páginas: cliente de relays (`nostr-client.js`) y almacén de eventos (`event-store.js`), compartidos por las dos páginas, gráfica, paneles, precios y estado |
+| `web/js/` | los módulos de las páginas: cliente de relays (`nostr-client.js`) y almacén de eventos (`event-store.js`), compartidos por las dos páginas, gráfica, paneles, precios y estado, la gráfica de profundidad (`depth.js`, sus datos en `depth-curve.js`) y la página de otra plataforma (`platform.js`) |
+| `web/test/` | pruebas de los módulos puros de las páginas que el servidor no usa (`node --test 'web/test/*.test.js'`): los datos de la gráfica de profundidad |
 | `web/css/` | estilos de cada página |
 | `web/i18n.js` | idioma (español / inglés): diccionario y traducción de textos |
 | `web/common.js`, `web/common.css` | configuración, formato, colores y tarjeta del nodo, compartidos por las dos páginas |
 | `web/vendor/` | librerías copiadas (sin depender de CDN) y la lista de métodos de pago por moneda de la app de Mostro (`mostro-payment-methods.js`) |
-| `shared/` | lógica pura de la tasa (módulos ES: métodos de pago, órdenes, precios del nodo (`mostro-rates`), zonas horarias y periodos, unidades, Tasa K y velas), que usan las páginas (`tasak` la copia a `web/shared/`) |
-| `shared/test/` | pruebas de `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), datos reales fijos (`fixtures/`), los valores de referencia que el código debe reproducir (`expected.json`) y casos escritos a mano (`cases.json`): los vectores que también pasa la versión en Rust de esta lógica (`server/src/logic/`) |
+| `shared/` | lógica pura de la tasa (módulos ES: métodos de pago, órdenes, precios del nodo (`mostro-rates`), zonas horarias y periodos, unidades, Tasa K y velas, órdenes y operaciones de otras plataformas (`p2p.js`)), que usan las páginas (`tasak` la copia a `web/shared/`) |
+| `shared/test/` | pruebas de `shared/` (`node --test 'shared/test/*.test.js'`, Node ≥ 22), datos reales fijos (`fixtures/`), los valores de referencia que el código debe reproducir (`expected.json`) y casos escritos a mano (`cases.json`): los vectores que también pasa la versión en Rust de esta lógica (`server/src/logic/`). `p2p.js` aún no tiene versión en Rust: el servidor no calcula nada con las otras plataformas |
 | `server/` | el servidor de tasaK en Rust (`tasak`): lee el `.env`, genera `web/config.js`, sirve `web/` y archiva los eventos del nodo; su servicio de systemd es `server/tasak.service`. `src/logic/` es la lógica de `shared/` en Rust, comprobada con los mismos vectores (`server/tests/shared_vectors.rs`); `server/tests/config-cases.json` es el `web/config.js` que debe salir de cada `.env` (`cargo test`) |
 | `Dockerfile`, `docker-compose.yml`, `Caddyfile` | la imagen de Docker (`tasak` con `web/` y `shared/`) y un despliegue de ejemplo, con Caddy para HTTPS (ver [Docker](#docker)) |
 | `.github/workflows/release.yml` | publica una versión al empujar una etiqueta `vX.Y.Z` (debe coincidir con `server/Cargo.toml`): los binarios estáticos y la imagen de Docker (amd64 y arm64, en GHCR), tras comprobar que funcionan; lanzada a mano, o en un pull request que la cambie, solo compila y comprueba |
-| `.github/workflows/ci.yml` | las comprobaciones de cada pull request y de cada push a `main`: `cargo fmt`, `clippy` y `cargo test` del servidor, `node --test` de `shared/`, `tools/reference.mjs` y `tools/snapshot.mjs` en Chrome headless (tras `tasak build`) y la imagen de Docker (se construye, arranca y sirve el sitio) |
+| `.github/workflows/ci.yml` | las comprobaciones de cada pull request y de cada push a `main`: `cargo fmt`, `clippy` y `cargo test` del servidor, `node --test` de `shared/` y `web/test/`, `tools/reference.mjs` y `tools/snapshot.mjs` en Chrome headless (tras `tasak build`) y la imagen de Docker (se construye, arranca y sirve el sitio) |
 | `tools/` | comprobaciones de desarrollo en Chrome headless (Node, sin dependencias); `node tools/reference.mjs` comprueba que `web/` calcula con datos fijos los valores de `shared/test/expected.json`, sin el servidor; `node tools/snapshot.mjs`, con el snapshot de un servidor y una tasa firmada |
 
 ## Idiomas

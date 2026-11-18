@@ -1,6 +1,6 @@
 [package]
 name = "tasak"
-version = "0.2.0"
+version = "0.3.0"
 edition = "2024"
 license = "MIT"
 description = "tasaK server: generates web/config.js from .env, serves web/ and archives the Mostro nodes' events"
@@ -11,7 +11,7 @@ publish = false
 [dependencies]
 axum = { version = "0.8.9", default-features = false, features = ["http1", "tokio"] }
 chrono = { version = "0.4.45", default-features = false }
-chrono-tz = { version = "0.10.4", features = ["case-insensitive"] }
+chrono-tz = "0.10.4"
 futures = { version = "0.3.34", default-features = false, features = ["std"] }
 nostr-sdk = "0.45.4"
 regex = "1.13.1"

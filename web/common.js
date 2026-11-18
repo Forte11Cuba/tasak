@@ -32,7 +32,26 @@ const CONFIG = (() => {
   const urlNodes = list('mostro').length > 0;
   const siteMostros = hexList(base.mostros || []);
   const relays = list('relays').length ? list('relays') : base.relays || [];
+  // Other P2P platforms (kind 35353): those of PLATFORMS (archived by the server) and OTHER_PLATFORMS
+  // (guests), each with its name in .env and its pubkeys; the methods never chosen by default on each one,
+  // as it publishes them (PLATFORM_HIDDEN_PAYMENT_METHODS; the test orders always)
+  const platforms = [[base.platforms, true], [base.otherPlatforms, false]].flatMap(([ps, archived]) =>
+    (ps || []).filter(p => /^[a-z0-9][a-z0-9.-]*$/i.test(p?.name || ''))
+      .map(p => ({ name: p.name, keys: hexList(p.pubkeys || []), archived })))
+    .filter(p => p.keys.length);
+  const hiddenOf = name => (base.platformHiddenPaymentMethods || [])
+    .find(h => h.name?.toLowerCase() === name.toLowerCase())?.methods || ['Pruebas'];
+  // ?platform=<name>&key=<npub>: the page of a platform, and of one of its pubkeys (the first one by
+  // default). It goes before ?mostro=. An unknown name or key leaves `platformError`
+  const platformName = qs.get('platform');
+  const found = platformName && platforms.find(p => p.name.toLowerCase() === platformName.toLowerCase());
+  const key = found && (qs.get('key') ? toHex(qs.get('key')) : found.keys[0]);
+  const platform = found && found.keys.includes(key)
+    ? { name: found.name, key, keys: found.keys, archived: found.archived, hiddenPaymentMethods: hiddenOf(found.name) } : null;
   return {
+    platforms,
+    platform,
+    platformError: !!platformName && !platform,
     fromEnv: !!window.TASAK_CONFIG,
     // The URL changes the node: what describes the .env nodes doesn't apply (community, currency, signed
     // rate, the server's snapshot)
@@ -58,8 +77,9 @@ const CONFIG = (() => {
     hiddenPaymentMethods: urlNodes ? ['Pruebas'] : base.hiddenPaymentMethods || ['Pruebas', 'Otros'],
     // Without a configured currency, the page picks the most traded one on the node; the .env one
     // belongs to the .env nodes, so it doesn't apply if the URL changes the node
-    fiat: (qs.get('fiat') || (urlNodes ? '' : base.fiat) || '').toUpperCase(),
-    tz: base.timeZone || Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
+    fiat: (qs.get('fiat') || (urlNodes || platformName ? '' : base.fiat) || '').toUpperCase(),
+    // Dates and candles in each visitor's own time zone, the browser's
+    tz: Intl.DateTimeFormat().resolvedOptions().timeZone || 'UTC',
     // The key that signs the site's Tasa K (hex): its rate is about the .env's nodes, so it doesn't
     // apply if the URL changes the node
     ratePubkey: !urlNodes && /^[0-9a-f]{64}$/.test(base.ratePubkey || '') ? base.ratePubkey : '',
@@ -140,6 +160,42 @@ const fmtInt = n => Math.round(n).toLocaleString(LOCALE);
 const fmtTime = ts => new Date(ts * 1000).toLocaleString(LOCALE, {
   timeZone: CONFIG.tz, day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit', hourCycle: 'h23',
 });
+// The offset of the visitor's time zone at `ts` (now by default), so that it follows daylight saving time
+// and half hours: UTC−5, UTC+5:30, UTC. From Intl's shortOffset (GMT-5); browsers without it (Chrome < 95,
+// Safari < 15.4, Firefox < 91: old phones' WebViews) throw RangeError, and then it is computed like
+// tzOffset in shared/time.js: the zone's calendar fields minus UTC. The formatter is made only once
+let tzFormat = null;
+const tzOffsetName = (ts = Date.now() / 1000) => {
+  if (!tzFormat) {
+    try {
+      tzFormat = { short: new Intl.DateTimeFormat('en-US', { timeZone: CONFIG.tz, timeZoneName: 'shortOffset' }) };
+    } catch {
+      tzFormat = { fields: new Intl.DateTimeFormat('en-US', { timeZone: CONFIG.tz, hourCycle: 'h23', year: 'numeric',
+        month: 'numeric', day: 'numeric', hour: 'numeric', minute: 'numeric', second: 'numeric' }) };
+    }
+  }
+  const s = Math.floor(ts);
+  let minutes;
+  if (tzFormat.short) {
+    const part = tzFormat.short.formatToParts(new Date(s * 1000)).find(p => p.type === 'timeZoneName')?.value || '';
+    const m = part.match(/([+-])(\d+)(?::(\d+))?/);
+    minutes = m ? (m[1] === '-' ? -1 : 1) * (Number(m[2]) * 60 + Number(m[3] || 0)) : 0;
+  } else {
+    const p = {};
+    for (const { type, value } of tzFormat.fields.formatToParts(new Date(s * 1000))) p[type] = Number(value);
+    minutes = Math.round((Date.UTC(p.year, p.month - 1, p.day, p.hour, p.minute, p.second) / 1000 - s) / 60);
+  }
+  if (!minutes) return 'UTC';
+  const a = Math.abs(minutes);
+  return `UTC${minutes < 0 ? '−' : '+'}${Math.floor(a / 60)}${a % 60 ? ':' + String(a % 60).padStart(2, '0') : ''}`;
+};
+// Which time zone the dates are in, for tooltips
+const tzNote = ts => {
+  const offset = tzOffsetName(ts);
+  // UTC, not «UTC (UTC)»
+  return offset === CONFIG.tz ? t('Horas en tu zona horaria: {zone}', { zone: offset })
+    : t('Horas en tu zona horaria: {zone} ({offset})', { zone: CONFIG.tz, offset });
+};
 
 // ---------- Node information: profile (0), information (38385) and relays (10002) ----------
 const META_KINDS = [0, 38385, 10002];

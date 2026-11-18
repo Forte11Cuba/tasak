@@ -4,7 +4,7 @@
 import { UNITS, toUnit, hourlyClose } from '../shared/units.js';
 import { referenceRates, fiatPerUsd, marketPrice } from '../shared/rates.js';
 import { pricedAt } from '../shared/orders.js';
-import { state } from './state.js';
+import { state, assetTicker } from './state.js';
 
 // Newest mostro-rates of the selected nodes that the node still uses: the prices each node publishes,
 // signed, every few minutes, and uses for market orders (the same ones the order book uses). With
@@ -88,8 +88,9 @@ export function btcAt(ts) {
 // Yadio's reference for the chosen currency: currency per USD
 export const yadioFiatPerUsd = () => currentPrices()?.fiatPerUsd(state.fiat) ?? null;
 
-// Name of the chosen unit: CUP/USD, CUP/BTC or CUP/sat
-export const unitName = () => `${state.fiat}/${UNITS[state.unit]}`;
+// The chosen pair, base/quote as in the markets: USD/CUP, BTC/CUP or sat/CUP (how many CUP one USD, BTC
+// or sat costs); on a platform's page, the asset's (QUSD/CUP)
+export const unitName = () => `${CONFIG.platform ? assetTicker() : UNITS[state.unit]}/${state.fiat}`;
 
 // Converts currency per BTC to the chosen unit; in USD with the BTC/USD of the order (btcOf) or, without
 // an order, the current one

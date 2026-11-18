@@ -11,3 +11,6 @@ export const fmtAgo = s => s < 3600 ? t('{n} min', { n: Math.max(1, Math.round(s
 // Percentage in the language's format: +6,00 % (es), +6.00% (en)
 export const fmtPct = (c, digits = 2) =>
   `${c >= 0 ? '+' : '−'}${Math.abs(c).toLocaleString(LOCALE, { minimumFractionDigits: digits, maximumFractionDigits: digits })}${LANG === 'en' ? '' : ' '}%`;
+
+// Amount of an asset (QUSD, USDT…): two decimals, or up to six below one unit
+export const fmtAmt = n => n.toLocaleString(LOCALE, { maximumFractionDigits: Math.abs(n) >= 1 ? 2 : 6 });

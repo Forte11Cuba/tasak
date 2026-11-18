@@ -25,13 +25,22 @@ fn js_trim(s: &str) -> &str {
 /// # npub1…   # one left out
 /// "
 /// ```
-const LISTS: [&str; 5] = [
+///
+/// PLATFORMS, OTHER_PLATFORMS and PLATFORM_HIDDEN_PAYMENT_METHODS have one entry per line
+/// (`name: npub1…, npub1…` or `name: method, method`), so their lines are joined with `;`, which also
+/// separates their entries on one line
+const LISTS: [&str; 8] = [
     "MOSTRO_PUBKEYS",
     "OTHER_MOSTRO_PUBKEYS",
+    "PLATFORMS",
+    "OTHER_PLATFORMS",
     "RELAYS",
     "SOCIAL_LINKS",
     "HIDDEN_PAYMENT_METHODS",
+    "PLATFORM_HIDDEN_PAYMENT_METHODS",
 ];
+
+const PLATFORM_LISTS: [&str; 3] = ["PLATFORMS", "OTHER_PLATFORMS", "PLATFORM_HIDDEN_PAYMENT_METHODS"];
 
 /// The .env format: KEY=value lines, # comments, optional quotes around the value; later lines win.
 /// A list can span several lines (see LISTS). The errors: a list whose closing quote is missing
@@ -63,7 +72,7 @@ pub fn parse_env(text: &str) -> (HashMap<String, String>, Vec<String>) {
                     .iter()
                     .map(|l| js_trim(l.split('#').next().unwrap_or("")))
                     .collect();
-                items.join(",")
+                items.join(if PLATFORM_LISTS.contains(&key) { ";" } else { "," })
             }
             _ => value.to_string(),
         };
@@ -107,16 +116,38 @@ pub struct Config {
     pub mostros: Vec<String>,
     /// Guest nodes: offered in the site's node selector, not archived nor part of the Tasa K
     pub other_mostros: Vec<String>,
+    /// Other P2P platforms, whose orders and trades (kinds 38383 and 35353) are archived; not part of
+    /// the Tasa K
+    pub platforms: Vec<Platform>,
+    /// Guest platforms: read live from the relays by the browser, not archived
+    pub other_platforms: Vec<Platform>,
+    /// The payment methods never chosen by default on each platform's page (its rate is of one method
+    /// at a time), as it publishes them; the test orders never are
+    pub platform_hidden_payment_methods: Vec<PlatformMethods>,
     pub relays: Vec<String>,
-    /// Empty: the most traded currency on the node and the visitor's browser time zone
+    /// Empty: the most traded currency on the node
     pub fiat: String,
-    pub time_zone: String,
     pub community: Community,
     pub social_links: Vec<String>,
     pub hidden_payment_methods: Vec<String>,
     /// The key that signs the published Tasa K (hex), from SIGNING_KEY_FILE: the site checks the rate's
     /// author with it. Set by the server after reading the key; empty without one
     pub rate_pubkey: String,
+}
+
+/// A platform of PLATFORMS or OTHER_PLATFORMS: the name given in .env and its pubkeys (hex or npub)
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct Platform {
+    pub name: String,
+    pub pubkeys: Vec<String>,
+}
+
+/// An entry of PLATFORM_HIDDEN_PAYMENT_METHODS: a platform (its name as in PLATFORMS or OTHER_PLATFORMS)
+/// and its methods
+#[derive(Debug, Clone, PartialEq, Eq, Serialize)]
+pub struct PlatformMethods {
+    pub name: String,
+    pub methods: Vec<String>,
 }
 
 #[derive(Debug, Serialize)]
@@ -133,13 +164,66 @@ fn list(s: Option<String>) -> Vec<String> {
         .collect()
 }
 
+/// PLATFORMS and OTHER_PLATFORMS: `name: key, key; name: key`. An entry without a name keeps an empty
+/// one (an error)
+fn platforms(s: Option<String>) -> Vec<Platform> {
+    s.unwrap_or_default()
+        .split(';')
+        .map(js_trim)
+        .filter(|e| !e.is_empty())
+        .map(|e| match e.split_once(':') {
+            Some((name, keys)) => Platform {
+                name: js_trim(name).to_string(),
+                pubkeys: list(Some(keys.to_string())),
+            },
+            None => Platform {
+                name: String::new(),
+                pubkeys: list(Some(e.to_string())),
+            },
+        })
+        .collect()
+}
+
+/// PLATFORM_HIDDEN_PAYMENT_METHODS: `name: method, method; name: method`. Comma separated only: methods
+/// may contain spaces («bank transfer»). An entry without a name keeps an empty one (an error)
+fn platform_methods(s: Option<String>) -> Vec<PlatformMethods> {
+    let methods = |m: &str| {
+        m.split(',')
+            .map(js_trim)
+            .filter(|s| !s.is_empty())
+            .map(str::to_string)
+            .collect()
+    };
+    s.unwrap_or_default()
+        .split(';')
+        .map(js_trim)
+        .filter(|e| !e.is_empty())
+        .map(|e| match e.split_once(':') {
+            Some((name, m)) => PlatformMethods {
+                name: js_trim(name).to_string(),
+                methods: methods(m),
+            },
+            None => PlatformMethods {
+                name: String::new(),
+                methods: methods(e),
+            },
+        })
+        .collect()
+}
+
+/// /^[a-z0-9][a-z0-9.-]*$/i
+fn valid_platform_name(n: &str) -> bool {
+    n.bytes().next().is_some_and(|b| b.is_ascii_alphanumeric())
+        && n.bytes().all(|b| b.is_ascii_alphanumeric() || b == b'.' || b == b'-')
+}
+
 /// `get` gives a variable's value (the process environment first, then .env); `web` is the web/ folder,
 /// to check the logos. The config is only valid if the errors are empty.
 pub fn build_config(get: impl Fn(&str) -> Option<String>, web: &Path) -> (Config, Vec<String>) {
     let or_empty = |k: &str| get(k).unwrap_or_default();
     let or_default = |k: &str, d: &str| get(k).filter(|v| !v.is_empty()).unwrap_or_else(|| d.to_string());
     let one_of = |k: &str, allowed: &[&str]| get(k).filter(|v| allowed.contains(&v.as_str())).unwrap_or_default();
-    let config = Config {
+    let mut config = Config {
         site_name: or_default("SITE_NAME", "tasaK"),
         rate_name: or_default("RATE_NAME", "Tasa K"),
         logo: or_empty("LOGO"),
@@ -149,9 +233,11 @@ pub fn build_config(get: impl Fn(&str) -> Option<String>, web: &Path) -> (Config
         language: one_of("LANGUAGE", &["es", "en"]),
         mostros: list(get("MOSTRO_PUBKEYS")),
         other_mostros: list(get("OTHER_MOSTRO_PUBKEYS")),
+        platforms: platforms(get("PLATFORMS")),
+        other_platforms: platforms(get("OTHER_PLATFORMS")),
+        platform_hidden_payment_methods: platform_methods(get("PLATFORM_HIDDEN_PAYMENT_METHODS")),
         relays: list(get("RELAYS")),
         fiat: or_empty("FIAT").to_uppercase(),
-        time_zone: or_empty("TIMEZONE"),
         community: Community {
             name: or_empty("COMMUNITY"),
             url: or_empty("COMMUNITY_URL"),
@@ -179,6 +265,52 @@ pub fn build_config(get: impl Fn(&str) -> Option<String>, web: &Path) -> (Config
             errors.push(format!("invalid pubkey: {k}"));
         }
     }
+    // A name only once in both lists: it names the platform on the site
+    let mut names = std::collections::HashSet::new();
+    let lists = [
+        ("PLATFORMS", &config.platforms),
+        ("OTHER_PLATFORMS", &config.other_platforms),
+    ];
+    for (var, p) in lists.iter().flat_map(|(var, list)| list.iter().map(move |p| (*var, p))) {
+        if p.name.is_empty() {
+            errors.push(format!(
+                "{var}: an entry has no name (name: npub1…): {}",
+                p.pubkeys.join(", ")
+            ));
+        } else if !valid_platform_name(&p.name) {
+            errors.push(format!("{var}: invalid name (letters, digits, . and -): {}", p.name));
+        } else if !names.insert(p.name.to_ascii_lowercase()) {
+            errors.push(format!("{var}: {} is listed twice", p.name));
+        }
+        if p.pubkeys.is_empty() && !p.name.is_empty() {
+            errors.push(format!("{var}: {} has no pubkeys", p.name));
+        }
+        for k in p.pubkeys.iter().filter(|k| !valid_pubkey(k)) {
+            errors.push(format!("invalid pubkey: {k}"));
+        }
+    }
+    // Each entry names a platform of PLATFORMS or OTHER_PLATFORMS, once; written as it is named there
+    let all: Vec<&Platform> = config.platforms.iter().chain(&config.other_platforms).collect();
+    let mut named = std::collections::HashSet::new();
+    for entry in &mut config.platform_hidden_payment_methods {
+        let var = "PLATFORM_HIDDEN_PAYMENT_METHODS";
+        if entry.name.is_empty() {
+            errors.push(format!(
+                "{var}: an entry has no name (name: method, method): {}",
+                entry.methods.join(", ")
+            ));
+        } else if let Some(p) = all.iter().find(|p| p.name.eq_ignore_ascii_case(&entry.name)) {
+            if !named.insert(p.name.to_ascii_lowercase()) {
+                errors.push(format!("{var}: {} is listed twice", entry.name));
+            }
+            entry.name = p.name.clone();
+        } else {
+            errors.push(format!(
+                "{var}: {} is not a platform of PLATFORMS or OTHER_PLATFORMS",
+                entry.name
+            ));
+        }
+    }
     if config.relays.is_empty() {
         errors.push("RELAYS is empty".to_string());
     }
@@ -193,10 +325,6 @@ pub fn build_config(get: impl Fn(&str) -> Option<String>, web: &Path) -> (Config
         if !is_https(u) {
             errors.push(format!("invalid link (must start with https://): {u}"));
         }
-    }
-    // The browser checks it with Intl; both use the IANA database
-    if !config.time_zone.is_empty() && chrono_tz::Tz::from_str_insensitive(&config.time_zone).is_err() {
-        errors.push(format!("invalid TIMEZONE: {}", config.time_zone));
     }
     for (k, v) in [("LOGO", &config.logo), ("LOGO_LIGHT", &config.logo_light)] {
         if v.is_empty() {
@@ -390,6 +518,29 @@ mod tests {
         }
         assert_eq!(errors_for("."), ["FAVICON file not found in web/: ."]);
         std::fs::remove_dir_all(&dir).unwrap();
+    }
+
+    #[test]
+    fn platforms_keep_their_names_and_keys() {
+        let (env, errors) = parse_env("PLATFORMS=\"\n  a: k1, k2   # two\n# b: k3\n  c.d-2: k4; e: k5\n\"\nX=1");
+        assert!(errors.is_empty());
+        let platform = |name: &str, keys: &[&str]| Platform {
+            name: name.to_string(),
+            pubkeys: keys.iter().map(|k| k.to_string()).collect(),
+        };
+        assert_eq!(
+            platforms(env.get("PLATFORMS").cloned()),
+            [
+                platform("a", &["k1", "k2"]),
+                platform("c.d-2", &["k4"]),
+                platform("e", &["k5"])
+            ]
+        );
+        assert_eq!(
+            platforms(Some("a: k1,k2; b:k3".to_string())),
+            [platform("a", &["k1", "k2"]), platform("b", &["k3"])]
+        );
+        assert!(platforms(None).is_empty());
     }
 
     #[test]
