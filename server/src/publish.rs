@@ -237,33 +237,40 @@ pub struct HistoryTrade {
 }
 
 /// `web/api/history.json`: every completed trade of the site's currency, oldest first, to draw price
-/// charts. The shape price-chart-proxy reads for its CUP series: `{when, from, data}` with
-/// `data[].{time, value, size}`. It follows the same rules as the Tasa K: the `.env`'s nodes, the
-/// site's currency and the payment methods it doesn't hide
+/// charts. The shape an external service reads (for example, price-chart-proxy): `{when, from, fiat,
+/// data}` with `data[].{time, value, size}`. It follows the same rules as the Tasa K: the `.env`'s
+/// nodes, the site's currency and the payment methods it doesn't hide
 #[derive(Debug, Clone, PartialEq, Serialize)]
 pub struct History {
     /// When it was written (unix seconds)
     pub when: i64,
     pub from: &'static str,
+    /// The series currency, or empty when it can't be known (no completed orders and `FIAT` unset)
+    pub fiat: String,
     pub data: Vec<HistoryTrade>,
 }
 
 /// The trades to chart: same rules as [`compute`], over all time instead of the last 24 h
 pub fn history(rows: &[Row], rules: &Rules, when: i64) -> History {
     let orders: Vec<Order> = rows.iter().map(Row::order).collect();
-    let data = site_filters(&orders, rules, when).map_or_else(Vec::new, |(_, filters)| {
-        get_trades(&orders, &filters, |p, _| Some(p))
-            .into_iter()
-            .map(|t| HistoryTrade {
-                time: t.ts,
-                value: t.price,
-                size: t.size,
-            })
-            .collect()
-    });
+    let (fiat, data) = match site_filters(&orders, rules, when) {
+        Some((fiat, filters)) => (
+            fiat,
+            get_trades(&orders, &filters, |p, _| Some(p))
+                .into_iter()
+                .map(|t| HistoryTrade {
+                    time: t.ts,
+                    value: t.price,
+                    size: t.size,
+                })
+                .collect(),
+        ),
+        None => (rules.fiat.clone(), Vec::new()),
+    };
     History {
         when,
         from: "tasak",
+        fiat,
         data,
     }
 }
@@ -646,7 +653,7 @@ mod tests {
             row("d", NOW - 20, 3000.0, 50_000.0, None, false, "EnZona"),
         ];
         let h = history(&rows, &rules(), NOW);
-        assert_eq!((h.when, h.from), (NOW, "tasak"));
+        assert_eq!((h.when, h.from, h.fiat.as_str()), (NOW, "tasak", "CUP"));
         // Oldest first, with value = currency per BTC and size = currency moved
         assert_eq!(
             h.data,
@@ -671,6 +678,7 @@ mod tests {
         let json = serde_json::to_value(history(&rows, &rules(), NOW)).unwrap();
         assert_eq!(json["when"], NOW);
         assert_eq!(json["from"], "tasak");
+        assert_eq!(json["fiat"], "CUP");
         assert_eq!(json["data"][0]["time"], NOW - 100);
         assert_eq!(json["data"][0]["value"], 1_000_000.0);
         assert_eq!(json["data"][0]["size"], 1000.0);
@@ -682,7 +690,7 @@ mod tests {
         assert!(h.data.is_empty());
         assert_eq!(
             serde_json::to_value(&h).unwrap(),
-            serde_json::json!({"when": NOW, "from": "tasak", "data": []})
+            serde_json::json!({"when": NOW, "from": "tasak", "fiat": "", "data": []})
         );
     }
 

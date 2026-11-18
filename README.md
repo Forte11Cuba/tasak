@@ -538,9 +538,10 @@ minutes, if a relay doesn't answer), so that an order signed on the relays never
 
 - **`/api/history.json`**: every completed order of the site's currency over all time, oldest first, with
   its moment (unix seconds), its currency per BTC and the currency it moved. The same rules as the Tasa K
-  (the `.env`'s nodes, the site's currency and the payment methods it doesn't hide). It is what
-  `price-chart-proxy` reads to draw the CUP chart of the Arkade wallet (`{when, from, data}` with
-  `data[].{time, value, size}`); without orders it is `{"data": []}`. Like the rate, it isn't meant as a
+  (the `.env`'s nodes, the site's currency and the payment methods it doesn't hide). It is what an
+  external service can read to draw price charts of the site's currency (for example,
+  `price-chart-proxy`): `{when, from, fiat, data}` with `data[].{time, value, size}`; without orders it
+  is `{"data": []}` and `fiat` is empty when the currency is unknown. Like the rate, it isn't meant as a
   market price source, only to draw charts.
 
 When there is a key, its public key goes into `config.js` (`ratePubkey`), for the site to check who
